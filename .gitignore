@@ -1,0 +1,12 @@
+# raw datasets are downloaded, never committed
+data/raw/
+data/physionet/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+
+# large / regenerable artifacts (keep results.json, drop the rest if you prefer)
+*.pkl
