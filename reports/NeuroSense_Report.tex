@@ -1,0 +1,92 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+
+\captionsetup{font=small,labelfont=bf}
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection}{0.5em}{}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{0pt}
+
+\title{\textbf{NeuroSense: Leakage-Aware, Explainable EEG Decoding}\\[0.3em]
+\large An honest look at when EEG machine learning generalizes, and when it only appears to}
+\author{Muizza}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent Machine learning on EEG is easy to evaluate incorrectly. Because EEG is a time series with strong short-range correlation, randomly splitting a single continuous recording into training and test sets lets a model score highly by recognizing near-duplicate neighbors rather than by learning a generalizable mapping. This report studies that failure across two datasets and two paradigms. On the widely used UCI EEG Eye State dataset, a random split yields an F1 of 0.61, but three leakage-aware protocols (chronological holdout, blocked \texttt{TimeSeriesSplit}, and leave-one-block-out) place performance at or below chance, and feature attribution shows the model leans on frontal channels consistent with ocular artifact rather than the posterior alpha of the Berger effect. On the PhysioNet Motor Movement/Imagery dataset, honest within-subject decoding of imagined left versus right fist reaches a mean AUC of 0.61 with 8 of 10 subjects above chance, while cross-subject transfer collapses to chance; here feature attribution recovers the expected C3/C4 sensorimotor lateralization. Across both datasets, evaluation design determines apparent performance, and interpretability is trustworthy only when the evaluation beneath it is leakage-free.
+\end{abstract}
+
+\section{Introduction}
+EEG underpins brain-computer interfaces, attention and fatigue monitoring, and a broad range of neurotechnology. Applying machine learning to EEG, however, requires care that is often skipped in introductory work: the signal is time-dependent, and samples that are close in time are highly correlated. When such samples are split randomly into training and test sets, a model can appear highly accurate while mostly recognizing repeated temporal patterns it has already seen, rather than learning structure that transfers to new data.
+
+This report treats that pitfall as the object of study rather than an afterthought. It asks two questions. First, do the high accuracies commonly reported on a popular EEG benchmark survive leakage-aware evaluation? Second, on a dataset built for generalization, how far does honest decoding actually go, and do the model's explanations agree with known neurophysiology? The work is deliberately framed around evaluation validity and interpretability rather than headline accuracy, because on EEG a high number is only as trustworthy as the protocol that produced it.
+
+\section{Data and Methods}
+\textbf{Phase 1: UCI EEG Eye State.} A single continuous 117-second recording from one subject, 14 channels sampled at 128\,Hz, labeled for eyes open versus closed. The label runs in only 24 contiguous blocks with a median duration of about 3.9 seconds. Several channels contain single-sample electrode pops reaching roughly 700{,}000 against a baseline near 4{,}000; these are clipped per channel before feature extraction. The signal is segmented into one-second non-overlapping windows, yielding 100 windows and 56 band-power features.
+
+\textbf{Phase 2: PhysioNet Motor Movement/Imagery.} Imagined left versus right fist movement across 10 subjects, 64 channels at 160\,Hz, 437 trials in total drawn from runs R04, R08, and R12. Features are mu (8 to 13\,Hz) and beta (13 to 30\,Hz) band power over a 13-channel sensorimotor strip, giving 26 features per trial.
+
+\textbf{Features.} For both phases, band power is computed per channel and window using Welch's method and integrated over each band. The delta, theta, alpha, and beta bands are used in Phase 1; the motor-relevant mu and beta bands in Phase 2. The gamma band (30 to 45\,Hz) is excluded, since on consumer-grade hardware that range is dominated by muscle activity rather than cortical signal.
+
+\textbf{Models and evaluation.} Logistic Regression, Support Vector Machines, Random Forests, and XGBoost are compared under standardized features. The central methodological contribution is the use of multiple leakage-aware evaluation protocols: for Phase 1, a chronological holdout, a blocked \texttt{TimeSeriesSplit}, and leave-one-block-out cross-validation; for Phase 2, within-subject trial-level cross-validation and cross-subject leave-one-subject-out. A naive shuffled split is included in Phase 1 purely as a contrast, to quantify the inflation that leakage produces.
+
+\section{Phase 1: Eye-State Detection}
+Because the label runs in long blocks, neighboring samples are near-identical and share a label. A random split scatters these neighbors across training and test, so a model scores well by recognizing duplicates. Holding everything else fixed and changing only how the split is drawn produces the entire performance gap shown in Figure~\ref{fig:leak}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\linewidth]{figures/fig1_phase1_leakage.png}
+\caption{Left: F1 for the same features and model under three splits. The naive random split (0.61) is leakage; both leakage-aware splits fall to the level of the majority baseline. Right: leave-one-block-out ROC-AUC is below chance for both models.}
+\label{fig:leak}
+\end{figure}
+
+Three independent leakage-aware protocols agree. The chronological holdout gives an F1 of 0.32, below the majority baseline of about 0.38. The blocked \texttt{TimeSeriesSplit} gives 0.40 with a standard deviation of 0.24, and ROC-AUC is undefined in several folds because each contiguous test fold falls within a single eye-state block. Leave-one-block-out, the fairest honest protocol for this data, gives ROC-AUC between 0.28 and 0.37 and balanced accuracy between 0.35 and 0.44. AUC below 0.5 is informative: it indicates that the band-power features encode which segment of the recording a window came from, through electrode drift and non-stationarity, rather than the eye state itself. A model trained on the early session therefore mislabels the late session.
+
+A pre-modeling check found no clean Berger effect in this recording: occipital alpha does not rise on eye closure. Consistent with that, the most class-separating features are frontal (Figure~\ref{fig:interp}, left), matching eye-movement and blink artifact captured by frontal electrodes rather than posterior alpha. The explanation exposes the artifact. The conclusion is that the widely reported accuracies above 90\% on this dataset are an artifact of evaluation design, and that a single continuous recording cannot support generalizable eye-state decoding.
+
+\section{Phase 2: Motor Imagery}
+The same band-power approach is applied to data with many independent trials and multiple subjects. Two honest evaluations tell a two-part story (Figure~\ref{fig:gen}). Within a subject, trial-level cross-validation gives a mean balanced accuracy of 0.58 and a mean AUC of 0.61, with 8 of 10 subjects above chance and clear between-subject variability. Across subjects, leave-one-subject-out gives balanced accuracy of 0.49 and AUC of 0.48, at chance: the features are subject-specific and do not transfer to a new person without calibration.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.72\linewidth]{figures/fig2_phase2_generalization.png}
+\caption{Within-subject decoding is honestly above chance; cross-subject transfer collapses to chance. Error bars show variation across the 10 subjects.}
+\label{fig:gen}
+\end{figure}
+
+The interpretability check here points the other way. The within-subject model keys on the C3 versus C4 mu rhythm (Figure~\ref{fig:interp}, right), the lateralized sensorimotor pattern expected from contralateral desynchronization during motor imagery. The same attribution method that exposed an artifact in Phase 1 confirms known physiology in Phase 2.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\linewidth]{figures/fig3_interpretability_contrast.png}
+\caption{Explainability as a validity check. Left: Phase 1 top features are frontal, consistent with ocular artifact. Right: Phase 2 top features sit on the central motor strip (C3/C4), consistent with sensorimotor lateralization. Same method, opposite verdicts.}
+\label{fig:interp}
+\end{figure}
+
+\section{Discussion}
+Across both datasets, naive evaluation overstates performance, and leakage-aware evaluation reveals that EEG band-power features capture structure other than the intended target: session drift in Phase 1 and subject identity in Phase 2. Honest within-subject motor-imagery decoding is achievable but modest, and where it works its explanations align with sensorimotor physiology. Taken together, the two phases make a single point: model explanations are usable as evidence only when the evaluation beneath them is leakage-free. An attribution plot on a leaked model is a confident description of an illusion.
+
+\section{Limitations}
+Phase 1 is a single subject and single session recorded on consumer-grade hardware, so its results are not subject-generalizable and its high-frequency content is unreliable. Windowing produces a small effective sample (100 windows), which is why variance across folds is reported rather than a single figure. Phase 2 uses 10 of the 109 available subjects, so the within-subject estimate has a wider confidence interval than necessary.
+
+\section{Future Work}
+The natural next steps are to scale Phase 2 to all 109 subjects to tighten the within-subject estimate, to add common spatial pattern (CSP) features that are standard for motor imagery, to attempt subject-adaptive transfer to lift cross-subject decoding above chance, and to explore deep models only after these leakage-safe baselines are established.
+
+\begin{thebibliography}{9}
+\small
+\bibitem{uci} R\"osler, O. and Suendermann, D. (2013). A First Step towards Eye State Prediction Using EEG. UCI Machine Learning Repository, dataset 264: EEG Eye State.
+\bibitem{schalk} Schalk, G., McFarland, D. J., Hinterberger, T., Birbaumer, N., and Wolpaw, J. R. (2004). BCI2000: A General-Purpose Brain-Computer Interface System. \textit{IEEE Transactions on Biomedical Engineering}, 51(6), 1034--1043.
+\bibitem{physionet} Goldberger, A. L. et al. (2000). PhysioBank, PhysioToolkit, and PhysioNet. \textit{Circulation}, 101(23), e215--e220. EEG Motor Movement/Imagery Database v1.0.0.
+\bibitem{berger} Berger, H. (1929). Uber das Elektrenkephalogramm des Menschen. \textit{Archiv fur Psychiatrie und Nervenkrankheiten}, 87, 527--570.
+\end{thebibliography}
+
+\end{document}
