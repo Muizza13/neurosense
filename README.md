@@ -4,6 +4,8 @@
 
 Most introductory EEG classification projects report a high accuracy and stop there. This project asks whether that accuracy is real. Across two datasets and two paradigms, it shows that the headline numbers commonly reported on a popular EEG benchmark are an artifact of how the data is split, quantifies the honest performance under leakage-aware evaluation, and uses model explanations as a validity check rather than decoration.
 
+A full write-up is in [`reports/NeuroSense_Report.pdf`](reports/NeuroSense_Report.pdf).
+
 ## Core finding
 
 > Naive evaluation overstates EEG decoding. Under leakage-aware evaluation, EEG band-power features mostly capture session-specific and subject-specific structure that does not generalize across time or across people. Where decoding genuinely works, its explanations match known physiology. Where it only appears to work, the explanation exposes the artifact.
@@ -15,7 +17,7 @@ Most introductory EEG classification projects report a high accuracy and stop th
 | Phase 1 (eye state) | Naive random split | F1 = 0.61 | inflated, leaked |
 | Phase 1 (eye state) | Chronological holdout | F1 = 0.32 | below majority baseline |
 | Phase 1 (eye state) | Blocked TimeSeriesSplit | F1 = 0.40 ± 0.24 | at chance, unstable |
-| Phase 1 (eye state) | Leave-one-block-out | AUC = 0.28–0.37 | below chance |
+| Phase 1 (eye state) | Leave-one-block-out | AUC = 0.28 to 0.37 | below chance |
 | Phase 2 (motor imagery) | Within-subject (trial CV) | balAcc = 0.58, AUC = 0.61, 8/10 above chance | honest, modest, real |
 | Phase 2 (motor imagery) | Cross-subject (leave-one-subject-out) | balAcc = 0.49, AUC = 0.48 | chance |
 
@@ -23,9 +25,9 @@ All numbers are produced by the code in this repo. Nothing is rounded up.
 
 ---
 
-## Phase 1 - UCI EEG Eye State: the cautionary result
+## Phase 1: UCI EEG Eye State (the cautionary result)
 
-**Dataset.** A single continuous 117-second recording from one person, 14 channels at 128 Hz. The eyes-open/closed label runs in only 24 contiguous blocks (median ~3.9 s). Several channels contain single-sample electrode pops up to ~700,000 against a ~4,000 baseline, clipped before feature extraction. One-second non-overlapping windows yield 100 windows and 56 band-power features (delta, theta, alpha, beta; gamma is excluded because 30–45 Hz on consumer hardware is dominated by muscle activity, not cortex).
+**Dataset.** A single continuous 117-second recording from one person, 14 channels at 128 Hz. The eyes-open/closed label runs in only 24 contiguous blocks (median ~3.9 s). Several channels contain single-sample electrode pops up to ~700,000 against a ~4,000 baseline, clipped before feature extraction. One-second non-overlapping windows yield 100 windows and 56 band-power features (delta, theta, alpha, beta; gamma is excluded because 30 to 45 Hz on consumer hardware is dominated by muscle activity, not cortex).
 
 **The leakage trap.** Because the label runs in long blocks, neighboring samples are near-identical and share a label. A random shuffled split scatters those neighbors across train and test, so the model scores well by recognizing near-duplicates it has already seen. Holding the split constant in every other respect and changing only how it is drawn produces the entire performance gap:
 
@@ -39,9 +41,9 @@ Three independent leakage-aware protocols agree: performance sits at or below ch
 
 ---
 
-## Phase 2 — PhysioNet Motor Imagery: the honest result
+## Phase 2: PhysioNet Motor Imagery (the honest result)
 
-**Dataset.** PhysioNet EEG Motor Movement/Imagery, imagined left vs right fist. 10 subjects, 64 channels at 160 Hz, 437 trials. Features are mu (8-13 Hz) and beta (13–30 Hz) band power over a 13-channel sensorimotor strip (26 features), the same band-power approach as Phase 1 applied to data with many independent trials and multiple subjects.
+**Dataset.** PhysioNet EEG Motor Movement/Imagery, imagined left vs right fist. 10 subjects, 64 channels at 160 Hz, 437 trials. Features are mu (8 to 13 Hz) and beta (13 to 30 Hz) band power over a 13-channel sensorimotor strip (26 features), the same band-power approach as Phase 1 applied to data with many independent trials and multiple subjects.
 
 **Two honest evaluations.** Within a subject (trial-level cross-validation), decoding is honestly above chance but modest, with 8 of 10 subjects above chance and clear between-subject variability. Across subjects (leave-one-subject-out), performance collapses to chance: the features are subject-specific and do not transfer to a new person without calibration.
 
@@ -69,6 +71,8 @@ src/
   evaluate_physionet.py   # Phase 2: within-subject and cross-subject evaluation
   make_figures.py         # regenerates the three figures from data
 reports/
+  NeuroSense_Report.pdf   # 5-page write-up (start here)
+  NeuroSense_Report.tex   # its LaTeX source
   results.json            # Phase 1 numbers
   physionet_results.json  # Phase 2 numbers
   figures/                # the three figures above
