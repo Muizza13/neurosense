@@ -23,7 +23,7 @@ All numbers are produced by the code in this repo. Nothing is rounded up.
 
 ---
 
-## Phase 1 — UCI EEG Eye State: the cautionary result
+## Phase 1 - UCI EEG Eye State: the cautionary result
 
 **Dataset.** A single continuous 117-second recording from one person, 14 channels at 128 Hz. The eyes-open/closed label runs in only 24 contiguous blocks (median ~3.9 s). Several channels contain single-sample electrode pops up to ~700,000 against a ~4,000 baseline, clipped before feature extraction. One-second non-overlapping windows yield 100 windows and 56 band-power features (delta, theta, alpha, beta; gamma is excluded because 30–45 Hz on consumer hardware is dominated by muscle activity, not cortex).
 
@@ -41,7 +41,7 @@ Three independent leakage-aware protocols agree: performance sits at or below ch
 
 ## Phase 2 — PhysioNet Motor Imagery: the honest result
 
-**Dataset.** PhysioNet EEG Motor Movement/Imagery, imagined left vs right fist. 10 subjects, 64 channels at 160 Hz, 437 trials. Features are mu (8–13 Hz) and beta (13–30 Hz) band power over a 13-channel sensorimotor strip (26 features), the same band-power approach as Phase 1 applied to data with many independent trials and multiple subjects.
+**Dataset.** PhysioNet EEG Motor Movement/Imagery, imagined left vs right fist. 10 subjects, 64 channels at 160 Hz, 437 trials. Features are mu (8-13 Hz) and beta (13–30 Hz) band power over a 13-channel sensorimotor strip (26 features), the same band-power approach as Phase 1 applied to data with many independent trials and multiple subjects.
 
 **Two honest evaluations.** Within a subject (trial-level cross-validation), decoding is honestly above chance but modest, with 8 of 10 subjects above chance and clear between-subject variability. Across subjects (leave-one-subject-out), performance collapses to chance: the features are subject-specific and do not transfer to a new person without calibration.
 
