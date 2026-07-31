@@ -1,0 +1,588 @@
+{
+  "_provenance": {
+    "git_commit": "62ca90a",
+    "numpy": "2.0.2",
+    "python": "3.9.6",
+    "written_utc": "2026-07-31T05:59:52Z"
+  },
+  "chronological_holdout": {
+    "balanced_accuracy": 0.4161490683229814,
+    "macro_f1": 0.33035714285714285,
+    "majority_baseline_accuracy": 0.7666666666666666,
+    "n_test": 30,
+    "n_train": 70,
+    "roc_auc": 0.49068322981366463
+  },
+  "cross_subject": null,
+  "cross_subject_note": "Not available. The dataset contains one subject.",
+  "dataset": "UCI EEG Eye State, single continuous recording, 1 subject",
+  "grouping_unit": "contiguous label block (single subject, so no LOSO)",
+  "leave_one_block_out": {
+    "config": {
+      "n_boot": 10000,
+      "n_features": 1792,
+      "n_samples": 100,
+      "n_subjects": 19,
+      "param_grid": {},
+      "random_state": 42,
+      "tuned": false
+    },
+    "folds": [
+      {
+        "balanced_accuracy": 1.0,
+        "confusion_matrix": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 1.0,
+        "n_positive": 0,
+        "n_test": 1,
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 1.0,
+        "subject_id": "0"
+      },
+      {
+        "balanced_accuracy": 0.75,
+        "confusion_matrix": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "macro_f1": 0.42857142857142855,
+        "n_positive": 4,
+        "n_test": 4,
+        "roc_auc": null,
+        "sensitivity": 0.75,
+        "specificity": null,
+        "subject_id": "1"
+      },
+      {
+        "balanced_accuracy": 0.6666666666666666,
+        "confusion_matrix": [
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.4,
+        "n_positive": 0,
+        "n_test": 3,
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.6666666666666666,
+        "subject_id": "2"
+      },
+      {
+        "balanced_accuracy": 0.0,
+        "confusion_matrix": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "macro_f1": 0.0,
+        "n_positive": 1,
+        "n_test": 1,
+        "roc_auc": null,
+        "sensitivity": 0.0,
+        "specificity": null,
+        "subject_id": "3"
+      },
+      {
+        "balanced_accuracy": 0.0,
+        "confusion_matrix": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.0,
+        "n_positive": 0,
+        "n_test": 4,
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.0,
+        "subject_id": "4"
+      },
+      {
+        "balanced_accuracy": 0.3333333333333333,
+        "confusion_matrix": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "macro_f1": 0.25,
+        "n_positive": 3,
+        "n_test": 3,
+        "roc_auc": null,
+        "sensitivity": 0.3333333333333333,
+        "specificity": null,
+        "subject_id": "5"
+      },
+      {
+        "balanced_accuracy": 1.0,
+        "confusion_matrix": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 1.0,
+        "n_positive": 0,
+        "n_test": 1,
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 1.0,
+        "subject_id": "6"
+      },
+      {
+        "balanced_accuracy": 1.0,
+        "confusion_matrix": [
+          [
+            3,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 1.0,
+        "n_positive": 0,
+        "n_test": 3,
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 1.0,
+        "subject_id": "8"
+      },
+      {
+        "balanced_accuracy": 0.7142857142857143,
+        "confusion_matrix": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            5
+          ]
+        ],
+        "macro_f1": 0.4166666666666667,
+        "n_positive": 7,
+        "n_test": 7,
+        "roc_auc": null,
+        "sensitivity": 0.7142857142857143,
+        "specificity": null,
+        "subject_id": "9"
+      },
+      {
+        "balanced_accuracy": 0.3333333333333333,
+        "confusion_matrix": [
+          [
+            2,
+            4
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.25,
+        "n_positive": 0,
+        "n_test": 6,
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.3333333333333333,
+        "subject_id": "10"
+      },
+      {
+        "balanced_accuracy": 0.6,
+        "confusion_matrix": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "macro_f1": 0.375,
+        "n_positive": 5,
+        "n_test": 5,
+        "roc_auc": null,
+        "sensitivity": 0.6,
+        "specificity": null,
+        "subject_id": "11"
+      },
+      {
+        "balanced_accuracy": 0.75,
+        "confusion_matrix": [
+          [
+            3,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.42857142857142855,
+        "n_positive": 0,
+        "n_test": 4,
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.75,
+        "subject_id": "12"
+      },
+      {
+        "balanced_accuracy": 0.3333333333333333,
+        "confusion_matrix": [
+          [
+            0,
+            0
+          ],
+          [
+            12,
+            6
+          ]
+        ],
+        "macro_f1": 0.25,
+        "n_positive": 18,
+        "n_test": 18,
+        "roc_auc": null,
+        "sensitivity": 0.3333333333333333,
+        "specificity": null,
+        "subject_id": "13"
+      },
+      {
+        "balanced_accuracy": 0.5333333333333333,
+        "confusion_matrix": [
+          [
+            8,
+            7
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.34782608695652173,
+        "n_positive": 0,
+        "n_test": 15,
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.5333333333333333,
+        "subject_id": "14"
+      },
+      {
+        "balanced_accuracy": 0.2857142857142857,
+        "confusion_matrix": [
+          [
+            0,
+            0
+          ],
+          [
+            5,
+            2
+          ]
+        ],
+        "macro_f1": 0.2222222222222222,
+        "n_positive": 7,
+        "n_test": 7,
+        "roc_auc": null,
+        "sensitivity": 0.2857142857142857,
+        "specificity": null,
+        "subject_id": "15"
+      },
+      {
+        "balanced_accuracy": 0.5,
+        "confusion_matrix": [
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.3333333333333333,
+        "n_positive": 0,
+        "n_test": 4,
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.5,
+        "subject_id": "16"
+      },
+      {
+        "balanced_accuracy": 0.0,
+        "confusion_matrix": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.0,
+        "n_positive": 0,
+        "n_test": 1,
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.0,
+        "subject_id": "18"
+      },
+      {
+        "balanced_accuracy": 0.1111111111111111,
+        "confusion_matrix": [
+          [
+            1,
+            8
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.1,
+        "n_positive": 0,
+        "n_test": 9,
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.1111111111111111,
+        "subject_id": "20"
+      },
+      {
+        "balanced_accuracy": 0.25,
+        "confusion_matrix": [
+          [
+            1,
+            3
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.2,
+        "n_positive": 0,
+        "n_test": 4,
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.25,
+        "subject_id": "22"
+      }
+    ],
+    "pooled_descriptive_metrics": {
+      "_warning": "Descriptive only. Pools correlated epochs across subjects and treats them as independent. Not the inferential result.",
+      "balanced_accuracy": 0.44040404040404035,
+      "confusion_matrix": [
+        [
+          24,
+          31
+        ],
+        [
+          25,
+          20
+        ]
+      ],
+      "macro_f1": 0.4391025641025641,
+      "n_positive": 45,
+      "n_test": 100,
+      "roc_auc": 0.43676767676767675,
+      "sensitivity": 0.4444444444444444,
+      "specificity": 0.43636363636363634
+    },
+    "subject_bootstrap_ci": {
+      "balanced_accuracy": {
+        "hi": 0.6302871762740184,
+        "level": 0.95,
+        "lo": 0.33358395989974937,
+        "method": "percentile bootstrap, resampling subjects",
+        "n_subjects": 19,
+        "point": 0.4821637426900585
+      },
+      "macro_f1": {
+        "hi": 0.5145211988304093,
+        "level": 0.95,
+        "lo": 0.23865403999128257,
+        "method": "percentile bootstrap, resampling subjects",
+        "n_subjects": 19,
+        "point": 0.3685363771748211
+      },
+      "roc_auc": null
+    },
+    "subject_mean": {
+      "balanced_accuracy": {
+        "mean": 0.4821637426900585,
+        "median": 0.5,
+        "n_above_chance": 9,
+        "n_subjects": 19,
+        "std": 0.33720658153881083
+      },
+      "macro_f1": {
+        "mean": 0.3685363771748211,
+        "median": 0.3333333333333333,
+        "n_above_chance": 3,
+        "n_subjects": 19,
+        "std": 0.31446583448876736
+      },
+      "roc_auc": {
+        "mean": null,
+        "median": null,
+        "n_above_chance": 0,
+        "n_subjects": 0,
+        "std": null
+      }
+    }
+  },
+  "naive_random_split": {
+    "_warning": "Leaky by construction: epochs from the same subject appear in both train and test. Included to quantify inflation.",
+    "balanced_accuracy": 0.5333333333333333,
+    "confusion_matrix": [
+      [
+        33,
+        22
+      ],
+      [
+        24,
+        21
+      ]
+    ],
+    "macro_f1": 0.5332792207792207,
+    "n_positive": 45,
+    "n_test": 100,
+    "roc_auc": 0.5656565656565656,
+    "sensitivity": 0.4666666666666667,
+    "specificity": 0.6
+  },
+  "phase": "1_eye_state",
+  "primary_model": "LogisticRegression(C=1.0, balanced)",
+  "primary_model_prespecified": true,
+  "secondary_models": {
+    "RandomForest(300)": {
+      "subject_bootstrap_ci": {
+        "balanced_accuracy": {
+          "hi": 0.6482456140350877,
+          "level": 0.95,
+          "lo": 0.3281119465329992,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 19,
+          "point": 0.48734335839598997
+        },
+        "macro_f1": {
+          "hi": 0.553447966507177,
+          "level": 0.95,
+          "lo": 0.2453007518796993,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 19,
+          "point": 0.3921679197994987
+        },
+        "roc_auc": null
+      },
+      "subject_mean": {
+        "balanced_accuracy": {
+          "mean": 0.48734335839598997,
+          "median": 0.4666666666666667,
+          "n_above_chance": 8,
+          "n_subjects": 19,
+          "std": 0.3639938114266236
+        },
+        "macro_f1": {
+          "mean": 0.3921679197994987,
+          "median": 0.3181818181818182,
+          "n_above_chance": 4,
+          "n_subjects": 19,
+          "std": 0.3512197281958615
+        },
+        "roc_auc": {
+          "mean": null,
+          "median": null,
+          "n_above_chance": 0,
+          "n_subjects": 0,
+          "std": null
+        }
+      }
+    },
+    "SVM-RBF": {
+      "subject_bootstrap_ci": {
+        "balanced_accuracy": {
+          "hi": 0.685970133667502,
+          "level": 0.95,
+          "lo": 0.37593984962406013,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 19,
+          "point": 0.5341269841269841
+        },
+        "macro_f1": {
+          "hi": 0.570830292643373,
+          "level": 0.95,
+          "lo": 0.27213622291021666,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 19,
+          "point": 0.4161838419578357
+        },
+        "roc_auc": null
+      },
+      "subject_mean": {
+        "balanced_accuracy": {
+          "mean": 0.5341269841269841,
+          "median": 0.5,
+          "n_above_chance": 8,
+          "n_subjects": 19,
+          "std": 0.35296289951213683
+        },
+        "macro_f1": {
+          "mean": 0.4161838419578357,
+          "median": 0.3333333333333333,
+          "n_above_chance": 4,
+          "n_subjects": 19,
+          "std": 0.34120816993030717
+        },
+        "roc_auc": {
+          "mean": null,
+          "median": null,
+          "n_above_chance": 0,
+          "n_subjects": 0,
+          "std": null
+        }
+      }
+    }
+  }
+}
