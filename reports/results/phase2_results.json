@@ -1,0 +1,539 @@
+{
+  "_provenance": {
+    "git_commit": "62ca90a",
+    "numpy": "2.0.2",
+    "python": "3.9.6",
+    "written_utc": "2026-07-31T05:59:01Z"
+  },
+  "cross_subject": {
+    "config": {
+      "n_boot": 10000,
+      "n_features": 26,
+      "n_samples": 437,
+      "n_subjects": 10,
+      "param_grid": {},
+      "random_state": 42,
+      "tuned": false
+    },
+    "folds": [
+      {
+        "balanced_accuracy": 0.6373517786561265,
+        "confusion_matrix": [
+          [
+            22,
+            1
+          ],
+          [
+            15,
+            7
+          ]
+        ],
+        "macro_f1": 0.6,
+        "n_positive": 22,
+        "n_test": 45,
+        "roc_auc": 0.6778656126482213,
+        "sensitivity": 0.3181818181818182,
+        "specificity": 0.9565217391304348,
+        "subject_id": "0"
+      },
+      {
+        "balanced_accuracy": 0.441699604743083,
+        "confusion_matrix": [
+          [
+            13,
+            10
+          ],
+          [
+            15,
+            7
+          ]
+        ],
+        "macro_f1": 0.4343891402714932,
+        "n_positive": 22,
+        "n_test": 45,
+        "roc_auc": 0.4150197628458498,
+        "sensitivity": 0.3181818181818182,
+        "specificity": 0.5652173913043478,
+        "subject_id": "1"
+      },
+      {
+        "balanced_accuracy": 0.38438735177865613,
+        "confusion_matrix": [
+          [
+            2,
+            21
+          ],
+          [
+            7,
+            15
+          ]
+        ],
+        "macro_f1": 0.32112068965517243,
+        "n_positive": 22,
+        "n_test": 45,
+        "roc_auc": 0.37351778656126483,
+        "sensitivity": 0.6818181818181818,
+        "specificity": 0.08695652173913043,
+        "subject_id": "2"
+      },
+      {
+        "balanced_accuracy": 0.607707509881423,
+        "confusion_matrix": [
+          [
+            6,
+            17
+          ],
+          [
+            1,
+            21
+          ]
+        ],
+        "macro_f1": 0.55,
+        "n_positive": 22,
+        "n_test": 45,
+        "roc_auc": 0.7411067193675889,
+        "sensitivity": 0.9545454545454546,
+        "specificity": 0.2608695652173913,
+        "subject_id": "3"
+      },
+      {
+        "balanced_accuracy": 0.44345238095238093,
+        "confusion_matrix": [
+          [
+            16,
+            5
+          ],
+          [
+            21,
+            3
+          ]
+        ],
+        "macro_f1": 0.36961206896551724,
+        "n_positive": 24,
+        "n_test": 45,
+        "roc_auc": 0.5079365079365079,
+        "sensitivity": 0.125,
+        "specificity": 0.7619047619047619,
+        "subject_id": "4"
+      },
+      {
+        "balanced_accuracy": 0.3869047619047619,
+        "confusion_matrix": [
+          [
+            6,
+            18
+          ],
+          [
+            10,
+            11
+          ]
+        ],
+        "macro_f1": 0.37,
+        "n_positive": 21,
+        "n_test": 45,
+        "roc_auc": 0.3412698412698412,
+        "sensitivity": 0.5238095238095238,
+        "specificity": 0.25,
+        "subject_id": "5"
+      },
+      {
+        "balanced_accuracy": 0.5217391304347826,
+        "confusion_matrix": [
+          [
+            1,
+            22
+          ],
+          [
+            0,
+            22
+          ]
+        ],
+        "macro_f1": 0.375,
+        "n_positive": 22,
+        "n_test": 45,
+        "roc_auc": 0.6818181818181818,
+        "sensitivity": 1.0,
+        "specificity": 0.043478260869565216,
+        "subject_id": "6"
+      },
+      {
+        "balanced_accuracy": 0.5464426877470356,
+        "confusion_matrix": [
+          [
+            3,
+            19
+          ],
+          [
+            1,
+            22
+          ]
+        ],
+        "macro_f1": 0.4591346153846154,
+        "n_positive": 23,
+        "n_test": 45,
+        "roc_auc": 0.6106719367588933,
+        "sensitivity": 0.9565217391304348,
+        "specificity": 0.13636363636363635,
+        "subject_id": "7"
+      },
+      {
+        "balanced_accuracy": 0.3647058823529412,
+        "confusion_matrix": [
+          [
+            9,
+            8
+          ],
+          [
+            12,
+            3
+          ]
+        ],
+        "macro_f1": 0.3522267206477733,
+        "n_positive": 15,
+        "n_test": 32,
+        "roc_auc": 0.4117647058823529,
+        "sensitivity": 0.2,
+        "specificity": 0.5294117647058824,
+        "subject_id": "8"
+      },
+      {
+        "balanced_accuracy": 0.48214285714285715,
+        "confusion_matrix": [
+          [
+            14,
+            10
+          ],
+          [
+            13,
+            8
+          ]
+        ],
+        "macro_f1": 0.4796380090497738,
+        "n_positive": 21,
+        "n_test": 45,
+        "roc_auc": 0.4384920634920635,
+        "sensitivity": 0.38095238095238093,
+        "specificity": 0.5833333333333334,
+        "subject_id": "9"
+      }
+    ],
+    "pooled_descriptive_metrics": {
+      "_warning": "Descriptive only. Pools correlated epochs across subjects and treats them as independent. Not the inferential result.",
+      "balanced_accuracy": 0.48431541008339973,
+      "confusion_matrix": [
+        [
+          92,
+          131
+        ],
+        [
+          95,
+          119
+        ]
+      ],
+      "macro_f1": 0.48085576114381834,
+      "n_positive": 214,
+      "n_test": 437,
+      "roc_auc": 0.482565692971795,
+      "sensitivity": 0.5560747663551402,
+      "specificity": 0.4125560538116592
+    },
+    "subject_bootstrap_ci": {
+      "balanced_accuracy": {
+        "hi": 0.5390282616999368,
+        "level": 0.95,
+        "lo": 0.42874415971922364,
+        "method": "percentile bootstrap, resampling subjects",
+        "n_subjects": 10,
+        "point": 0.4816533945594048
+      },
+      "macro_f1": {
+        "hi": 0.4866766128891526,
+        "level": 0.95,
+        "lo": 0.38029227504906754,
+        "method": "percentile bootstrap, resampling subjects",
+        "n_subjects": 10,
+        "point": 0.43111212439743457
+      },
+      "roc_auc": {
+        "hi": 0.6076480229773069,
+        "level": 0.95,
+        "lo": 0.4392550366655226,
+        "method": "percentile bootstrap, resampling subjects",
+        "n_subjects": 10,
+        "point": 0.5199463118580765
+      }
+    },
+    "subject_mean": {
+      "balanced_accuracy": {
+        "mean": 0.4816533945594048,
+        "median": 0.46279761904761907,
+        "n_above_chance": 4,
+        "n_subjects": 10,
+        "std": 0.09493080225249075
+      },
+      "macro_f1": {
+        "mean": 0.43111212439743457,
+        "median": 0.4046945701357466,
+        "n_above_chance": 2,
+        "n_subjects": 10,
+        "std": 0.09116209221832057
+      },
+      "roc_auc": {
+        "mean": 0.5199463118580765,
+        "median": 0.4732142857142857,
+        "n_above_chance": 5,
+        "n_subjects": 10,
+        "std": 0.1457328367628483
+      }
+    }
+  },
+  "dataset": "PhysioNet EEG Motor Movement/Imagery, 10 subjects, left vs right fist imagery",
+  "naive_random_split": {
+    "_warning": "Leaky by construction: epochs from the same subject appear in both train and test. Included to quantify inflation.",
+    "balanced_accuracy": 0.5396148526884874,
+    "confusion_matrix": [
+      [
+        125,
+        98
+      ],
+      [
+        103,
+        111
+      ]
+    ],
+    "macro_f1": 0.5395732100454467,
+    "n_positive": 214,
+    "n_test": 437,
+    "roc_auc": 0.5252713633125182,
+    "sensitivity": 0.5186915887850467,
+    "specificity": 0.5605381165919282
+  },
+  "phase": "2_motor_imagery",
+  "primary_model": "LogisticRegression(C=1.0, balanced)",
+  "primary_model_prespecified": true,
+  "secondary_models": {
+    "LogisticRegression(C=0.5)": {
+      "subject_bootstrap_ci": {
+        "balanced_accuracy": {
+          "hi": 0.5470249270656878,
+          "level": 0.95,
+          "lo": 0.4365798547679941,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 10,
+          "point": 0.48862003299343454
+        },
+        "macro_f1": {
+          "hi": 0.512700627683732,
+          "level": 0.95,
+          "lo": 0.3914162941198596,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 10,
+          "point": 0.44861403296897545
+        },
+        "roc_auc": {
+          "hi": 0.6034817311311875,
+          "level": 0.95,
+          "lo": 0.4399631833958879,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 10,
+          "point": 0.5185552547764825
+        }
+      },
+      "subject_mean": {
+        "balanced_accuracy": {
+          "mean": 0.48862003299343454,
+          "median": 0.4642857142857143,
+          "n_above_chance": 4,
+          "n_subjects": 10,
+          "std": 0.0955851824530664
+        },
+        "macro_f1": {
+          "mean": 0.44861403296897545,
+          "median": 0.41524265208475736,
+          "n_above_chance": 3,
+          "n_subjects": 10,
+          "std": 0.10489704216411788
+        },
+        "roc_auc": {
+          "mean": 0.5185552547764825,
+          "median": 0.4751984126984127,
+          "n_above_chance": 5,
+          "n_subjects": 10,
+          "std": 0.14104840848295447
+        }
+      }
+    },
+    "RandomForest(300)": {
+      "subject_bootstrap_ci": {
+        "balanced_accuracy": {
+          "hi": 0.519036699314113,
+          "level": 0.95,
+          "lo": 0.4562066414510469,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 10,
+          "point": 0.48721844864427977
+        },
+        "macro_f1": {
+          "hi": 0.5036491831488997,
+          "level": 0.95,
+          "lo": 0.41194875088945493,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 10,
+          "point": 0.4575842466336463
+        },
+        "roc_auc": {
+          "hi": 0.5215257583599975,
+          "level": 0.95,
+          "lo": 0.41582677939423457,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 10,
+          "point": 0.46798030542915453
+        }
+      },
+      "subject_mean": {
+        "balanced_accuracy": {
+          "mean": 0.48721844864427977,
+          "median": 0.47823734236777715,
+          "n_above_chance": 4,
+          "n_subjects": 10,
+          "std": 0.05375972475390114
+        },
+        "macro_f1": {
+          "mean": 0.4575842466336463,
+          "median": 0.45381529652929953,
+          "n_above_chance": 3,
+          "n_subjects": 10,
+          "std": 0.07766327874084762
+        },
+        "roc_auc": {
+          "mean": 0.46798030542915453,
+          "median": 0.43168093983311373,
+          "n_above_chance": 3,
+          "n_subjects": 10,
+          "std": 0.0905334360179028
+        }
+      }
+    }
+  },
+  "within_subject": {
+    "_limitation": "Stratified trial folds, not leave-one-run-out. Run identity is absent from the committed feature file.",
+    "folds": [
+      {
+        "balanced_accuracy": 0.6215415019762847,
+        "macro_f1": 0.6214745175655616,
+        "n_test": 45,
+        "roc_auc": 0.6798418972332017,
+        "subject_id": "0"
+      },
+      {
+        "balanced_accuracy": 0.708498023715415,
+        "macro_f1": 0.7058823529411764,
+        "n_test": 45,
+        "roc_auc": 0.7569169960474309,
+        "subject_id": "1"
+      },
+      {
+        "balanced_accuracy": 0.5553359683794465,
+        "macro_f1": 0.5553359683794465,
+        "n_test": 45,
+        "roc_auc": 0.5948616600790514,
+        "subject_id": "2"
+      },
+      {
+        "balanced_accuracy": 0.5770750988142292,
+        "macro_f1": 0.5769421078673924,
+        "n_test": 45,
+        "roc_auc": 0.6146245059288538,
+        "subject_id": "3"
+      },
+      {
+        "balanced_accuracy": 0.46726190476190477,
+        "macro_f1": 0.46640316205533594,
+        "n_test": 45,
+        "roc_auc": 0.501984126984127,
+        "subject_id": "4"
+      },
+      {
+        "balanced_accuracy": 0.5267857142857143,
+        "macro_f1": 0.5248868778280543,
+        "n_test": 45,
+        "roc_auc": 0.5595238095238095,
+        "subject_id": "5"
+      },
+      {
+        "balanced_accuracy": 0.9110671936758893,
+        "macro_f1": 0.9110671936758893,
+        "n_test": 45,
+        "roc_auc": 0.958498023715415,
+        "subject_id": "6"
+      },
+      {
+        "balanced_accuracy": 0.5543478260869565,
+        "macro_f1": 0.5535714285714286,
+        "n_test": 45,
+        "roc_auc": 0.5652173913043479,
+        "subject_id": "7"
+      },
+      {
+        "balanced_accuracy": 0.3176470588235294,
+        "macro_f1": 0.30980392156862746,
+        "n_test": 32,
+        "roc_auc": 0.3686274509803922,
+        "subject_id": "8"
+      },
+      {
+        "balanced_accuracy": 0.5595238095238095,
+        "macro_f1": 0.5553359683794465,
+        "n_test": 45,
+        "roc_auc": 0.6388888888888888,
+        "subject_id": "9"
+      }
+    ],
+    "subject_bootstrap_ci": {
+      "balanced_accuracy": {
+        "hi": 0.674675883446264,
+        "level": 0.95,
+        "lo": 0.4931288667640969,
+        "method": "percentile bootstrap, resampling subjects",
+        "n_subjects": 10,
+        "point": 0.5799084100043179
+      },
+      "macro_f1": {
+        "hi": 0.6737709106463209,
+        "level": 0.95,
+        "lo": 0.4899983261087574,
+        "method": "percentile bootstrap, resampling subjects",
+        "n_subjects": 10,
+        "point": 0.5780703498832359
+      },
+      "roc_auc": {
+        "hi": 0.7214490781490464,
+        "level": 0.95,
+        "lo": 0.5362154620741577,
+        "method": "percentile bootstrap, resampling subjects",
+        "n_subjects": 10,
+        "point": 0.6238984750685519
+      }
+    },
+    "subject_mean": {
+      "balanced_accuracy": {
+        "mean": 0.5799084100043179,
+        "n_above_chance": 8,
+        "n_subjects": 10,
+        "std": 0.1541671975839209
+      },
+      "macro_f1": {
+        "mean": 0.5780703498832359,
+        "n_above_chance": 8,
+        "n_subjects": 10,
+        "std": 0.15563733529939547
+      },
+      "roc_auc": {
+        "mean": 0.6238984750685519,
+        "n_above_chance": 9,
+        "n_subjects": 10,
+        "std": 0.1568963841237748
+      }
+    }
+  }
+}
