@@ -31,7 +31,14 @@ def bootstrap_ci(values, n_boot=10000, alpha=0.05, random_state=42):
         "hi": float(hi),
         "level": float(1 - alpha),
         "n_subjects": int(n),
-        "method": "percentile bootstrap, resampling subjects",
+        "n_boot": int(n_boot),
+        "random_state": int(random_state) if random_state is not None else None,
+        "method": (
+            "percentile bootstrap of the mean; "
+            "numpy.random.Generator.choice with replacement; "
+            "numpy.percentile linear interpolation; "
+            "resamples the scores passed in, not trials"
+        ),
     }
 
 
