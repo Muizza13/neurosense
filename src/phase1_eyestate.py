@@ -349,6 +349,7 @@ def main():
     n_both = sum(1 for c in class_summary if c["is_both_classes"])
     print(f"  {n_both}/{len(class_summary)} folds contain both classes")
 
+    phase1_feature_names = [f"{ch}_{b}" for ch in channels for b in STANDARD_BANDS]
     merged_lobo = evaluate_loso(
         X, y, super_blocks, factory,
         random_state=RANDOM_STATE,
@@ -357,6 +358,8 @@ def main():
                          "super_block_id": super_blocks},
         include_baselines=True,
         persist_predictions=True,
+        capture_coefficients=True,
+        feature_names=phase1_feature_names,
     )
     _log_lobo_or_expanding("merged-LOBO", merged_lobo)
 

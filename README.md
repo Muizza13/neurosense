@@ -35,7 +35,9 @@ All numbers are produced by the code in this repo and stored in `reports/results
 | Phase 2 (motor imagery) | Within-subject leave-one-run-out (30 folds)                  | balAcc = 0.588 [0.529, 0.648], AUC = 0.657 [0.598, 0.718]; tests transfer across runs of same session, NOT across sessions | modest, added in 2026-09 audit       |
 | Phase 2 (motor imagery) | Cross-subject (leave-one-subject-out)                        | balAcc = 0.474 [0.432, 0.516], AUC = 0.511 [0.447, 0.583]                                       | chance                               |
 
-The 2026-09 audit added (a) temporal-gap chronological holdout and expanding-window on Phase 1, (b) leave-one-merged-block-out with a DummyClassifier(prior) diagnostic that replaces single-class native LOBO as the primary group protocol, (c) leave-one-run-out within subject on Phase 2, (d) persisted per-fold labels, predictions, and probabilities in Phase 2 JSON, and (e) per-split baselines throughout. The primary model is the same as before (LogisticRegression, C = 1.0, balanced). See [`REFACTOR_NOTES.md`](REFACTOR_NOTES.md) and [`reports/AUDIT_LOG.md`](reports/AUDIT_LOG.md) for the full change list.
+The 2026-09 audit added (a) temporal-gap chronological holdout and expanding-window on Phase 1, (b) leave-one-merged-block-out with a DummyClassifier(prior) diagnostic that replaces single-class native LOBO as the primary group protocol, (c) leave-one-run-out within subject on Phase 2, (d) persisted per-fold labels, predictions, and probabilities in Phase 2 JSON, (e) per-split baselines throughout, (f) a hardened raw-data reproduction path with a manifest of SHA-256 source-file checksums, (g) signed per-fold coefficients captured and consumed by the figure code so figures do not refit models, and (h) a CSP + LDA extension for Phase 2 as a separately labelled comparison to the audited band-power primary. The primary model is the same as before (LogisticRegression, C = 1.0, balanced). See [`REFACTOR_NOTES.md`](REFACTOR_NOTES.md) and [`reports/AUDIT_LOG.md`](reports/AUDIT_LOG.md) for the full change list.
+
+**How to read the four rounds.** Round 1 fixed preprocessing leakage and Phase 1 baselines. Round 2 corrected the leave-one-block-out analysis and rebuilt Phase 2 reporting. Round 3 corrected interpretation language, unified the attribution method across both figures, and hardened raw-data reproduction. Round 4 removed duplicated evaluation logic (figures and tables now read the same JSON, no refit), added the CSP+LDA extension, added the CI workflow, and expanded test coverage. Numbers reported here are the round-3/round-4 numbers; historical pre-audit numbers are preserved verbatim under `reports/results/archive/pre-audit-<commit>/` and `reports/figures/archive/pre-audit-<commit>/`.
 
 "Above 0.5" is reported as a descriptive count, not a significance claim. Standard deviation across subjects is spread; the bootstrap CI is uncertainty of the mean, computed by resampling subjects or blocks (never trials).
 
@@ -126,6 +128,31 @@ Same method, two very different situations. On the right the ranking is stable a
 
 ---
 
+## CSP + LDA extension (round 4, Task 9)
+
+Round 4 of the audit adds Common Spatial Patterns with Linear Discriminant Analysis as a separately labelled **extension** to Phase 2. It is not a replacement for the band-power result above; both live side by side and are labelled accordingly.
+
+- Same 10 subjects, same eligible trials (imagery runs R04, R08, R12), same evaluation splits, so the numbers are directly comparable to the audited band-power primary.
+- Signal filtering: 4th-order Butterworth zero-phase bandpass 8-30 Hz, applied per epoch before CSP. Channel set is the same 13-electrode sensorimotor strip. Epoch window 0.5-3.5 s.
+- 6 CSP components with log-variance features, LDA classifier.
+- **CSP and every learned transformation are fitted inside training folds only.** The extension never fits CSP on the whole dataset. Same rule as everywhere else in the repo.
+- Written to `reports/results/phase2_csp_lda_results.json`. The primary `phase2_results.json` is unchanged.
+
+| Protocol | Model | balAcc | AUC |
+|---|---|---|---|
+| Within-subject shuffled trial CV | LogReg band-power (primary) | 0.607 [0.522, 0.700] | 0.632 [0.534, 0.735] |
+| Within-subject shuffled trial CV | CSP+LDA (extension) | 0.655 [0.543, 0.773] | 0.693 [0.569, 0.819] |
+| Within-subject LORO (30 folds) | LogReg band-power (primary) | 0.588 [0.529, 0.648] | 0.657 [0.598, 0.718] |
+| Within-subject LORO (30 folds) | CSP+LDA (extension) | 0.640 [0.577, 0.705] | 0.758 [0.675, 0.836] |
+| Cross-subject LOSO | LogReg band-power (primary) | 0.474 [0.432, 0.516] | 0.511 [0.447, 0.583] |
+| Cross-subject LOSO | CSP+LDA (extension) | 0.541 [0.478, 0.618] | 0.654 [0.556, 0.767] |
+
+Reading the CSP row: within-subject the extension is meaningfully stronger than the band-power primary (about 5 balAcc points, 6-10 AUC points), as expected — CSP tuned inside each training fold is the standard motor-imagery baseline and the band-power features do not exploit spatial covariance. Cross-subject the point estimate lifts from 0.474 to 0.541 on balAcc and to 0.654 on AUC, but the 95% CI on balanced accuracy still just touches 0.5 (0.478 lower bound, 3/10 subjects above 0.5) and the AUC point estimate rests on a large per-subject spread (9/10 above 0.5 but AUC CI is 0.556-0.767). **The CSP extension lifts cross-subject performance above the band-power number without clearing chance under a strict reading of the balanced-accuracy CI.** The AUC pattern is consistent with the model ranking trials sensibly but not making calibrated 0/1 predictions across subjects. Larger subject counts or subject-adaptive calibration would be needed to say more.
+
+This does not change the overall conclusion (band-power alone does not transfer across people on this dataset), but it does update the intended framing: cross-subject decoding on this dataset is not settled by the band-power result, and reporting only band-power would understate what a standard motor-imagery baseline achieves.
+
+---
+
 ## Two corrections to earlier versions of this README
 
 **1. Cross-subject AUC is chance, not below chance.** An earlier version reported 0.48 and called it below chance. That figure came from pooling every held-out subject's predicted probabilities into one array and scoring it once. Subjects' decision scores sit on different scales, so pooling manufactures apparent below-chance performance. The subject-level mean is 0.511 [0.447, 0.583]. The conclusion is unchanged, chance either way, but "below chance" was a reporting artifact rather than a finding. The pooled figures remain in `reports/results/phase2_results.json` under `pooled_descriptive_metrics`, tagged as descriptive.
@@ -157,41 +184,52 @@ Across both datasets, naive evaluation overstates performance on Phase 1 (dramat
 ```
 src/
   core/
-    features.py           # windowing, artifact clipping, band power; sfreq is always explicit
-    evaluation.py         # LOSO / expanding-window / merged-block grouping / per-split baselines
-    statistics.py         # subject-level bootstrap, grouped permutation test
-    temporal.py           # feature autocorrelation, gap chooser, walk-forward split generators
-    results.py            # deterministic JSON serialisation
-  phase1_eyestate.py      # Phase 1: naive / chronological / expanding-window / merged-LOBO + dummy
-  phase2_motor_imagery.py # Phase 2: within-subject shuffled + LORO / cross-subject LOSO
-  physionet_features.py   # raw EDF -> feature cache + manifest (validated, no silent skips)
-  make_figures.py         # regenerates the three figures from data
+    features.py             # windowing, artifact clipping, band power; sfreq is always explicit
+    evaluation.py           # LOSO / expanding-window / merged-block / within-subject CV,
+                            #   coefficient capture, per-split baselines, dummy diagnostic
+    statistics.py           # subject-level bootstrap, grouped permutation test
+    temporal.py             # feature autocorrelation, gap chooser, walk-forward split generators
+    results.py              # deterministic JSON serialisation
+  phase1_eyestate.py        # Phase 1: naive / chronological / expanding-window / merged-LOBO + dummy
+  phase2_motor_imagery.py   # Phase 2 primary: within-subject shuffled + LORO / cross-subject LOSO
+  phase2_csp_lda.py         # Phase 2 extension (round 4, Task 9): CSP + LDA on the same splits
+  physionet_features.py     # raw EDF -> feature cache + manifest (validated, no silent skips)
+  make_figures.py           # rebuilds three figures from saved JSON only (no model refit)
+  make_tables.py            # rebuilds phase1/phase2 markdown tables from the same JSONs
 tests/
-  test_features.py        # feature extraction, windowing, clipping
-  test_evaluation.py      # per-subject reporting, merged_block_groups, persist_predictions, dummy
-  test_temporal.py        # autocorrelation diagnostic and expanding-window splits
-  test_no_leakage.py      # the project thesis as executable regression tests
+  test_features.py          # feature extraction, windowing, clipping
+  test_evaluation.py        # per-subject reporting, merged_block_groups, persist_predictions, dummy
+  test_temporal.py          # autocorrelation diagnostic and expanding-window splits
+  test_no_leakage.py        # the project thesis as executable regression tests
+  test_physionet_features.py# manifest schema, layout validation, cache invariants
+  test_round4_extras.py     # LORO run separation, dummy diagnostic, deterministic bootstrap,
+                            #   coefficient capture, result schema, figure smoke test
+.github/workflows/
+  tests.yml                 # CI: pytest + rebuild figures/tables from JSON on push and PR
 reports/
-  AUDIT_LOG.md            # 2026-09 audit: pre-audit commit, environment, changes (rounds 1-3)
-  NeuroSense_Report.pdf   # write-up (start here)
-  NeuroSense_Report.tex   # its LaTeX source
+  AUDIT_LOG.md              # 2026-09 audit: pre-audit commit, environment, changes (rounds 1-4)
+  NeuroSense_Report.pdf     # write-up (start here)
+  NeuroSense_Report.tex     # its LaTeX source
   results/
-    phase1_results.json   # current, five Phase 1 protocols with per-split baselines + dummy prior
-    phase2_results.json   # current, LOSO + LORO + shuffled CV, per-fold preds persisted
-    archive/pre-audit-<commit>/  # verbatim pre-audit JSONs, never rewritten
+    phase1_results.json                 # 5 Phase 1 protocols, per-split baselines, dummy prior,
+                                        #   per-fold merged-LOBO coefficients
+    phase2_results.json                 # LOSO + LORO + shuffled CV, per-fold preds, per-subject coefs
+    phase2_csp_lda_results.json         # CSP+LDA extension (round 4), separate from the primary
+    tables/                             # markdown tables regenerated by make_tables.py
+    archive/pre-audit-<commit>/         # verbatim pre-audit JSONs, never rewritten
   figures/
     fig1_phase1_leakage.png
     fig2_phase2_generalization.png
     fig3_interpretability_contrast.png
-    archive/pre-audit-<commit>/  # verbatim pre-audit figures
+    archive/pre-audit-<commit>/         # verbatim pre-audit figures
 scripts/
-  download_data.sh        # fetches datasets, hard-fails on missing/truncated files
+  download_data.sh          # fetches datasets, hard-fails on missing/truncated files
 data/processed/
-  physionet_features.npz            # committed feature cache (see licensing note above)
-  physionet_features_manifest.json  # SHA-256 of source EDFs, channel order, preprocessing
-models/                              # created automatically by the phase scripts
-PREREGISTRATION.md        # analysis plan for Phase 3, committed before results
-REFACTOR_NOTES.md         # shared-core rebuild + 2026-09 audit notes (rounds 1-3)
+  physionet_features.npz              # committed band-power cache (see licensing note above)
+  physionet_features_manifest.json    # SHA-256 of source EDFs, channel order, preprocessing
+models/                                # created automatically by the phase scripts
+PREREGISTRATION.md          # analysis plan for Phase 3, committed before results
+REFACTOR_NOTES.md           # shared-core rebuild + 2026-09 audit notes (rounds 1-4)
 ```
 
 ## Reproduce
@@ -204,8 +242,9 @@ Supported Python: **3.9** (audit runs used 3.9.6). The `numpy==2.0.2` pin means 
 pip install -r requirements.txt       # MNE is only needed for path B
 python src/phase1_eyestate.py          # reads data/raw/EEG Eye State.arff
 python src/phase2_motor_imagery.py     # reads data/processed/physionet_features.npz
-python src/make_figures.py
-python -m pytest tests/ -q             # 49 tests
+python src/make_figures.py             # figures from JSON only, no model fit
+python src/make_tables.py              # markdown tables from the same JSONs
+python -m pytest tests/ -q             # 73 tests
 ```
 
 `data/processed/physionet_features.npz` and its manifest `data/processed/physionet_features_manifest.json` are committed. The manifest records the SHA-256 of every source EDF the cache was built from, so a Path-B rerun can verify byte-for-byte agreement.
@@ -218,7 +257,9 @@ bash scripts/download_data.sh          # ~60 MB of PhysioNet EDFs, refuses to sk
 python -m src.physionet_features       # rebuild data/processed/physionet_features.npz + manifest
 python src/phase1_eyestate.py
 python src/phase2_motor_imagery.py
+python -m src.phase2_csp_lda           # CSP+LDA extension (round 4, needs MNE + raw EDFs)
 python src/make_figures.py
+python src/make_tables.py              # picks up the CSP results automatically
 python -m pytest tests/ -q
 ```
 

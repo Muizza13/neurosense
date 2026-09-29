@@ -259,6 +259,94 @@ session. The shuffled trial CV is retained and labelled as such
   features and integer labels, so it does not constitute
   redistribution of the underlying recordings.
 
+### Round 4 (Tasks 8-11)
+
+**Task 8 (remove duplicated evaluation logic):**
+
+- Added `evaluate_within_subject_shuffled_cv` and
+  `_extract_fold_coefficients` to `src/core/evaluation.py`. Both are
+  small; the goal is to share what is genuinely shared without
+  building a framework. Dataset-specific loading (ARFF for Phase 1,
+  EDF+MNE for Phase 2, `src/physionet_features.py`) stays in the phase
+  scripts and does not leak into `src/core/`.
+- `evaluate_loso` and `evaluate_within_subject_shuffled_cv` now accept
+  `capture_coefficients=True`. Signed per-fold coefficients (Phase 1
+  merged-LOBO) and per-subject mean coefficients (Phase 2 within-subject
+  shuffled CV) are persisted to the phase-results JSON with feature
+  names in the fitted-vector order.
+- `src/make_figures.py` no longer fits any model. All three figures are
+  built from `reports/results/phase1_results.json` and
+  `phase2_results.json`. Round 3's Figure 3 had refit both phases
+  independently; round 4 removes that duplication.
+- Added `src/make_tables.py`, which regenerates the phase 1 / phase 2
+  markdown tables from the same JSONs. The README and the LaTeX report
+  can cite the same numbers without independent rounding.
+- Feature spaces are deliberately not unified across the two phases
+  (14 EEG channels x 4 bands for Phase 1, 13 sensorimotor channels x 2
+  bands for Phase 2). The two datasets are not comparable to each
+  other; forcing a common feature space would imply a controlled
+  comparison the audit is careful not to claim.
+
+**Task 9 (CSP + LDA extension):**
+
+- `src/phase2_csp_lda.py` implements CSP (6 log-variance components) +
+  LDA on the same 10 subjects, the same imagery runs (R04, R08, R12),
+  and the same evaluation splits (within-subject shuffled trial CV,
+  leave-one-run-out, leave-one-subject-out) as the audited band-power
+  primary. CSP and LDA are fitted inside training folds only. No
+  learned transformation crosses a fold boundary.
+- Signal filtering is documented in-source and in the JSON: 4th-order
+  Butterworth zero-phase bandpass 8-30 Hz per epoch, 13-channel motor
+  strip, epoch window 0.5-3.5 s. Sampling rate is read from and
+  asserted against `EXPECTED_FS = 160.0` on every EDF via the shared
+  physionet loader.
+- Results land in `reports/results/phase2_csp_lda_results.json`. The
+  primary `phase2_results.json` is not touched. The README labels the
+  extension as such and does not fold its numbers into the audited
+  band-power tables.
+- Within-subject the CSP extension is meaningfully stronger than the
+  band-power primary (about 5 balAcc points, 6-10 AUC points).
+  Cross-subject the point estimate rises to 0.541 balAcc (from 0.474)
+  and 0.654 AUC (from 0.511), but the balanced-accuracy CI still just
+  brackets 0.5 (0.478 lower bound); readable as "CSP lifts the
+  cross-subject baseline without cleanly clearing chance on 10
+  subjects", not as "cross-subject decoding is solved".
+- No EEGNet or transformers. Not in the audit's scope.
+
+**Task 10 (tests and CI):**
+
+- Added `tests/test_round4_extras.py` (14 tests) covering the items
+  Task 10 lists explicitly: LORO run separation, feature-free
+  pooled-AUC diagnostic (dummy prior on single-class folds),
+  per-protocol dummy baselines on every fold, deterministic bootstrap
+  output for a fixed seed, auto-creation of missing output
+  directories, result-schema invariants on the phase 1 / phase 2
+  JSONs, coefficient capture behaviour, and a small end-to-end smoke
+  test on synthetic subject-fingerprint data.
+- Every fixture is synthetic (`_synthetic_multi_run`,
+  `subject_fingerprint_data`) and clearly separated from the real
+  research artefacts. The schema tests read the committed JSONs
+  read-only and skip when they are absent, so tests still pass in a
+  fresh checkout without the raw-data cache.
+- CI workflow at `.github/workflows/tests.yml` runs on push and PR.
+  It installs the pinned dependencies (without the MNE line, which
+  is only required for the raw-EDF Path B), runs `pytest tests/`,
+  and rebuilds the three figures and two tables from the committed
+  JSONs to guard against `make_figures.py` or `make_tables.py`
+  quietly refitting a model. CI never downloads the raw dataset.
+- Test count grew from 58 to 73 across rounds 3 and 4 (49 pre-round-3
+  + 9 manifest tests in round 3 + 15 new tests in round 4).
+
+**Task 11 (research artifacts):**
+
+- README gains the CSP+LDA extension section, updates the repo
+  structure block, and adds a one-paragraph "how to read the four
+  rounds" summary linking historical, corrected, and extension
+  results.
+- LaTeX report gains a Phase 2 CSP+LDA subsection and a Reproducibility
+  section update.
+- PDF rebuilt via `tectonic -X compile`.
+
 ### What the audit did not change
 
 - The primary model, feature bands, channel sets, window lengths, or the

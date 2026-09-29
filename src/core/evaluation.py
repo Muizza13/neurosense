@@ -126,6 +126,35 @@ def merged_block_groups(block_ids, blocks_per_superblock):
     return np.array([to_super[int(b)] for b in block_ids], dtype=int)
 
 
+def _extract_fold_coefficients(fitted_estimator):
+    """Return the linear coefficient vector of a fitted estimator, or None.
+
+    Round 4 (Task 8) helper: called after every fit inside evaluate_loso so
+    downstream figure/table code can consume the saved per-fold coefficients
+    from JSON instead of independently retraining models. Signs are
+    preserved (not just magnitudes).
+
+    Works for a bare linear estimator (``LogisticRegression`` etc.) or for a
+    scikit-learn Pipeline whose final step is a linear estimator. Returns
+    ``None`` for anything else (RandomForest, SVM-RBF, DummyClassifier).
+    """
+    if fitted_estimator is None:
+        return None
+    if hasattr(fitted_estimator, "named_steps"):
+        final = list(fitted_estimator.named_steps.values())[-1]
+    else:
+        final = fitted_estimator
+    coef = getattr(final, "coef_", None)
+    if coef is None:
+        return None
+    coef = np.asarray(coef)
+    if coef.ndim == 2 and coef.shape[0] == 1:
+        return [float(v) for v in coef[0].tolist()]
+    if coef.ndim == 1:
+        return [float(v) for v in coef.tolist()]
+    return None
+
+
 def evaluate_loso(
     X,
     y,
@@ -142,6 +171,8 @@ def evaluate_loso(
     include_baselines=False,
     persist_predictions=False,
     dummy_strategy=None,
+    capture_coefficients=False,
+    feature_names=None,
 ):
     """Leave-one-subject-out evaluation with subject-level inference.
 
@@ -178,6 +209,14 @@ def evaluate_loso(
         model with a ``DummyClassifier(strategy=...)`` at each fold. Used to
         expose whether pooled-metric anomalies (e.g. below-chance pooled AUC
         on single-class folds) are artefacts of the split rather than signal.
+    capture_coefficients : bool
+        If True and the fitted estimator (or its Pipeline final step) is
+        linear, attach ``coefficients`` (signed, in the fitted feature-order)
+        to every fold row. Round 4 (Task 8): the figure code reads these
+        instead of retraining.
+    feature_names : sequence of str, optional
+        Names for the coefficient vector, stored in ``config`` if provided.
+        Order must match the coefficients returned by the fitted estimator.
 
     Returns
     -------
@@ -267,6 +306,10 @@ def evaluate_loso(
             row["y_true"] = [int(v) for v in y[test_idx].tolist()]
             row["y_pred"] = [int(v) for v in np.asarray(y_pred).tolist()]
             row["y_proba"] = [float(v) for v in np.asarray(proba).tolist()]
+        if capture_coefficients and dummy_strategy is None:
+            coef = _extract_fold_coefficients(model)
+            if coef is not None:
+                row["coefficients"] = coef
         folds.append(row)
 
         pooled_true.append(y[test_idx])
@@ -315,6 +358,13 @@ def evaluate_loso(
             "n_boot": n_boot,
             "dummy_strategy": dummy_strategy,
             "predictions_persisted": bool(persist_predictions),
+            "coefficients_captured": bool(
+                capture_coefficients and dummy_strategy is None
+            ),
+            "feature_names": (
+                [str(n) for n in feature_names] if feature_names is not None
+                else None
+            ),
         },
     }
 
@@ -360,6 +410,96 @@ def evaluate_naive_split(X, y, model_factory, n_splits=5, random_state=42,
         # using the same y as train and test for the majority calculation.
         out["baselines"] = per_split_baselines(y, y, random_state=random_state)
     return out
+
+
+def evaluate_within_subject_shuffled_cv(
+    X,
+    y,
+    groups,
+    model_factory,
+    *,
+    n_splits=5,
+    random_state=42,
+    capture_coefficients=False,
+    feature_names=None,
+):
+    """Per-subject stratified K-fold CV with optional coefficient capture.
+
+    One row per subject, containing the subject's per-fold-averaged
+    predictions (pooled by ``cross_val_predict``) plus, optionally, the
+    mean-across-folds signed coefficient vector. Round 4 (Task 8): callers
+    can persist ``coefficients`` in the results JSON and never refit.
+
+    Trials from the same recording run appear in both train and test, so the
+    per-subject scores are mildly optimistic relative to leave-one-run-out.
+    Kept for direct comparison to published within-subject numbers.
+    """
+    from sklearn.model_selection import StratifiedKFold, cross_val_predict
+    from sklearn.metrics import (
+        balanced_accuracy_score,
+        f1_score,
+        roc_auc_score,
+    )
+
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y).astype(int)
+    groups = np.asarray(groups)
+
+    rows = []
+    for s in np.unique(groups):
+        mask = groups == s
+        Xs, ys = X[mask], y[mask]
+        cv = StratifiedKFold(n_splits, shuffle=True, random_state=random_state)
+
+        proba = cross_val_predict(
+            model_factory(), Xs, ys, cv=cv, method="predict_proba"
+        )[:, 1]
+        pred = (proba >= 0.5).astype(int)
+
+        row = {
+            "subject_id": str(int(s)),
+            "n_test": int(len(ys)),
+            "balanced_accuracy": float(balanced_accuracy_score(ys, pred)),
+            "macro_f1": float(f1_score(ys, pred, average="macro",
+                                       zero_division=0)),
+            "roc_auc": float(roc_auc_score(ys, proba)),
+            "y_true": [int(v) for v in ys.tolist()],
+            "y_pred": [int(v) for v in pred.tolist()],
+            "y_proba": [float(v) for v in proba.tolist()],
+        }
+
+        if capture_coefficients:
+            fold_coefs = []
+            for tr_idx, _te_idx in cv.split(Xs, ys):
+                est = model_factory()
+                est.fit(Xs[tr_idx], ys[tr_idx])
+                c = _extract_fold_coefficients(est)
+                if c is not None:
+                    fold_coefs.append(c)
+            if fold_coefs:
+                fold_coefs = np.asarray(fold_coefs)
+                row["coefficients_mean"] = [float(v) for v in
+                                            fold_coefs.mean(axis=0).tolist()]
+                row["coefficients_per_fold"] = [
+                    [float(v) for v in c.tolist()] for c in fold_coefs
+                ]
+
+        rows.append(row)
+
+    return {
+        "folds": rows,
+        "config": {
+            "n_splits": int(n_splits),
+            "n_subjects": int(len(np.unique(groups))),
+            "n_features": int(X.shape[1]),
+            "random_state": random_state,
+            "coefficients_captured": bool(capture_coefficients),
+            "feature_names": (
+                [str(n) for n in feature_names] if feature_names is not None
+                else None
+            ),
+        },
+    }
 
 
 def evaluate_expanding_window(

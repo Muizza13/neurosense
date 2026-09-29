@@ -5,9 +5,12 @@ pre-refactor modules, a different model (C = 0.5), globally fitted artifact
 clipping, and F1 rather than balanced accuracy. The figures could therefore
 disagree with the README while both were "produced by the code in this repo".
 
-This version reads reports/results/phase1_results.json and phase2_results.json,
-so the figures cannot drift from the reported numbers. Only Figure 3 fits a
-model, because feature attribution has no number to read.
+Round 4 (Task 8) went further: this script fits nothing. All three figures
+read reports/results/phase1_results.json and phase2_results.json. Per-fold
+signed coefficients (Figure 3) come from ``capture_coefficients=True`` on
+the primary Phase 1 merged-LOBO run and the Phase 2 within-subject shuffled
+CV, so the figures cannot drift from the reported numbers, and rebuilding
+the figures no longer trains any model.
 
 Run:  python src/make_figures.py
 """
@@ -28,17 +31,7 @@ for _d in ("reports/figures", "reports/results", "models"):
     os.makedirs(_d, exist_ok=True)
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from matplotlib.patches import Patch
-from scipy.io import arff
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-
-from src.core.features import (
-    STANDARD_BANDS,
-    make_continuous_windows,
-)
 
 plt.rcParams.update({
     "figure.dpi": 130, "font.size": 11,
@@ -264,59 +257,55 @@ plt.close(fig)
 # ======================================================================
 # FIGURE 3: per-fold signed-coefficient attribution (Task 6)
 #
-# Both panels now use the same method: signed standardized logistic-
-# regression coefficients extracted from within each real evaluation
-# fold. Bars are the mean across folds; horizontal segments are the
-# per-fold values, so the spread is visible. This replaces the previous
-# figure which paired Phase 1 permutation importance with Phase 2
-# coefficients from a model fitted to all subjects at once (not a
-# protocol we evaluate).
+# Round 4 (Task 8): this figure now reads the coefficients that
+# evaluate_loso and evaluate_within_subject_shuffled_cv saved into the
+# phase1/phase2 result JSONs. Nothing is refit here. Both panels use
+# signed standardised logistic-regression coefficients from within real
+# evaluation folds; bars are the mean, white dots are per-fold values,
+# so the between-fold spread is visible.
 # ======================================================================
-from src.core.evaluation import merged_block_groups  # noqa: E402
-from src.core.features import (  # noqa: E402
-    EpochBandPower,
-    flatten_epochs,
-    label_blocks,
-)
+def _load_phase1_coefs():
+    merged = p1["leave_one_merged_block_out"]["primary_model"]
+    names = merged["config"].get("feature_names")
+    if not names:
+        raise RuntimeError(
+            "phase1_results.json is missing feature_names under "
+            "leave_one_merged_block_out.primary_model.config. "
+            "Rerun python src/phase1_eyestate.py after Task 8."
+        )
+    per_fold = [f["coefficients"] for f in merged["folds"]
+                if "coefficients" in f]
+    if not per_fold:
+        raise RuntimeError(
+            "phase1_results.json has no per-fold coefficients. "
+            "Rerun python src/phase1_eyestate.py after Task 8."
+        )
+    arr = np.asarray(per_fold, dtype=float)
+    return names, arr, arr.mean(axis=0)
 
-SFREQ1, WIN_SEC = 128.0, 1.0
 
-df = pd.DataFrame(arff.loadarff("data/raw/EEG Eye State.arff")[0])
-df["eyeDetection"] = df["eyeDetection"].astype(int)
-channels_1 = [c for c in df.columns if c != "eyeDetection"]
+def _load_phase2_coefs():
+    within = p2["within_subject_shuffled"]
+    cfg = within.get("config") or {}
+    names = cfg.get("feature_names")
+    if not names:
+        raise RuntimeError(
+            "phase2_results.json is missing feature_names under "
+            "within_subject_shuffled.config. Rerun "
+            "python src/phase2_motor_imagery.py after Task 8."
+        )
+    per_subject = [f["coefficients_mean"] for f in within["folds"]
+                   if "coefficients_mean" in f]
+    if not per_subject:
+        raise RuntimeError(
+            "phase2_results.json has no per-subject coefficients_mean. "
+            "Rerun python src/phase2_motor_imagery.py after Task 8."
+        )
+    arr = np.asarray(per_subject, dtype=float)
+    return names, arr, arr.mean(axis=0)
 
-epochs, yw, starts = make_continuous_windows(
-    df[channels_1].values, df["eyeDetection"].values, SFREQ1, WIN_SEC
-)
-n_times_1 = epochs.shape[2]
-X1_flat = flatten_epochs(epochs)
-blocks_1 = label_blocks(df["eyeDetection"].values)[starts]
-super_1 = merged_block_groups(blocks_1, blocks_per_superblock=4)
 
-# Feature names in the Phase 1 pipeline order.
-names1 = [f"{ch}_{b}" for ch in channels_1 for b in STANDARD_BANDS]
-
-# Per-fold signed standardised coefficients from the merged-LOBO folds.
-# Fitting inside the fold is what the phase actually evaluates, so the
-# explanation is model-specific and protocol-consistent.
-coef_folds_p1 = []
-for super_id in np.unique(super_1):
-    train_idx = np.where(super_1 != super_id)[0]
-    if len(np.unique(yw[train_idx])) < 2:
-        continue
-    pipe = Pipeline([
-        ("bandpower", EpochBandPower(SFREQ1, STANDARD_BANDS,
-                                     channels_1, n_times_1)),
-        ("scaler", StandardScaler()),
-        ("model", LogisticRegression(C=1.0, class_weight="balanced",
-                                     max_iter=5000,
-                                     random_state=RANDOM_STATE)),
-    ])
-    pipe.fit(X1_flat[train_idx], yw[train_idx])
-    coef_folds_p1.append(pipe.named_steps["model"].coef_[0])
-coef_folds_p1 = np.asarray(coef_folds_p1)
-coef_mean_p1 = coef_folds_p1.mean(axis=0)
-# Rank by mean |coef|, then plot the SIGNED mean and per-fold segments.
+names1, coef_folds_p1, coef_mean_p1 = _load_phase1_coefs()
 order1 = np.argsort(np.abs(coef_mean_p1))[::-1][:10]
 
 POSTERIOR = {"O1", "O2", "P7", "P8", "T7", "T8"}
@@ -324,29 +313,7 @@ f1_labels = [names1[i] for i in order1]
 f1_means = [coef_mean_p1[i] for i in order1]
 f1_folds = [coef_folds_p1[:, i] for i in order1]
 
-# Phase 2: per-subject models from within-subject shuffled trial CV.
-# One fit per subject on that subject's own trials, coefficients extracted
-# and averaged across subjects. Report signed mean and per-subject range.
-d = np.load("data/processed/physionet_features.npz")
-X2, y2, g2 = d["X"], d["y"].astype(int), d["g"]
-MOTOR = ["FC3", "FCZ", "FC4", "C5", "C3", "C1", "CZ", "C2", "C4", "C6",
-         "CP3", "CPZ", "CP4"]
-names2 = [f"{ch}_{b}" for ch in MOTOR for b in ("mu", "beta")]
-
-coef_folds_p2 = []
-for s in np.unique(g2):
-    Xs, ys = X2[g2 == s], y2[g2 == s]
-    if len(np.unique(ys)) < 2:
-        continue
-    pipe = Pipeline([
-        ("scaler", StandardScaler()),
-        ("model", LogisticRegression(C=1.0, class_weight="balanced",
-                                     max_iter=5000,
-                                     random_state=RANDOM_STATE)),
-    ]).fit(Xs, ys)
-    coef_folds_p2.append(pipe.named_steps["model"].coef_[0])
-coef_folds_p2 = np.asarray(coef_folds_p2)
-coef_mean_p2 = coef_folds_p2.mean(axis=0)
+names2, coef_folds_p2, coef_mean_p2 = _load_phase2_coefs()
 order2 = np.argsort(np.abs(coef_mean_p2))[::-1][:10]
 
 CLINE = {"C5", "C3", "C1", "CZ", "C2", "C4", "C6"}
@@ -415,7 +382,7 @@ fig.savefig("reports/figures/fig3_interpretability_contrast.png",
             bbox_inches="tight")
 plt.close(fig)
 
-print("figures written to reports/figures/")
+print("figures written to reports/figures/ (no models retrained)")
 print(f"  fig1 from phase1_results.json: naive={naive_score:.3f} "
       f"chrono={chrono_score:.3f} expand={expand_ci['point']:.3f} "
       f"merged-LOBO={merged_ci['point']:.3f} "
@@ -424,6 +391,6 @@ print(f"  fig1 from phase1_results.json: naive={naive_score:.3f} "
 print(f"  fig2 from phase2_results.json: within balAcc="
       f"{w_ci['balanced_accuracy']['point']:.3f} | cross balAcc="
       f"{c_ci['balanced_accuracy']['point']:.3f}")
-print(f"  fig3 recomputed: phase1 top = {f1_labels[0]} "
+print(f"  fig3 from saved coefficients: phase1 top = {f1_labels[0]} "
       f"(mean coef {f1_means[0]:+.3f}), "
       f"phase2 top = {f2_labels[0]} (mean coef {f2_means[0]:+.3f})")

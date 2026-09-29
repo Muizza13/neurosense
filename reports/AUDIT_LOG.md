@@ -1,6 +1,6 @@
 # Audit log
 
-The 2026-09 audit had three rounds. Round 1 (2026-09-29) added leakage-safe
+The 2026-09 audit had four rounds. Round 1 (2026-09-29) added leakage-safe
 protocols, per-split baselines, a temporal-dependence diagnostic, an
 expanding-window evaluation, a regression guard, and fold provenance to
 Phase 1; Phase 2 was unchanged. Round 2 (later the same day) corrected the
@@ -14,7 +14,11 @@ corrected the interpretation language around ocular artifact,
 subject-identity learning, and "confirms physiology", hardened raw-data
 reproduction with a validated download script and a feature manifest, and
 documented explanation-faithfulness and randomisation tests as future
-work.
+work. Round 4 (Tasks 8-11) removed duplicated evaluation logic so the
+figure code no longer refits models, added a table generator so the README
+and the LaTeX report share a single source of truth, added a CSP + LDA
+extension as a separately labelled Phase 2 comparison, added tests and a
+CI workflow, and updated the research artifacts and the PDF.
 
 This is a rerun on data that has been inspected many times in this project.
 It is not an untouched confirmatory study of either paradigm.
@@ -167,6 +171,40 @@ truth for what the earlier version claimed.
     the two paths explicitly documented, and a licensing note for the
     committed derived feature cache (band-power features only, no raw
     EEG samples, so not redistribution of the PhysioNet recordings).
+
+### Round 4 (Tasks 8-11)
+
+28. Adds `evaluate_within_subject_shuffled_cv` and
+    `_extract_fold_coefficients` to `src/core/evaluation.py`. Signed
+    per-fold coefficients (Phase 1 merged-LOBO) and per-subject mean
+    coefficients (Phase 2 within-subject shuffled CV) are persisted to
+    the phase-results JSON with feature names in the fitted-vector
+    order.
+29. `src/make_figures.py` no longer fits any model. All three figures
+    read the JSON coefficients. `src/make_tables.py` regenerates the
+    Phase 1 and Phase 2 markdown tables from the same JSONs.
+30. Dataset-specific loading and windowing stay outside `src/core/`.
+    Feature spaces are deliberately not unified across Phase 1 and
+    Phase 2; the two datasets are not comparable to each other.
+31. Adds `src/phase2_csp_lda.py` (CSP + LDA extension, round 4 Task 9).
+    Same 10 subjects, same eligible trials, same evaluation splits as
+    the audited band-power primary. CSP and LDA are fitted inside
+    training folds only. Signal filtering documented in-source and in
+    the JSON: 4th-order Butterworth zero-phase 8-30 Hz, 13-channel
+    motor strip, epoch window 0.5-3.5 s. Results in
+    `reports/results/phase2_csp_lda_results.json`; the primary
+    `phase2_results.json` is not touched.
+32. Adds `tests/test_round4_extras.py` (14 tests) covering LORO run
+    separation, the feature-free pooled-AUC diagnostic, per-protocol
+    dummy baselines, deterministic bootstrap output for a fixed seed,
+    output-directory auto-creation, coefficient capture behaviour,
+    result-schema invariants on the phase 1 / phase 2 JSONs, and a
+    small end-to-end synthetic smoke test. Test count: 58 -> 73.
+33. Adds `.github/workflows/tests.yml`: pytest + figure/table
+    regeneration on push and PR. CI never downloads the raw dataset;
+    synthetic fixtures cover the leakage-safety and CI-only paths.
+34. README, REFACTOR_NOTES, AUDIT_LOG updated with a round-4 section.
+    LaTeX report gains a Phase 2 CSP+LDA subsection; PDF rebuilt.
 
 ## What the audit does not change
 

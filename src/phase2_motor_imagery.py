@@ -30,13 +30,22 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import balanced_accuracy_score, f1_score, roc_auc_score
-from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from src.core.evaluation import evaluate_loso, evaluate_naive_split
+from src.core.evaluation import (
+    evaluate_loso,
+    evaluate_naive_split,
+    evaluate_within_subject_shuffled_cv,
+)
 from src.core.results import format_ci, save_results
 from src.core.statistics import bootstrap_ci
+
+# Feature layout used to write out feature names alongside per-subject
+# coefficients. Kept in sync with src/physionet_features.py.
+MOTOR_CHANNELS = ["FC3", "FCZ", "FC4", "C5", "C3", "C1", "CZ", "C2", "C4", "C6",
+                  "CP3", "CPZ", "CP4"]
+PHASE2_FEATURE_NAMES = [f"{ch}_{b}" for ch in MOTOR_CHANNELS for b in ("mu", "beta")]
 
 FEATURES = "data/processed/physionet_features.npz"
 RANDOM_STATE = 42
@@ -72,31 +81,25 @@ def _within_subject_trial_cv(X, y, g, factory, n_splits=5):
     Trials from the same recording run appear in both train and test, so this
     is mildly optimistic. Kept because it is the direct comparison to a lot
     of published within-subject numbers on this dataset.
+
+    Round 4 (Task 8): delegates to ``evaluate_within_subject_shuffled_cv`` in
+    src/core/evaluation.py, which captures signed per-fold coefficients so
+    the figure code can consume them from JSON instead of retraining.
     """
-    rows = []
-    for s in np.unique(g):
-        Xs, ys = X[g == s], y[g == s]
-        cv = StratifiedKFold(n_splits, shuffle=True,
-                             random_state=RANDOM_STATE)
-        proba = cross_val_predict(factory(), Xs, ys, cv=cv,
-                                  method="predict_proba")[:, 1]
-        pred = (proba >= 0.5).astype(int)
-        rows.append({
-            "subject_id": str(int(s)),
-            "n_test": int(len(ys)),
-            "balanced_accuracy": float(balanced_accuracy_score(ys, pred)),
-            "macro_f1": float(f1_score(ys, pred, average="macro",
-                                       zero_division=0)),
-            "roc_auc": float(roc_auc_score(ys, proba)),
-            "y_true": [int(v) for v in ys.tolist()],
-            "y_pred": [int(v) for v in pred.tolist()],
-            "y_proba": [float(v) for v in proba.tolist()],
-        })
-    return _summarise(rows, unit="subject", limitation=(
+    raw = evaluate_within_subject_shuffled_cv(
+        X, y, g, factory,
+        n_splits=n_splits,
+        random_state=RANDOM_STATE,
+        capture_coefficients=True,
+        feature_names=PHASE2_FEATURE_NAMES,
+    )
+    summary = _summarise(raw["folds"], unit="subject", limitation=(
         "Shuffled stratified trial CV within subject. Trials from the same "
         "recording run appear in both train and test. Mildly optimistic "
         "relative to leave-one-run-out."
     ))
+    summary["config"] = raw["config"]
+    return summary
 
 
 def _within_subject_leave_one_run_out(X, y, g, run, factory):
