@@ -183,8 +183,7 @@ ac_str = ", ".join(f"lag{l}={v:.2f}"
                    for l, v in zip(ac["lags"], ac["mean_abs_autocorr"]))
 gap_reason = p1["temporal_dependence"]["gap_choice"]["reason"]
 fig.suptitle(
-    "Phase 1  |  UCI EEG Eye State: apparent skill is an artifact of the "
-    "split (100 windows, 1 subject)\n"
+    "Phase 1  |  UCI EEG Eye State, 100 windows, 1 subject\n"
     f"feature autocorrelation {ac_str}   →   gap = {chrono_gap} windows "
     f"({gap_reason})",
     fontweight="bold", x=0.02, ha="left", fontsize=10.5,
@@ -361,8 +360,9 @@ _plot_signed_attribution(
 _plot_signed_attribution(
     a2, f2_labels, f2_means, f2_folds, _p2_colour,
     "signed standardized coefficient (mean across per-subject fits)",
-    ("Phase 2: per-subject signed coefficients; top magnitudes sit on "
-     "the central strip,\nconsistent with expected sensorimotor patterns"),
+    ("Phase 2: per-subject signed coefficients from the saved JSON.\n"
+     "Largest mean |coef| names are on the motor-montage channels used "
+     "as features."),
     "channel group",
 )
 a1.legend(handles=[Patch(color=HOT, label="frontal"),

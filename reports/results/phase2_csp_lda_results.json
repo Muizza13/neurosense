@@ -1,9 +1,9 @@
 {
   "_provenance": {
-    "git_commit": "b4974c8",
+    "git_commit": "e31ce6c",
     "numpy": "2.0.2",
     "python": "3.9.6",
-    "written_utc": "2026-09-29T11:07:57Z"
+    "written_utc": "2026-09-29T12:30:44Z"
   },
   "cross_subject": {
     "folds": [

@@ -1,9 +1,9 @@
 {
   "_provenance": {
-    "git_commit": "b4974c8",
+    "git_commit": "e31ce6c",
     "numpy": "2.0.2",
     "python": "3.9.6",
-    "written_utc": "2026-09-29T11:03:32Z"
+    "written_utc": "2026-09-29T12:32:37Z"
   },
   "audit": {
     "notes": "Explicit per-subject LOSO with persisted per-fold predictions, subject-level bootstrap CI, std across subjects reported separately from CI. Added leave-one-run-out within subject (does not establish transfer to a new session). '8/10 above 0.5' is a descriptive count, not statistical significance. Pooled cross-subject scores are retained only as a descriptive appendix.",

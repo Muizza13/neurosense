@@ -415,9 +415,8 @@ def main():
     print(f"    pooled AUC (dummy prior):        "
           f"{pooled_dummy_auc:.3f}" if pooled_dummy_auc is not None else
           "    pooled AUC (dummy prior):        n/a")
-    print("  Interpretation: the dummy is learning nothing, so any non-0.5 "
-          "pooled AUC here is a splitting artefact rather than electrode "
-          "drift.")
+    print("  The dummy prior does not use the features. Its pooled AUC on "
+          "these splits is the number printed above.")
 
     # ------------------------------------------------------------------
     # Secondary models under leave-one-merged-block-out (Task 4 primary
@@ -482,11 +481,11 @@ def main():
         "leave_one_block_out_diagnostic": {
             "note": (
                 "Retained only as a diagnostic. Each native block is single-"
-                "class, so per-fold AUC is undefined and pooled AUC from "
-                "separately-trained folds is a splitting artefact, not "
-                "electrode drift. The paired dummy_prior_diagnostic "
-                "reproduces the artefact with a classifier that learns "
-                "nothing."
+                "class, so per-fold AUC is undefined. Pooled AUC is computed "
+                "by concatenating predictions from separately trained folds. "
+                "On these splits the primary model pooled AUC and the "
+                "DummyClassifier(strategy='prior') pooled AUC are both stored "
+                "above. The dummy does not use the features."
             ),
             "primary_model": lobo,
             "dummy_prior_diagnostic": dummy_lobo,

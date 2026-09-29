@@ -2,13 +2,13 @@
 
 **An honest look at when EEG machine learning actually generalizes, and when it only appears to.**
 
-Most introductory EEG classification projects report a high accuracy and stop there. This project asks whether that accuracy is real. Across two datasets and two paradigms, it shows that the headline numbers commonly reported on a popular EEG benchmark are an artifact of how the data is split, quantifies the honest performance under leakage-aware evaluation, and uses model explanations as a validity check rather than decoration.
+This repository reports logistic-regression scores on two public EEG datasets under standard train/test rules: a random split, a chronological holdout, walk-forward blocks, leave-one-block-out, leave-one-subject-out, and leave-one-run-out. Those rules are not a new method. The numbers below are what this code produced on these files.
 
 A full write-up is in [`reports/NeuroSense_Report.pdf`](reports/NeuroSense_Report.pdf).
 
 ## Core finding
 
-> Naive evaluation overstates EEG decoding. Under leakage-aware evaluation, EEG band-power features mostly capture session-specific and subject-specific structure that does not generalize across time or across people. Where decoding genuinely works, its explanations match known physiology. Where it does not, the explanations are not evidence of anything, including not evidence of what went wrong.
+> On the UCI eye-state recording, the leakage-safe scores do not beat the same-split dummy. On the PhysioNet subset, within-subject band-power logistic regression is above 0.5. Leave-one-subject-out is not. Coefficient lists are the fitted weights of that model. They are not a physiological result.
 
 ## How to read the numbers
 
@@ -45,7 +45,7 @@ The 2026-09 audit added (a) temporal-gap chronological holdout and expanding-win
 
 ## Phase 1: UCI EEG Eye State (the cautionary result)
 
-**Dataset.** A single continuous 117-second recording from **one person**, 14 channels at 128 Hz. The eyes-open/closed label runs in only 24 contiguous blocks (median 3.9 s), 19 of which contain at least one complete window. Several channels contain single-sample electrode pops up to around 700,000 against a 4,000 baseline, clipped before feature extraction using thresholds fitted on training data only. One-second non-overlapping windows yield **100 windows** and 56 band-power features (delta, theta, alpha, beta; gamma is excluded because 30 to 45 Hz on consumer hardware is dominated by muscle activity, not cortex).
+**Dataset.** A single continuous 117-second recording from **one person**, 14 channels at 128 Hz. The eyes-open/closed label runs in only 24 contiguous blocks (median 3.9 s), 19 of which contain at least one complete window. Several channels contain single-sample electrode pops up to around 700,000 against a 4,000 baseline, clipped before feature extraction using thresholds fitted on training data only. One-second non-overlapping windows yield **100 windows** and 56 band-power features (delta, theta, alpha, beta). Gamma is not included.
 
 Every Phase 1 number rests on 100 observations from one person. That single fact drives the width of every interval below and is the main reason this phase is a cautionary tale rather than a result.
 
@@ -77,13 +77,9 @@ Secondary models under leave-one-merged-block-out: SVM-RBF and RandomForest (300
 
 **Why native-LOBO and expanding-window AUCs are undefined.** Every contiguous native label block is single-class by construction, so a held-out block contains only eyes-open or only eyes-closed windows. AUC cannot be computed on a single-class test set, and balanced accuracy degenerates into the recall of whichever class the block contains. Native LOBO is retained only as a labelled diagnostic and paired with a DummyClassifier(prior) run on the same splits to make the pooled-metric artefact obvious. **Leave-one-merged-block-out is the primary group protocol; chronological holdout is the primary temporal protocol.**
 
-**Explainability, and its limits.** A pre-modeling check found no clean Berger effect in this recording: occipital alpha does not rise on eye closure, which is the first sign that this is not a decodable eye-state signal.
+**Coefficients.** Signed standardized logistic-regression coefficients are stored for each merged-LOBO training fold. The largest mean coefficient in the saved JSON is `F4_beta` (+1.430). The merged-LOBO balanced accuracy is 0.456 [0.270, 0.605], and the same-splits dummy prior is 0.400 [0.200, 0.500]. The two intervals overlap. An earlier README treated a frontal ranking as evidence of eye-movement artifact. That sentence is removed. No eye-artifact regressor or blink annotation is in this repository, and no Berger-effect contrast is computed here.
 
-An earlier version of this project went further and reported that the most class-separating features were frontal, reading that as evidence of eye-movement and blink artifact. That claim does not survive the rebuild, and the audit's re-runs do not restore it either. Signed standardized coefficients extracted from within each merged-LOBO fold (see `src/make_figures.py`; same method as Phase 2) put both frontal and posterior/temporal channels at the top of the mean-|coef| ranking; the single strongest by mean coefficient is `F4_beta`, but per-fold spread is very wide and the model's merged-LOBO balanced accuracy (0.456) overlaps the same-splits DummyClassifier(prior). A high frontal coefficient here is not itself evidence of ocular artifact, and a low central coefficient is not evidence of anything either.
-
-The Phase 1 attribution figure is therefore a **descriptive ranking**, not a physiological finding. An explanation inherits the credibility of the evaluation beneath it, and when the evaluation overlaps a dummy the ranking should be read as descriptive text rather than mined for a mechanistic story. Explanation-faithfulness checks (permutation of labels within blocks, model-randomisation tests) are not implemented in this repo; see [`REFACTOR_NOTES.md`](REFACTOR_NOTES.md) for the future-work list.
-
-**Takeaway.** On this recording and under the leakage-aware protocols implemented here, the widely reported high accuracies on this dataset appear to be an artifact of evaluation design. This is not a claim that every published high-accuracy result on this dataset was wrong — some published pipelines use different features, filters, or evaluation designs — only that under a leakage-safe design the model does not clear a same-split dummy. A single continuous recording from one person on consumer-grade hardware also cannot support subject-generalizable eye-state decoding on its own, which is what motivates moving to Phase 2's multi-subject data.
+**Takeaway.** On this one recording, under these splits, the prespecified model does not beat the same-split dummy. The file has one subject.
 
 ---
 
@@ -100,7 +96,7 @@ The Phase 1 attribution figure is therefore a **descriptive ranking**, not a phy
 
 Descriptive counts above 0.5 (not significance claims): 8 of 10 subjects on within-subject balanced accuracy, 8 of 10 on within-subject AUC, 19 of 30 folds on leave-one-run-out balanced accuracy, 25 of 30 folds on leave-one-run-out AUC, 2 of 10 subjects on cross-subject balanced accuracy.
 
-Leave-one-run-out is close to the shuffled-trial CV, which is reassuring: the within-subject signal is consistent across recording runs of the same session. The AUC is actually slightly higher on LORO than on shuffled CV (0.657 vs 0.632), which is within noise given the fold overlap between the two protocols. Leave-one-run-out still does not establish transfer to a new recording session, because all three runs share the electrode montage, cap placement, and skin condition of a single day.
+Leave-one-run-out balanced accuracy is 0.588 and shuffled-trial balanced accuracy is 0.607. Leave-one-run-out uses the three imagery runs from the same recording. It does not test a later session.
 
 **Within-subject shuffled trial CV vs leave-one-run-out.** The shuffled trial CV is retained because it is the direct comparison to a lot of published within-subject numbers on this dataset. It is optimistic: trials from the same recording run appear in both train and test. The leave-one-run-out (LORO) evaluation added in the 2026-09 audit trains on two of a subject's three imagery runs (R04, R08, R12) and tests on the third, so trials in the test set come from a run the model has not seen. This tests transfer across recording runs of the same session; it does not establish transfer to a new recording session.
 
@@ -114,17 +110,15 @@ Leave-one-run-out is close to the shuffled-trial CV, which is reassuring: the wi
 
 A spread from 0.353 to 0.600 that a single pooled figure hides completely. Standard deviation across subjects: 0.072. Secondary models cross-subject: LogisticRegression (C = 0.5) 0.472 [0.427, 0.514], RandomForest (300) 0.487 [0.444, 0.531].
 
-**Two honest evaluations.** Within a subject, decoding is above chance on AUC but modest, with clear between-subject variability. Across subjects, performance collapses to chance. The chance-level cross-subject result is _consistent with_ features that carry subject-specific information (montage, cap placement, individual mu-rhythm topography) and do not transfer to a new person without calibration; it does not by itself _prove_ that the model is learning subject identity, which would require an explicit subject-id decoding experiment that is not implemented here.
+**Scores.** Within-subject AUC intervals exclude 0.5. The leave-one-subject-out intervals include 0.5. The cross-subject result is the score. This repository does not include a subject-identity classifier, so it does not identify what the cross-subject model failed to use.
 
 ![Phase 2 generalization](reports/figures/fig2_phase2_generalization.png)
 
-**Explainability, same method both sides (Task 6 correction).** Both Phase 1 and Phase 2 now report signed standardized logistic-regression coefficients extracted from within each real evaluation fold (Phase 1: merged-LOBO folds; Phase 2: per-subject models). The white dots on Figure 3 are the per-fold coefficients so the between-fold spread is visible. The Phase 2 mean coefficients place `C6_beta`, `C1_mu`, `C3_beta`, `C5_mu`, and `C4_mu` at the top of the |coef| ranking, sitting on the central sensorimotor strip — **consistent with expected sensorimotor patterns** for imagined left-vs-right fist movement, and consistent enough across subjects that the signs of the top mu features do not flip randomly. That is a validity check on the model, not a proof of a specific physiological mechanism; the audit deliberately stopped short of "confirms known physiology" language.
+**Coefficients, same estimator both sides.** Both panels of Figure 3 use signed standardized logistic-regression coefficients from the saved evaluation folds. Phase 1 uses the merged-LOBO folds. Phase 2 uses the per-subject shuffled-trial fits. White dots are the per-fold values. The five largest mean absolute coefficients in the Phase 2 JSON are `C6_beta`, `C1_mu`, `C3_beta`, `C5_mu`, and `C4_mu`. Those names are channels in the motor montage used to build the features. The plot does not test whether the weights match a physiological pattern, and an earlier sentence that said they confirm known physiology is removed.
 
 ![Interpretability contrast](reports/figures/fig3_interpretability_contrast.png)
 
-Same method, two very different situations. On the right the ranking is stable across subjects and lands on the expected motor strip. On the left the model overlaps a same-splits dummy prior, so the ranking is presented as **descriptive** — a description of what the coefficients happen to be on this recording, not evidence about ocular artifact or about eye-state physiology in either direction.
-
-**Attribution caveat.** These are model-specific coefficients from one prespecified classifier fit inside real evaluation folds. They report what the model uses; they do not by themselves establish faithfulness (that permuting the top feature would degrade held-out score by a matching amount) or robustness (that a differently regularised model would rank the same features). Randomisation tests and permutation-importance-vs-coefficient agreement checks would strengthen the interpretation and are listed in [`REFACTOR_NOTES.md`](REFACTOR_NOTES.md) as future work.
+The Phase 1 weights come from a model whose score overlaps the same-split dummy. The Phase 2 weights come from within-subject models whose AUC interval excludes 0.5. No faithfulness test (permute a feature, rescore the held-out fold) is implemented.
 
 ---
 
@@ -147,9 +141,7 @@ Round 4 of the audit adds Common Spatial Patterns with Linear Discriminant Analy
 | Cross-subject LOSO | LogReg band-power (primary) | 0.474 [0.432, 0.516] | 0.511 [0.447, 0.583] |
 | Cross-subject LOSO | CSP+LDA (extension) | 0.541 [0.478, 0.618] | 0.654 [0.556, 0.767] |
 
-Reading the CSP row: within-subject the extension is meaningfully stronger than the band-power primary (about 5 balAcc points, 6-10 AUC points), as expected — CSP tuned inside each training fold is the standard motor-imagery baseline and the band-power features do not exploit spatial covariance. Cross-subject the point estimate lifts from 0.474 to 0.541 on balAcc and to 0.654 on AUC, but the 95% CI on balanced accuracy still just touches 0.5 (0.478 lower bound, 3/10 subjects above 0.5) and the AUC point estimate rests on a large per-subject spread (9/10 above 0.5 but AUC CI is 0.556-0.767). **The CSP extension lifts cross-subject performance above the band-power number without clearing chance under a strict reading of the balanced-accuracy CI.** The AUC pattern is consistent with the model ranking trials sensibly but not making calibrated 0/1 predictions across subjects. Larger subject counts or subject-adaptive calibration would be needed to say more.
-
-This does not change the overall conclusion (band-power alone does not transfer across people on this dataset), but it does update the intended framing: cross-subject decoding on this dataset is not settled by the band-power result, and reporting only band-power would understate what a standard motor-imagery baseline achieves.
+CSP plus LDA is the usual motor-imagery baseline (Ramoser, Müller-Gerking, and Pfurtscheller, 2000), not a method introduced here. On these 10 subjects the within-subject CSP balanced-accuracy point estimates are higher than the band-power point estimates (0.655 vs 0.607 shuffled; 0.640 vs 0.588 leave-one-run-out). Cross-subject CSP balanced accuracy is 0.541 [0.478, 0.618], so the interval still includes 0.5. The cross-subject CSP AUC interval is 0.654 [0.556, 0.767]. The JSON records 3 of 10 subjects above 0.5 on balanced accuracy and 9 of 10 above 0.5 on AUC.
 
 ---
 
@@ -177,7 +169,7 @@ Phase 2's naive random trial split reaches 0.504 against a cross-subject 0.474. 
 
 ## Unified finding
 
-Across both datasets, naive evaluation overstates performance on Phase 1 (dramatically) and marginally on Phase 2. Under leakage-aware evaluation, Phase 1 features from this single-subject continuous recording do not clear a same-split dummy, and Phase 2 features carry structure that supports modest within-subject decoding but does not transfer across people. Whether that non-transfer reflects subject-identity leakage, montage variability, or genuine between-subject differences in motor-imagery neurophysiology is not answered by the present evaluation. Model explanations are usable as descriptive rankings; they warrant a physiological reading only when paired with faithfulness and randomisation checks, which are listed as future work.
+On the UCI file, the random-split balanced accuracy is 0.533 and the chronological holdout is 0.416. On the PhysioNet subset, the random-split balanced accuracy is 0.504 and leave-one-subject-out is 0.474. The large gap between a random split and a blocked split is in Phase 1. Phase 2 does not show that gap. Leave-one-subject-out band-power balanced accuracy includes 0.5. No further cause is identified.
 
 ## Repository structure
 

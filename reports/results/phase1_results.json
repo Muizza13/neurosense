@@ -1,9 +1,9 @@
 {
   "_provenance": {
-    "git_commit": "b4974c8",
+    "git_commit": "e31ce6c",
     "numpy": "2.0.2",
     "python": "3.9.6",
-    "written_utc": "2026-09-29T11:03:24Z"
+    "written_utc": "2026-09-29T12:33:08Z"
   },
   "audit": {
     "notes": "Naive split retained as descriptive only. Chronological holdout and expanding-window run with a temporal gap chosen from a measured autocorrelation threshold. Every leakage-safe split reports its own baselines; no baseline is shared across protocols. Leave-one-merged-block-out (super-block size 4 native blocks, declared before evaluation) is now the primary group protocol; leave-one-native-block-out is retained only as a labelled diagnostic with a DummyClassifier(strategy='prior') comparison on the same splits.",
@@ -2049,7 +2049,7 @@
         }
       }
     },
-    "note": "Retained only as a diagnostic. Each native block is single-class, so per-fold AUC is undefined and pooled AUC from separately-trained folds is a splitting artefact, not electrode drift. The paired dummy_prior_diagnostic reproduces the artefact with a classifier that learns nothing.",
+    "note": "Retained only as a diagnostic. Each native block is single-class, so per-fold AUC is undefined. Pooled AUC is computed by concatenating predictions from separately trained folds. On these splits the primary model pooled AUC and the DummyClassifier(strategy='prior') pooled AUC are both stored above. The dummy does not use the features.",
     "primary_model": {
       "config": {
         "coefficients_captured": false,

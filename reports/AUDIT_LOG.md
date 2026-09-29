@@ -206,6 +206,20 @@ truth for what the earlier version claimed.
 34. README, REFACTOR_NOTES, AUDIT_LOG updated with a round-4 section.
     LaTeX report gains a Phase 2 CSP+LDA subsection; PDF rebuilt.
 
+### Claim cleanup (after round 4)
+
+35. Removes sentences that treated chronological holdout, leave-one-subject-out,
+    leave-one-run-out, or CSP plus LDA as a new method. The report now
+    names them as standard procedures and cites Ramoser, Müller-Gerking,
+    and Pfurtscheller (2000) for CSP.
+36. Deletes unsupported explanations instead of substituting new ones.
+    Removed: Berger effect, gamma-as-muscle, frontal weights as ocular
+    artifact, coefficients as confirmation of sensorimotor physiology,
+    cross-subject chance as subject-identity learning or montage drift,
+    and "published high accuracies on this dataset are an evaluation
+    artifact." What remains are the saved scores, the same-split dummy
+    comparisons, and the coefficient names.
+
 ## What the audit does not change
 
 - The prespecified primary model, logistic regression with `C = 1.0`,
