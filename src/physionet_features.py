@@ -41,9 +41,14 @@ import json
 import warnings
 from pathlib import Path
 
-import mne
 import numpy as np
 from scipy.signal import welch
+
+# ``mne`` is only needed by ``load_subject`` (Path B: rebuild the feature
+# cache from raw EDFs). It is deliberately imported inside that function
+# so this module can be imported by tests and by the cached-features
+# reproduction path (Path A) without MNE installed. Round 4 CI does not
+# install MNE.
 
 warnings.filterwarnings("ignore")
 
@@ -129,7 +134,12 @@ def load_subject(subj_dir, tmin=EPOCH_TMIN, tmax=EPOCH_TMAX):
         y:    (n_epochs,) 0=left, 1=right
         run:  (n_epochs,) int in IMAGERY_RUNS
         source_paths: list[str] of EDFs used for this subject
+
+    Note: ``mne`` is imported inside this function on purpose. The module
+    is importable and testable without MNE installed; only the raw-EDF
+    path (Path B) needs it.
     """
+    import mne  # noqa: PLC0415 - required only on Path B
     raw_by_run = []
     used_paths = []
     for path in sorted(glob.glob(f"{subj_dir}/*R*.edf")):
