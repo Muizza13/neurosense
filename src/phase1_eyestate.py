@@ -17,12 +17,12 @@ Changes from the pre-audit pipeline (still true):
 
 Audit additions (2026-09):
 
-3. Every leakage-safe protocol reports per-split baselines: majority-class
-   accuracy, and balanced accuracy of a stratified and a uniform dummy
-   classifier. No baseline is shared across protocols.
-4. Temporal dependence of the fold-safe features is measured, and the choice
-   of temporal gap for the chronological and expanding-window protocols is
-   derived from the measurement rather than picked by hand.
+3. Every leakage-safe protocol reports dummies fitted on training labels
+   and scored with balanced accuracy, macro F1, and ROC-AUC. No baseline
+   is shared across protocols.
+4. The chronological gap is chosen from autocorrelation of the training
+   prefix only. The expanding-window gap is prespecified as zero block
+   groups and is not copied from that diagnostic.
 5. An expanding-window (walk-forward across label blocks) evaluation is added
    as an additional leakage-safe protocol.
 6. Every fold row carries a `provenance` block with test-window start-sample
@@ -87,32 +87,27 @@ PRIMARY_NAME = "LogisticRegression(C=1.0, balanced)"
 CHRONO_TRAIN_FRAC = 0.70
 AUTOCORR_LAGS = (1, 2, 3, 4, 5)
 AUTOCORR_THRESHOLD = 0.30            # gap chosen at first lag with |ac| < 0.30
+# Prespecified. Not copied from the chronological autocorrelation, which
+# is estimated on the training prefix and would otherwise use later blocks.
+EXPANDING_WINDOW_GAP_GROUPS = 0
 
 # ---------------------------------------------------------------------------
 # Prespecified merged-block grouping rule (2026-09 audit, Task 4)
 #
 # The single continuous recording alternates eyes-open and eyes-closed
-# stretches, so every native contiguous-label block is single-class. Per-fold
-# AUC is undefined and pooled AUC from separately-trained folds is a known
-# splitting artefact (each fold model sees a different class prior).
-#
-# To produce a leakage-safe temporal fold whose held-out set can contain both
-# classes we merge consecutive native blocks into super-blocks of a fixed
-# size. Rule (declared before any evaluation):
+# stretches, so every native contiguous-label block is single-class.
 #
 #     MERGED_BLOCK_SIZE = 4  native blocks per super-block.
 #
-# Chosen for two structural reasons:
-#   (a) with N = 19 native blocks we get ceil(19 / 4) = 5 super-blocks,
-#       enough folds for a percentile bootstrap over folds;
-#   (b) 4 blocks span at least one full open/closed transition regardless of
-#       where the block boundaries fall, so each super-block covers both
-#       classes.
+# The k-th native block, in first-seen order, belongs to super-block
+# k // 4. If the number of native blocks is not a multiple of 4, the
+# leftover blocks join the last complete super-block. They are not a
+# separate fold. With 19 native blocks this is groups of 4, 4, 4, and 7.
 #
-# The size is not tuned on results. We report merged-LOBO scores at this
-# fixed size and separately show DummyClassifier(strategy="prior") on the
-# same splits so the reader can see how much of any pooled artefact
-# survives when nothing is being learned.
+# The size stays 4. It is not re-chosen from scores. The remainder rule
+# does not read labels. Whether a super-block contains both classes is
+# counted after the groups are assigned and is not an input to the rule.
+# DummyClassifier(strategy="prior") is still scored on the same splits.
 # ---------------------------------------------------------------------------
 MERGED_BLOCK_SIZE = 4
 
@@ -140,38 +135,41 @@ def load():
 
 
 def _training_fitted_features(X, split, channels, n_times):
-    """Extract features with a clipper fit on the training half of the split.
+    """Band-power features of the training prefix only.
 
-    Used by the temporal-dependence diagnostic. Everything else in Phase 1
-    lets `EpochBandPower` in the Pipeline handle this per fold. Here we
-    just need one representative feature matrix to measure autocorrelation
-    of what the model actually consumes.
+    The clipper is fitted on ``epochs[:split]`` and applied only to that
+    prefix. Held-out windows are not transformed and are not used to
+    choose the gap.
     """
     epochs = X.reshape(len(X), len(channels), n_times)
-    clipper = ArtifactClipper().fit(epochs[:split])
-    clipped = clipper.transform(epochs)
+    train = epochs[:split]
+    clipper = ArtifactClipper().fit(train)
+    clipped = clipper.transform(train)
     feats, _ = band_power(clipped, SFREQ, STANDARD_BANDS, channels)
     return feats
 
 
 def temporal_diagnostic(X, split, channels, n_times, starts):
-    """Return the lag-correlation report and the recommended gap.
+    """Choose the chronological gap from the training prefix only.
 
     Windows that straddle a label change are discarded before this matrix is
-    built. Lag k pairs kept windows whose start samples differ by exactly
-    k * n_times. A small correlation is not an independence result.
+    built. Lag k pairs kept training windows whose start samples differ by
+    exactly k * n_times. A small correlation is not an independence result.
     """
     feats = _training_fitted_features(X, split, channels, n_times)
     report = feature_lag_autocorr(
-        feats, lags=AUTOCORR_LAGS, starts=starts, win_samples=n_times,
+        feats, lags=AUTOCORR_LAGS, starts=starts[:split], win_samples=n_times,
     )
     recommendation = choose_temporal_gap(report, threshold=AUTOCORR_THRESHOLD)
     return {
+        "selected_from": "chronological training windows only",
+        "n_windows_used": int(split),
         "lag_report": report,
         "gap_choice": recommendation,
         "note": (
-            "Pearson correlation of band-power features, clipper fitted on the "
-            f"first {int(CHRONO_TRAIN_FRAC * 100)}% of kept windows. "
+            "Pearson correlation of band-power features on the first "
+            f"{int(CHRONO_TRAIN_FRAC * 100)}% of kept windows. The clipper "
+            "is fitted on that prefix and is not applied to later windows. "
             "Pairs are aligned by start sample, so a discarded mixed-label "
             "window is a time gap and is not counted as lag 1. "
             "A value below the threshold is not evidence that neighbouring "
@@ -242,13 +240,14 @@ def _log_lobo_or_expanding(name, result):
 
 
 def _describe_baselines(split_name, baselines):
-    print(f"  baselines ({split_name}):")
-    print(f"    positive-rate test  : {baselines['positive_rate_test']:.3f}")
-    print(f"    majority-class acc  : {baselines['majority_class_accuracy']:.3f}")
-    print(f"    stratified dummy balAcc: "
-          f"{baselines['dummy_stratified_balanced_accuracy']:.3f}")
-    print(f"    uniform dummy    balAcc: "
-          f"{baselines['dummy_uniform_balanced_accuracy']:.3f}")
+    print(f"  baselines ({split_name}), fit on training labels, same metrics:")
+    for name in ("most_frequent", "stratified", "uniform"):
+        block = baselines[name]
+        auc = "n/a" if block["roc_auc"] is None else f"{block['roc_auc']:.3f}"
+        print(
+            f"    {name:16s} balAcc={block['balanced_accuracy']:.3f} "
+            f"macroF1={block['macro_f1']:.3f} AUC={auc}"
+        )
 
 
 def main():
@@ -322,11 +321,10 @@ def main():
     # ------------------------------------------------------------------
     print("\n=== EXPANDING-WINDOW (walk-forward across label blocks) ===")
     n_unique_blocks = len(np.unique(blocks))
-    # Start with a third of the blocks in the initial training window, walk
-    # one block at a time. Gap is measured in blocks; if the recommended gap
-    # in windows is 0 we still keep 0 blocks (adjacent-block boundary is
-    # already leakage-safe under the block grouping).
-    gap_groups = 1 if gap_windows > 0 else 0
+    # Prespecified. Do not copy this from the chronological diagnostic:
+    # that diagnostic is fit on the training prefix, and early test blocks
+    # sit inside that prefix.
+    gap_groups = EXPANDING_WINDOW_GAP_GROUPS
     n_init_groups = max(3, n_unique_blocks // 3)
     expanding = evaluate_expanding_window(
         X, y, blocks, factory,
@@ -480,6 +478,11 @@ def main():
         "cross_subject_note": "Not available. The dataset contains one subject.",
         "temporal_dependence": diagnostic,
         "temporal_gap_windows_used": int(gap_windows),
+        "temporal_gap_selected_from": "chronological training windows only",
+        "expanding_window_gap_groups": int(EXPANDING_WINDOW_GAP_GROUPS),
+        "expanding_window_gap_source": (
+            "prespecified as 0 block groups; not estimated from later blocks"
+        ),
         "naive_random_split": naive,
         "chronological_holdout": chrono,
         "expanding_window": expanding,
@@ -487,9 +490,12 @@ def main():
             "super_block_size_native_blocks": MERGED_BLOCK_SIZE,
             "grouping_rule_prespecified": True,
             "grouping_rule_description": (
-                "Contiguous native blocks partitioned into fixed-size "
-                "super-blocks of MERGED_BLOCK_SIZE = 4. Rule declared in "
-                "source before evaluation; not tuned on results."
+                "Contiguous native blocks are grouped by first-seen order "
+                "into super-blocks of MERGED_BLOCK_SIZE = 4. If the block "
+                "count is not a multiple of 4, the leftover blocks join the "
+                "last complete super-block and are not a separate fold. "
+                "The size stays 4. The remainder rule does not read labels "
+                "or scores."
             ),
             "fold_class_summary": class_summary,
             "n_folds_with_both_classes": int(n_both),
@@ -514,12 +520,13 @@ def main():
             "version": "2026-09",
             "notes": (
                 "Naive split retained as descriptive only. Chronological "
-                "holdout and expanding-window run with a temporal gap "
-                "chosen from a measured autocorrelation threshold. Every "
-                "leakage-safe split reports its own baselines; no baseline "
-                "is shared across protocols. Leave-one-merged-block-out "
-                "(super-block size 4 native blocks, declared before "
-                "evaluation) is now the primary group protocol; "
+                "holdout gap is chosen from autocorrelation of the training "
+                "prefix only. The expanding-window gap is prespecified as "
+                "0 block groups. Dummies are fitted on training labels and "
+                "scored with the same metrics as the model. "
+                "Leave-one-merged-block-out groups native blocks in fours "
+                "and attaches a non-multiple remainder to the last complete "
+                "super-block; "
                 "leave-one-native-block-out is retained only as a labelled "
                 "diagnostic with a DummyClassifier(strategy='prior') "
                 "comparison on the same splits."

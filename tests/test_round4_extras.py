@@ -156,11 +156,12 @@ def test_include_baselines_attaches_per_split_baseline_dict_to_every_fold():
         b = fold["baselines"]
         for key in (
             "n_test", "positive_rate_train", "positive_rate_test",
-            "majority_class_accuracy",
-            "dummy_stratified_balanced_accuracy",
-            "dummy_uniform_balanced_accuracy",
+            "most_frequent", "stratified", "uniform",
         ):
             assert key in b
+        for name in ("most_frequent", "stratified", "uniform"):
+            for metric in ("balanced_accuracy", "macro_f1", "roc_auc"):
+                assert metric in b[name]
 
 
 def test_per_split_baselines_is_a_pure_function_of_the_input_labels():

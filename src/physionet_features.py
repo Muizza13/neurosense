@@ -6,8 +6,10 @@ can reproduce Phase 2 from raw data without silent skips.
 What this script does:
 
 1. Validates that every expected subject (S001..S010) and every expected
-   imagery run (R04, R08, R12) is present on disk. Missing or truncated
-   files raise a hard error rather than getting silently skipped.
+   imagery run (R04, R08, R12) is present on disk. A file is truncated
+   when its length does not match the length declared in the EDF header.
+   Missing or invalid files raise a hard error rather than getting
+   silently skipped.
 2. Only R04/R08/R12 are ever loaded, even if extra files exist in the
    subject directory. Other runs (rest, real movement) belong to
    different task conditions and are not part of Phase 2.
@@ -38,6 +40,7 @@ from __future__ import annotations
 import glob
 import hashlib
 import json
+import sys
 import warnings
 from pathlib import Path
 
@@ -69,7 +72,8 @@ EPOCH_TMAX = 3.5
 DATA_ROOT = "data/physionet"
 CACHE_PATH = "data/processed/physionet_features.npz"
 MANIFEST_PATH = "data/processed/physionet_features_manifest.json"
-MIN_EDF_BYTES = 500_000                          # truncated files are smaller
+# EDF length is taken from the header (n_records and samples per record).
+# A byte-count floor is not an integrity check.
 
 _integrate = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
 
@@ -97,28 +101,101 @@ def _expected_edf(subj, run):
     return f"{DATA_ROOT}/{subj}/{subj}R{run:02d}.edf"
 
 
+def edf_declared_nbytes(path):
+    """Byte length required by an EDF header.
+
+    Fixed header is 256 bytes. ``header_bytes`` must equal ``256 * (1 +
+    n_signals)``. Each data record is ``2 * sum(samples per signal)`` bytes.
+    The declared file length is the header plus ``n_records`` data records.
+    """
+    path = Path(path)
+    data = path.read_bytes()
+    if len(data) < 256:
+        raise ValueError(
+            f"{path}: shorter than an EDF header ({len(data)} bytes)"
+        )
+    if not data[0:8].startswith(b"0"):
+        raise ValueError(f"{path}: version field is not EDF ({data[0:8]!r})")
+    try:
+        header_bytes = int(data[184:192])
+        n_records = int(data[236:244])
+        n_signals = int(data[252:256])
+    except ValueError as exc:
+        raise ValueError(f"{path}: EDF header fields are not integers") from exc
+    if n_signals < 1:
+        raise ValueError(f"{path}: n_signals={n_signals}")
+    if header_bytes != 256 * (1 + n_signals):
+        raise ValueError(
+            f"{path}: header_bytes {header_bytes} != 256*(1+{n_signals})"
+        )
+    if len(data) < header_bytes:
+        raise ValueError(f"{path}: truncated inside the header")
+    if n_records < 1:
+        raise ValueError(f"{path}: n_records={n_records}")
+    signal_header = data[256:header_bytes]
+    sample_off = 216 * n_signals
+    record_samples = 0
+    for i in range(n_signals):
+        field = signal_header[sample_off + 8 * i:sample_off + 8 * (i + 1)]
+        try:
+            n_samp = int(field)
+        except ValueError as exc:
+            raise ValueError(
+                f"{path}: samples-per-record field {field!r} for signal {i}"
+            ) from exc
+        if n_samp < 1:
+            raise ValueError(f"{path}: signal {i} has {n_samp} samples per record")
+        record_samples += n_samp
+    declared = header_bytes + n_records * record_samples * 2
+    return {
+        "path": str(path),
+        "nbytes": len(data),
+        "declared_nbytes": int(declared),
+        "n_signals": int(n_signals),
+        "n_records": int(n_records),
+        "header_bytes": int(header_bytes),
+    }
+
+
+def assert_edf_complete(path):
+    """Reject a file whose length does not match the EDF header.
+
+    Shorter than declared means the download was truncated. Longer than
+    declared is also rejected. Neither decision uses a minimum file size.
+    """
+    info = edf_declared_nbytes(path)
+    if info["nbytes"] == info["declared_nbytes"]:
+        return info
+    relation = (
+        "truncated" if info["nbytes"] < info["declared_nbytes"]
+        else "longer than the header declares"
+    )
+    raise ValueError(
+        f"{path}: {relation}: file is {info['nbytes']} bytes, "
+        f"header declares {info['declared_nbytes']}"
+    )
+
+
 def _validate_layout():
-    """Refuse to proceed unless every expected EDF is present and non-empty."""
+    """Refuse to proceed unless every expected EDF matches its header."""
     missing = []
-    truncated = []
+    invalid = []
     for subj in EXPECTED_SUBJECTS:
         for run in IMAGERY_RUNS:
             path = _expected_edf(subj, run)
             if not Path(path).exists():
                 missing.append(path)
                 continue
-            size = Path(path).stat().st_size
-            if size < MIN_EDF_BYTES:
-                truncated.append((path, size))
-    if missing or truncated:
+            try:
+                assert_edf_complete(path)
+            except ValueError as exc:
+                invalid.append(str(exc))
+    if missing or invalid:
         parts = []
         if missing:
             parts.append("Missing EDFs:\n  " + "\n  ".join(missing))
-        if truncated:
-            parts.append(
-                "Truncated EDFs (< " f"{MIN_EDF_BYTES // 1000} KB):\n  "
-                + "\n  ".join(f"{p} ({s} bytes)" for p, s in truncated)
-            )
+        if invalid:
+            parts.append("EDF integrity failures:\n  " + "\n  ".join(invalid))
         parts.append(
             "Rerun scripts/download_data.sh. This script refuses to skip "
             "expected files silently."
@@ -301,6 +378,13 @@ def _write_manifest(X, y, g, run, trials, per_subject_meta):
 
 
 def main():
+    if len(sys.argv) >= 3 and sys.argv[1] == "--check-edf":
+        try:
+            assert_edf_complete(sys.argv[2])
+        except ValueError as exc:
+            print(exc, file=sys.stderr)
+            sys.exit(1)
+        return
     Path("data/processed").mkdir(parents=True, exist_ok=True)
     X, y, g, run, trial_ids, per_subject_meta = load_all()
     np.savez_compressed(

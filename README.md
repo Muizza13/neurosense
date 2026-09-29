@@ -16,7 +16,7 @@ Both phases fit preprocessing inside each fold and use one prespecified model: l
 
 **The unit of inference is the subject, or in Phase 1 the label block, never the epoch.** Every interval below comes from `src.core.statistics.bootstrap_ci`: 10,000 resamples of those group scores with `numpy.random.Generator` seed 42, and the 2.5 and 97.5 percentiles of the resampled means (`numpy.percentile`, linear interpolation). Trials are not resampled. A different bootstrap can move a lower endpoint that sits near 0.5 across 0.5. Pooled epoch-level figures stay in the JSON as descriptive only.
 
-**Every leakage-safe split reports its own baselines.** Majority-class accuracy, a stratified dummy, and a uniform dummy are computed on that split's test set alone. Nothing is shared across protocols. Where a protocol produces single-class test folds by construction (leave-one-block-out and expanding-window on Phase 1), the meaningful baseline is chance (0.5) and the majority-class number is trivially 1.0.
+**Every leakage-safe split reports its own baselines.** A most-frequent dummy, a stratified dummy, and a uniform dummy are fitted on training labels and scored with balanced accuracy, macro F1, and ROC-AUC. Nothing is shared across protocols. On a single-class test fold, the most-frequent dummy's balanced accuracy is 0 or 1.
 
 All numbers are produced by the code in this repo and stored in `reports/results/`. Nothing is rounded up.
 
@@ -24,22 +24,22 @@ All numbers are produced by the code in this repo and stored in `reports/results
 
 | Setting                 | Evaluation                                                   | Result                                                                                          | Reading                              |
 | ----------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ------------------------------------ |
-| Phase 1 (eye state)     | Naive random window split                                    | balAcc = 0.533, majority 0.55                                                                   | leaked, near dummy                   |
-| Phase 1 (eye state)     | Chronological holdout (gap = 0 windows)                      | balAcc = 0.416, majority 0.767, stratified dummy 0.366                                          | below majority                       |
-| Phase 1 (eye state)     | Expanding-window (13 folds across blocks)                    | balAcc = 0.380 [0.230, 0.545]                                                                   | at level of a stratified dummy, wide |
-| Phase 1 (eye state)     | Leave-one-merged-block-out (5 folds, super-block = 4 blocks) | balAcc = 0.456 [0.270, 0.605], AUC = 0.533 [0.396, 0.629]; dummy-prior balAcc 0.400             | at level of dummy prior              |
+| Phase 1 (eye state)     | Naive random window split                                    | balAcc = 0.533; most-frequent dummy balAcc 0.500; stratified dummy balAcc 0.581                 | leaky                                |
+| Phase 1 (eye state)     | Chronological holdout (gap = 0 windows, training prefix)     | balAcc = 0.416, macro F1 = 0.330, AUC = 0.491; most-frequent dummy balAcc 0.500, macro F1 0.189 | below the dummy on balanced accuracy |
+| Phase 1 (eye state)     | Expanding-window (13 folds across blocks, gap prespecified 0)| balAcc = 0.380 [0.230, 0.545]                                                                   | wide interval                        |
+| Phase 1 (eye state)     | Leave-one-merged-block-out (4 folds; remainder attached)     | balAcc = 0.517 [0.401, 0.631], AUC = 0.518 [0.396, 0.617]; dummy-prior balAcc 0.500             | balanced accuracy overlaps the dummy |
 | Phase 1 (eye state)     | Leave-one-native-block-out (19 single-class folds)           | diagnostic only; pooled AUC 0.437 real vs 0.000 dummy prior on same splits, i.e. split artefact | do not read as drift                 |
 | Phase 1 (eye state)     | Cross-subject                                                | not available                                                                                   | one subject                          |
-| Phase 2 (motor imagery) | Naive random trial split                                     | balAcc = 0.504                                                                                  | near dummy                           |
-| Phase 2 (motor imagery) | Within-subject shuffled trial CV                             | balAcc = 0.607 [0.522, 0.700], AUC = 0.632 [0.534, 0.735]; 8/10 subjects above 0.5              | modest, ranking above chance         |
-| Phase 2 (motor imagery) | Within-subject leave-one-run-out (30 folds)                  | balAcc = 0.588 [0.529, 0.648], AUC = 0.657 [0.598, 0.718]; tests transfer across runs of same session, NOT across sessions | modest, added in 2026-09 audit       |
-| Phase 2 (motor imagery) | Cross-subject (leave-one-subject-out)                        | balAcc = 0.474 [0.432, 0.516], AUC = 0.511 [0.447, 0.583]                                       | chance                               |
+| Phase 2 (motor imagery) | Naive random trial split                                     | balAcc = 0.516, AUC = 0.551                                                                     | leaky contrast                       |
+| Phase 2 (motor imagery) | Within-subject shuffled trial CV                             | balAcc = 0.607 [0.546, 0.688], AUC = 0.644 [0.577, 0.729]; 9/10 and 10/10 subjects above 0.5    | modest                               |
+| Phase 2 (motor imagery) | Within-subject leave-one-run-out (10 subject means)          | balAcc = 0.574 [0.498, 0.654], AUC = 0.633 [0.545, 0.729]; same-session runs only               | interval includes 0.5                |
+| Phase 2 (motor imagery) | Cross-subject (leave-one-subject-out)                        | balAcc = 0.470 [0.423, 0.524], AUC = 0.518 [0.450, 0.593]                                       | interval includes 0.5                |
 
 The 2026-09 audit added (a) temporal-gap chronological holdout and expanding-window on Phase 1, (b) leave-one-merged-block-out with a DummyClassifier(prior) diagnostic that replaces single-class native LOBO as the primary group protocol, (c) leave-one-run-out within subject on Phase 2, (d) persisted per-fold labels, predictions, and probabilities in Phase 2 JSON, (e) per-split baselines throughout, (f) a hardened raw-data reproduction path with a manifest of SHA-256 source-file checksums, (g) signed per-fold coefficients captured and consumed by the figure code so figures do not refit models, and (h) a CSP + LDA extension for Phase 2 as a separately labelled comparison to the audited band-power primary. The primary model is the same as before (LogisticRegression, C = 1.0, balanced). See [`REFACTOR_NOTES.md`](REFACTOR_NOTES.md) and [`reports/AUDIT_LOG.md`](reports/AUDIT_LOG.md) for the full change list.
 
-**How to read the four rounds.** Round 1 fixed preprocessing leakage and Phase 1 baselines. Round 2 corrected the leave-one-block-out analysis and rebuilt Phase 2 reporting. Round 3 corrected interpretation language, unified the attribution method across both figures, and hardened raw-data reproduction. Round 4 removed duplicated evaluation logic (figures and tables now read the same JSON, no refit), added the CSP+LDA extension, added the CI workflow, and expanded test coverage. Numbers reported here are the round-3/round-4 numbers; historical pre-audit numbers are preserved verbatim under `reports/results/archive/pre-audit-<commit>/` and `reports/figures/archive/pre-audit-<commit>/`.
+**How to read the four rounds.** Round 1 fixed preprocessing leakage and Phase 1 baselines. Round 2 corrected the leave-one-block-out analysis and rebuilt Phase 2 reporting. Round 3 corrected interpretation language, unified the attribution method across both figures, and hardened raw-data reproduction. Round 4 removed duplicated evaluation logic (figures and tables now read the same JSON, no refit), added the CSP+LDA extension, added the CI workflow, and expanded test coverage. Numbers reported here are from the rerun after the header-length check, the subject-level leave-one-run-out bootstrap, the training-fitted dummies, the remainder rule, and the training-only gap. Historical pre-audit numbers stay under `reports/results/archive/pre-audit-<commit>/` and `reports/figures/archive/pre-audit-<commit>/`.
 
-"Above 0.5" is reported as a descriptive count, not a significance claim. Standard deviation across subjects is spread; the bootstrap CI is uncertainty of the mean, computed by resampling subjects or blocks (never trials).
+"Above 0.5" is a descriptive count, not a significance claim. The bootstrap resamples subjects or blocks, never trials. Leave-one-run-out resamples one score per subject, the mean of that subject's run folds. The 30 run rows are stored and are not the interval. These Phase 2 intervals are from the 450-trial cache built after the header check. They are not a re-description of the earlier 30-run intervals.
 
 ---
 
@@ -49,25 +49,25 @@ The 2026-09 audit added (a) temporal-gap chronological holdout and expanding-win
 
 Every Phase 1 number rests on 100 observations from one person. That single fact drives the width of every interval below and is the main reason this phase is a cautionary tale rather than a result.
 
-**Temporal-gap diagnostic.** The chronological and expanding-window splits can drop windows between train and test. The gap is the first lag, in kept windows, at which the mean absolute Pearson correlation of the band-power features falls below 0.30. Each side of a pair is centered on the paired rows only. Lag k pairs windows whose start samples differ by exactly k seconds. Mixed-label windows are discarded before this matrix is built: 16 of the 99 index-adjacent kept windows are two seconds apart, not one, and those pairs are not lag 1. On this recording the lag-1 through lag-5 values are 0.083 (83 pairs), 0.095 (86), 0.130 (82), 0.071 (83), and 0.072 (84). All are below 0.30, so the recorded gap is 0 windows. A value in that range is not evidence that neighbouring windows are independent. The clipper for this measurement is fit on the first 70% of kept windows. The report is in `temporal_dependence` in the Phase 1 JSON.
+**Temporal-gap diagnostic.** The chronological gap is the first lag, in kept windows, at which the mean absolute Pearson correlation of the band-power features falls below 0.30. That correlation is computed on the first 70 kept windows only. The clipper is fitted on that prefix and is not applied to later windows. Each side of a pair is centered on the paired rows only. Lag k pairs windows whose start samples differ by exactly k seconds. Mixed-label windows are discarded before this matrix is built: 11 of the 69 index-adjacent training windows are two seconds apart, not one, and those pairs are not lag 1. On the training prefix the lag-1 through lag-5 values are 0.092 (58 pairs), 0.079 (60), 0.150 (57), 0.082 (58), and 0.082 (57). All are below 0.30, so the chronological gap is 0 windows. A value in that range is not evidence that neighbouring windows are independent. The expanding-window gap is prespecified as 0 block groups. It is not copied from this diagnostic. The report is in `temporal_dependence` in the Phase 1 JSON.
 
 **Five leakage-aware protocols, per-split baselines.**
 
-| Protocol                                          | Balanced accuracy    | Macro F1             | ROC AUC              | Majority | Stratified dummy | Uniform dummy |
-| ------------------------------------------------- | -------------------- | -------------------- | -------------------- | -------- | ---------------- | ------------- |
-| Naive random window split (leaky)                 | 0.533                | 0.533                | 0.566                | 0.550    | 0.552            | 0.536         |
-| Chronological 70/30 (gap = 0)                     | 0.416                | 0.330                | 0.491                | 0.767    | 0.366            | 0.339         |
-| Expanding-window (13 folds)                       | 0.380 [0.230, 0.545] | 0.283 [0.165, 0.432] | undefined            | see note | see note         | see note      |
-| **Leave-one-merged-block-out (primary, 5 folds)** | 0.456 [0.270, 0.605] | 0.433 [0.255, 0.582] | 0.533 [0.396, 0.629] | mixed    | mixed            | mixed         |
-| Leave-one-native-block-out (diagnostic, 19 folds) | 0.482 [0.334, 0.630] | 0.369 [0.239, 0.515] | undefined            | see note | see note         | see note      |
+| Protocol                                          | Balanced accuracy    | Macro F1             | ROC AUC              | Most-frequent balAcc | Stratified balAcc | Uniform balAcc |
+| ------------------------------------------------- | -------------------- | -------------------- | -------------------- | -------------------- | ----------------- | -------------- |
+| Naive random window split (leaky)                 | 0.533                | 0.533                | 0.566                | 0.500                | 0.581             | 0.444          |
+| Chronological 70/30 (gap = 0)                     | 0.416                | 0.330                | 0.491                | 0.500                | 0.366             | 0.339          |
+| Expanding-window (13 folds)                       | 0.380 [0.230, 0.545] | 0.283 [0.165, 0.432] | undefined            | 0 or 1 per fold      | see note          | see note       |
+| **Leave-one-merged-block-out (primary, 4 folds)** | 0.517 [0.401, 0.631] | 0.512 [0.392, 0.624] | 0.518 [0.396, 0.617] | 0.500                | see JSON          | see JSON       |
+| Leave-one-native-block-out (diagnostic, 19 folds) | 0.482 [0.334, 0.630] | 0.369 [0.239, 0.515] | undefined            | 0 or 1 per fold      | see note          | see note       |
 
-Note: for native leave-one-block-out and expanding-window each held-out block is single-class by construction, so majority-class accuracy is trivially 1.0 and the dummy baselines degenerate. The meaningful reference for those protocols is chance (0.5), which every reported interval brackets. The merged-block variant partitions consecutive native blocks into super-blocks of size 4 (declared in source before evaluation; not tuned on results); 4 of 5 super-blocks contain both classes, so per-fold AUC is well-defined.
+The dummy columns are balanced accuracy. Each dummy is fitted on training labels and scored with balanced accuracy, macro F1, and ROC-AUC. Macro F1 and AUC for the dummies are in the JSON. On the chronological test segment the most-frequent dummy's macro F1 is 0.189 and its AUC is 0.500. Native leave-one-block-out and expanding-window test folds are single-class, so AUC is undefined. A most-frequent dummy on those folds scores balanced accuracy 0 or 1, depending on whether the training majority matches the held-out class. Super-blocks use 4 native blocks. If the block count is not a multiple of 4, the leftover blocks join the last complete super-block. With 19 native blocks the groups hold 4, 4, 4, and 7 blocks (9, 11, 22, and 58 windows). All 4 super-blocks contain both classes. That count was measured after the groups were assigned.
 
-**On the merged-LOBO number vs a dummy prior.** On the same merged splits, `DummyClassifier(strategy="prior")` scores balAcc = 0.400 [0.200, 0.500] and AUC = 0.500 [0.500, 0.500]. The primary model at balAcc = 0.456 and AUC = 0.533 is within a fold of that dummy and its CIs overlap. This is not evidence of decoding.
+**On the merged-LOBO number vs a dummy prior.** On the same merged splits, `DummyClassifier(strategy="prior")` scores balAcc = 0.500 [0.500, 0.500], macro F1 = 0.351 [0.310, 0.394], and AUC = 0.500 [0.500, 0.500]. The primary model is balAcc = 0.517 [0.401, 0.631], macro F1 = 0.512 [0.392, 0.624], and AUC = 0.518 [0.396, 0.617]. The balanced-accuracy and AUC intervals include 0.500. The macro F1 intervals do not.
 
 **Reading the native-LOBO diagnostic.** Every native block is single-class, so per-fold AUC is undefined and only the pooled AUC across separately-trained models is a number. On this recording the pooled AUC of the real model is 0.437 and the pooled AUC of `DummyClassifier(strategy="prior")` on the same splits is 0.000. Because the dummy is learning nothing, the sub-chance dummy pooled AUC is a splitting artefact rather than evidence of electrode drift; the same artefact affects any pooled-AUC number on this recording. The native-LOBO row is retained only as a diagnostic for that reason.
 
-The chronological logistic regression at 0.416 beats a stratified dummy by a small margin but sits well below the 0.767 majority-class baseline. The expanding-window mean of 0.380 sits at the level a stratified dummy would reach on a two-class split. Neither is evidence of real generalisation.
+The chronological logistic regression scores balanced accuracy 0.416, macro F1 0.330, and AUC 0.491. The most-frequent dummy fitted on the training prefix scores 0.500, 0.189, and 0.500 on those same three metrics. The stratified dummy's balanced accuracy on that split is 0.366.
 
 Secondary models under leave-one-merged-block-out: SVM-RBF and RandomForest (300); see `reports/results/phase1_results.json` for per-fold rows.
 
@@ -77,26 +77,26 @@ Secondary models under leave-one-merged-block-out: SVM-RBF and RandomForest (300
 
 **Why native-LOBO and expanding-window AUCs are undefined.** Every contiguous native label block is single-class by construction, so a held-out block contains only eyes-open or only eyes-closed windows. AUC cannot be computed on a single-class test set, and balanced accuracy degenerates into the recall of whichever class the block contains. Native LOBO is retained only as a labelled diagnostic and paired with a DummyClassifier(prior) run on the same splits to make the pooled-metric artefact obvious. **Leave-one-merged-block-out is the primary group protocol; chronological holdout is the primary temporal protocol.**
 
-**Coefficients.** Signed standardized logistic-regression coefficients are stored for each merged-LOBO training fold. The largest mean coefficient in the saved JSON is `F4_beta` (+1.430). The merged-LOBO balanced accuracy is 0.456 [0.270, 0.605], and the same-splits dummy prior is 0.400 [0.200, 0.500]. The two intervals overlap. An earlier README treated a frontal ranking as evidence of eye-movement artifact. That sentence is removed. No eye-artifact regressor or blink annotation is in this repository, and no Berger-effect contrast is computed here.
+**Coefficients.** Signed standardized logistic-regression coefficients are stored for each merged-LOBO training fold. The largest mean coefficient in the saved JSON is `F4_beta` (+1.364). The merged-LOBO balanced accuracy is 0.517 [0.401, 0.631], and the same-splits dummy prior is 0.500 [0.500, 0.500]. The balanced-accuracy interval includes the dummy. An earlier README treated a frontal ranking as evidence of eye-movement artifact. That sentence is removed. No eye-artifact regressor or blink annotation is in this repository, and no Berger-effect contrast is computed here.
 
-**Takeaway.** On this one recording, under these splits, the prespecified model does not beat the same-split dummy. The file has one subject.
+**Takeaway.** On this one recording, the merged-block balanced-accuracy and AUC intervals include the dummy prior. The macro F1 intervals do not. The file has one subject.
 
 ---
 
 ## Phase 2: PhysioNet Motor Imagery (the honest result)
 
-**Dataset.** PhysioNet EEG Motor Movement/Imagery, imagined left versus right fist. 10 subjects, 383 trials across imagery runs R04, R08, and R12. Features are mu (8 to 13 Hz) and beta (13 to 30 Hz) band power on a 13-channel sensorimotor strip at 160 Hz (26 features). Phase 1 uses four bands, including delta and theta. Phase 2 does not.
+**Dataset.** PhysioNet EEG Motor Movement/Imagery, imagined left versus right fist. 10 subjects, 450 trials across imagery runs R04, R08, and R12, 15 trials in each run. Features are mu (8 to 13 Hz) and beta (13 to 30 Hz) band power on a 13-channel sensorimotor strip at 160 Hz (26 features). Phase 1 uses four bands, including delta and theta. Phase 2 does not. Eleven of the EDF files previously on disk were shorter than the length declared in the header. This cache was rebuilt after those files were replaced.
 
 | Protocol                                    | Balanced accuracy    | Macro F1             | ROC AUC              |
 | ------------------------------------------- | -------------------- | -------------------- | -------------------- |
-| Naive random trial split (leaky)            | 0.504                | -                    | 0.521                |
-| Within-subject shuffled trial CV            | 0.607 [0.522, 0.700] | 0.605 [0.518, 0.698] | 0.632 [0.534, 0.735] |
-| Within-subject leave-one-run-out (30 folds) | 0.588 [0.529, 0.648] | 0.556 [0.490, 0.622] | 0.657 [0.598, 0.718] |
-| Cross-subject (leave-one-subject-out)       | 0.474 [0.432, 0.516] | 0.427 [0.380, 0.474] | 0.511 [0.447, 0.583] |
+| Naive random trial split (leaky)                 | 0.516                | 0.515                | 0.551                |
+| Within-subject shuffled trial CV                 | 0.607 [0.546, 0.688] | 0.606 [0.544, 0.687] | 0.644 [0.577, 0.729] |
+| Within-subject leave-one-run-out (10 subjects)   | 0.574 [0.498, 0.654] | 0.543 [0.458, 0.632] | 0.633 [0.545, 0.729] |
+| Cross-subject (leave-one-subject-out)            | 0.470 [0.423, 0.524] | 0.421 [0.377, 0.473] | 0.518 [0.450, 0.593] |
 
-Descriptive counts above 0.5 (not significance claims): 8 of 10 subjects on within-subject balanced accuracy, 8 of 10 on within-subject AUC, 19 of 30 folds on leave-one-run-out balanced accuracy, 25 of 30 folds on leave-one-run-out AUC, 2 of 10 subjects on cross-subject balanced accuracy.
+Descriptive counts above 0.5 (not significance claims): 9 of 10 subjects on within-subject balanced accuracy, 10 of 10 on within-subject AUC, 7 of 10 subjects on leave-one-run-out balanced accuracy, 8 of 10 subjects on leave-one-run-out AUC, 3 of 10 subjects on cross-subject balanced accuracy.
 
-Leave-one-run-out balanced accuracy is 0.588 and shuffled-trial balanced accuracy is 0.607. Leave-one-run-out uses the three imagery runs from the same recording. It does not test a later session.
+Leave-one-run-out balanced accuracy is 0.574 [0.498, 0.654]. That interval resamples the 10 subject means. Shuffled-trial balanced accuracy is 0.607 [0.546, 0.688]. Leave-one-run-out uses the three imagery runs from the same recording. It does not test a later session.
 
 **Within-subject shuffled trial CV vs leave-one-run-out.** The shuffled trial CV is retained because it is the direct comparison to a lot of published within-subject numbers on this dataset. It is optimistic: trials from the same recording run appear in both train and test. The leave-one-run-out (LORO) evaluation added in the 2026-09 audit trains on two of a subject's three imagery runs (R04, R08, R12) and tests on the third, so trials in the test set come from a run the model has not seen. This tests transfer across recording runs of the same session; it does not establish transfer to a new recording session.
 
@@ -106,15 +106,15 @@ Leave-one-run-out balanced accuracy is 0.588 and shuffled-trial balanced accurac
 
 | S0    | S1    | S2    | S3    | S4    | S5    | S6    | S7    | S8    | S9    |
 | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
-| 0.545 | 0.471 | 0.381 | 0.600 | 0.487 | 0.353 | 0.500 | 0.496 | 0.449 | 0.461 |
+| 0.638 | 0.395 | 0.361 | 0.542 | 0.464 | 0.393 | 0.499 | 0.546 | 0.402 | 0.464 |
 
-A spread from 0.353 to 0.600 that a single pooled figure hides completely. Standard deviation across subjects: 0.072. Secondary models cross-subject: LogisticRegression (C = 0.5) 0.472 [0.427, 0.514], RandomForest (300) 0.487 [0.444, 0.531].
+A spread from 0.361 to 0.638 that a single pooled figure hides completely. Standard deviation across subjects: 0.087. Secondary models cross-subject: LogisticRegression (C = 0.5) 0.472 [0.422, 0.522], RandomForest (300) 0.490 [0.455, 0.528].
 
-**Scores.** The documented within-subject balanced-accuracy interval is 0.522 to 0.700. The lower endpoint is close to 0.5. Leave-one-subject-out balanced accuracy is 0.474 [0.432, 0.516], which includes 0.5. This repository does not include a subject-identity classifier.
+**Scores.** On this cache the shuffled-trial balanced-accuracy interval is 0.546 to 0.688. Leave-one-subject-out balanced accuracy is 0.470 [0.423, 0.524], which includes 0.5. This repository does not include a subject-identity classifier.
 
 ![Phase 2 generalization](reports/figures/fig2_phase2_generalization.png)
 
-**Coefficients.** Both panels of Figure 3 use signed standardized logistic-regression coefficients from the saved JSON. Phase 1 white dots are one coefficient per merged-block training fold. Phase 2 white dots are subject-mean coefficients, one per subject. They are not individual training-fold coefficients. The five largest mean absolute coefficients in the Phase 2 JSON are `C6_beta`, `C1_mu`, `C3_beta`, `C5_mu`, and `C4_mu`.
+**Coefficients.** Both panels of Figure 3 use signed standardized logistic-regression coefficients from the saved JSON. Phase 1 white dots are one coefficient per merged-block training fold. Phase 2 white dots are subject-mean coefficients, one per subject. They are not individual training-fold coefficients. The five largest mean absolute coefficients in the Phase 2 JSON are `C4_mu` (+0.305), `C6_beta` (+0.290), `C5_mu` (+0.193), `C3_beta` (-0.179), and `C1_mu` (+0.160).
 
 ![Interpretability contrast](reports/figures/fig3_interpretability_contrast.png)
 
@@ -134,22 +134,22 @@ Round 4 of the audit adds Common Spatial Patterns with Linear Discriminant Analy
 
 | Protocol | Model | balAcc | AUC |
 |---|---|---|---|
-| Within-subject shuffled trial CV | LogReg band-power (primary) | 0.607 [0.522, 0.700] | 0.632 [0.534, 0.735] |
-| Within-subject shuffled trial CV | CSP+LDA (extension) | 0.655 [0.543, 0.773] | 0.693 [0.569, 0.819] |
-| Within-subject LORO (30 folds) | LogReg band-power (primary) | 0.588 [0.529, 0.648] | 0.657 [0.598, 0.718] |
-| Within-subject LORO (30 folds) | CSP+LDA (extension) | 0.640 [0.577, 0.705] | 0.758 [0.675, 0.836] |
-| Cross-subject LOSO | LogReg band-power (primary) | 0.474 [0.432, 0.516] | 0.511 [0.447, 0.583] |
-| Cross-subject LOSO | CSP+LDA (extension) | 0.541 [0.478, 0.618] | 0.654 [0.556, 0.767] |
+| Within-subject shuffled trial CV | LogReg band-power (primary) | 0.607 [0.546, 0.688] | 0.644 [0.577, 0.729] |
+| Within-subject shuffled trial CV | CSP+LDA (extension) | 0.669 [0.545, 0.794] | 0.698 [0.551, 0.837] |
+| Within-subject LORO (10 subject means) | LogReg band-power (primary) | 0.574 [0.498, 0.654] | 0.633 [0.545, 0.729] |
+| Within-subject LORO (10 subject means) | CSP+LDA (extension) | 0.656 [0.560, 0.758] | 0.748 [0.629, 0.865] |
+| Cross-subject LOSO | LogReg band-power (primary) | 0.470 [0.423, 0.524] | 0.518 [0.450, 0.593] |
+| Cross-subject LOSO | CSP+LDA (extension) | 0.569 [0.519, 0.627] | 0.669 [0.578, 0.764] |
 
-CSP plus LDA is the usual motor-imagery baseline (Ramoser, Müller-Gerking, and Pfurtscheller, 2000), not a method introduced here. On these 10 subjects the within-subject CSP balanced-accuracy point estimates are higher than the band-power point estimates (0.655 vs 0.607 shuffled; 0.640 vs 0.588 leave-one-run-out). Cross-subject CSP balanced accuracy is 0.541 [0.478, 0.618], so the interval still includes 0.5. The cross-subject CSP AUC interval is 0.654 [0.556, 0.767]. The JSON records 3 of 10 subjects above 0.5 on balanced accuracy and 9 of 10 above 0.5 on AUC.
+CSP plus LDA is the usual motor-imagery baseline (Ramoser, Müller-Gerking, and Pfurtscheller, 2000), not a method introduced here. On these 10 subjects the within-subject CSP balanced-accuracy point estimates are 0.669 [0.545, 0.794] shuffled and 0.656 [0.560, 0.758] leave-one-run-out, against 0.607 [0.546, 0.688] and 0.574 [0.498, 0.654] for band-power. The leave-one-run-out intervals resample subject means. Cross-subject CSP balanced accuracy is 0.569 [0.519, 0.627]. The cross-subject CSP AUC interval is 0.669 [0.578, 0.764]. The JSON records 7 of 10 subjects above 0.5 on balanced accuracy and 9 of 10 above 0.5 on AUC. Those counts are not a test.
 
 ---
 
 ## Two corrections to earlier versions of this README
 
-**1. Cross-subject AUC is chance, not below chance.** An earlier version reported 0.48 and called it below chance. That figure came from pooling every held-out subject's predicted probabilities into one array and scoring it once. Subjects' decision scores sit on different scales, so pooling manufactures apparent below-chance performance. The subject-level mean is 0.511 [0.447, 0.583]. The conclusion is unchanged, chance either way, but "below chance" was a reporting artifact rather than a finding. The pooled figures remain in `reports/results/phase2_results.json` under `pooled_descriptive_metrics`, tagged as descriptive.
+**1. Cross-subject AUC is not the pooled number.** An earlier version reported 0.48 and called it below chance. That figure came from pooling every held-out subject's predicted probabilities into one array and scoring it once. On this cache the subject-level mean AUC is 0.518 [0.450, 0.593]. The pooled descriptive AUC in the JSON is 0.476. The reason the two differ is not identified here.
 
-**2. Within-subject interval.** The documented bootstrap gives balanced accuracy 0.522 to 0.700 and AUC 0.534 to 0.735 on shuffled-trial CV, and balanced accuracy 0.529 to 0.648 on leave-one-run-out. The balanced-accuracy lower endpoint is close to 0.5. Eight of 10 subjects sit above 0.5 on both shuffled-trial metrics. That count is not a test. Leave-one-run-out uses three runs from the same recording.
+**2. Within-subject interval.** On the 450-trial cache, `bootstrap_ci` gives shuffled-trial balanced accuracy 0.546 to 0.688 and AUC 0.577 to 0.729. Leave-one-run-out balanced accuracy, resampling 10 subject means, is 0.498 to 0.654. Nine of 10 subjects sit above 0.5 on shuffled-trial balanced accuracy, and 10 of 10 on AUC. That count is not a test. Leave-one-run-out uses three runs from the same recording.
 
 An earlier version also paired a balanced accuracy from one model with an AUC from another. Every headline metric here comes from the single prespecified model.
 
@@ -163,13 +163,13 @@ Full detail in [`REFACTOR_NOTES.md`](REFACTOR_NOTES.md).
 
 ## A caveat on the inflation story
 
-Phase 2's naive random trial split reaches 0.504 against a cross-subject 0.474. Essentially no gap. Phase 2 uses discrete trials, and random splitting of discrete trials leaks far less than random splitting of Phase 1's continuous windows.
+Phase 2's naive random trial split reaches 0.516 against a cross-subject 0.470. Phase 2 uses discrete trials, and random splitting of discrete trials leaks far less than random splitting of Phase 1's continuous windows.
 
 **The dramatic inflation result belongs to Phase 1 and is not a general claim about EEG machine learning.** How much a naive split inflates depends on how much temporal and session structure the epochs share.
 
 ## Unified finding
 
-On the UCI file, the random-split balanced accuracy is 0.533 and the chronological holdout is 0.416. On the PhysioNet subset, the random-split balanced accuracy is 0.504 and leave-one-subject-out is 0.474. The large gap between a random split and a blocked split is in Phase 1. Phase 2 does not show that gap. Leave-one-subject-out band-power balanced accuracy includes 0.5. No further cause is identified.
+On the UCI file, the random-split balanced accuracy is 0.533 and the chronological holdout is 0.416. On the PhysioNet subset, the random-split balanced accuracy is 0.516 and leave-one-subject-out is 0.470. The large gap between a random split and a blocked split is in Phase 1. Phase 2 does not show that gap. Leave-one-subject-out band-power balanced accuracy includes 0.5. No further cause is identified.
 
 ## Repository structure
 
@@ -236,7 +236,7 @@ python src/phase1_eyestate.py          # reads data/raw/EEG Eye State.arff
 python src/phase2_motor_imagery.py     # reads data/processed/physionet_features.npz
 python src/make_figures.py             # figures from JSON only, no model fit
 python src/make_tables.py              # markdown tables from the same JSONs
-python -m pytest tests/ -q             # 73 tests
+python -m pytest tests/ -q             # 79 tests
 ```
 
 `data/processed/physionet_features.npz` and its manifest `data/processed/physionet_features_manifest.json` are committed. The manifest records the SHA-256 of every source EDF the cache was built from, so a Path-B rerun can verify byte-for-byte agreement.
@@ -255,7 +255,7 @@ python src/make_tables.py              # picks up the CSP results automatically
 python -m pytest tests/ -q
 ```
 
-`scripts/download_data.sh` hard-fails on any missing or truncated EDF (below 500 KB per file) rather than silently skipping. `src/physionet_features.py` validates that all 10 expected subjects and all 3 imagery runs per subject (R04, R08, R12) are present, and asserts the sampling rate on every EDF equals the expected 160 Hz.
+`scripts/download_data.sh` writes each EDF to a temporary file, accepts it only when the file length equals the length declared in the EDF header, and moves it into place after that check. After three failed attempts it deletes the partial file and exits. A size floor is not used. `src/physionet_features.py` runs the same header check on all 10 subjects and all 3 imagery runs (R04, R08, R12), and asserts the sampling rate on every EDF equals the expected 160 Hz.
 
 ### What's in the manifest
 
@@ -272,7 +272,7 @@ Rerunning `python -m src.physionet_features` on unchanged EDFs produces a byte-i
 
 Every number in the tables above has been reproduced on two independent machines and matches to three decimal places, with one exception: the RandomForest bootstrap interval varies in the third decimal across scikit-learn versions because of tie-breaking in tree construction. Point estimates are identical. Versions are pinned in `requirements.txt`.
 
-The Path-B trial count is 383 (post-audit re-extraction with MNE 1.8). The pre-audit cache had 437 trials because an older MNE version retained more boundary-adjacent epochs after `mne.concatenate_raws` in the feature extractor. The point estimates on the trimmed cache are close to the pre-audit numbers and do not change any substantive conclusion.
+The Path-B cache built from header-complete EDFs has 450 trials, 15 in each imagery run. Eleven files previously on disk were shorter than their headers. The 383-trial cache was built from those files. The pre-audit archive still has its own 437-trial cache and is not overwritten.
 
 `tests/test_no_leakage.py` encodes the project's thesis as executable checks. If a global scaler, a naive split, or an epoch-level confidence interval is reintroduced, a test fails. The 2026-09 audit added `test_held_out_mutation_cannot_change_training_preprocessing`, which mutates held-out rows to 1e12, refits the Phase 1 pipeline, and requires the fitted clipper thresholds, scaler statistics, and transformed training features to be bit-identical to a baseline without the mutation.
 

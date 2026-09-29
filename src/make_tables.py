@@ -110,9 +110,9 @@ def phase2_table(p2: dict, csp: dict | None = None) -> str:
     ]
 
     if loro is not None:
-        loro_ci = loro["fold_bootstrap_ci"]
+        loro_ci = loro["subject_bootstrap_ci"]
         lines.append(_row([
-            "Within-subject LORO (30 folds)",
+            "Within-subject LORO (10 subject means)",
             "LogReg band-power",
             _ci(loro_ci["balanced_accuracy"]),
             _ci(loro_ci["roc_auc"]),
@@ -130,7 +130,7 @@ def phase2_table(p2: dict, csp: dict | None = None) -> str:
             ("within_subject_shuffled",
              "Within-subject shuffled trial CV"),
             ("within_subject_leave_one_run_out",
-             "Within-subject LORO"),
+             "Within-subject LORO (10 subject means)"),
             ("cross_subject", "Cross-subject LOSO"),
         ):
             block = csp.get(proto_key)

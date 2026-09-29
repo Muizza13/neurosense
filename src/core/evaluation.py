@@ -20,7 +20,11 @@ from sklearn.metrics import (
     f1_score,
     roc_auc_score,
 )
-from sklearn.model_selection import GridSearchCV, LeaveOneGroupOut
+from sklearn.model_selection import (
+    GridSearchCV,
+    LeaveOneGroupOut,
+    cross_val_predict,
+)
 
 from .statistics import bootstrap_ci
 
@@ -31,51 +35,71 @@ def _index_hash(idx):
     return hashlib.sha1(arr.tobytes()).hexdigest()[:12]
 
 
-def per_split_baselines(y_train, y_test, random_state=42):
-    """Baselines computed on this split's test set alone.
+def _empty_dummy_metrics():
+    return {
+        "balanced_accuracy": None,
+        "macro_f1": None,
+        "roc_auc": None,
+    }
 
-    Every leakage-aware split reports these three, so a headline number is
-    always comparable to a same-split baseline rather than to a constant
-    that carries over from a different protocol.
+
+def _positive_class_proba(estimator, X):
+    """Column of predict_proba for class 1, or zeros if class 1 was unseen."""
+    proba = estimator.predict_proba(X)
+    classes = [int(c) for c in estimator.classes_]
+    if 1 not in classes:
+        return np.zeros(len(X))
+    return proba[:, classes.index(1)]
+
+
+def _score_dummy(strategy, y_train, y_test, random_state):
+    """Fit one dummy on training labels and score it like the model."""
+    y_train = np.asarray(y_train).astype(int)
+    y_test = np.asarray(y_test).astype(int)
+    if len(y_train) == 0 or len(y_test) == 0:
+        return _empty_dummy_metrics()
+    clf = DummyClassifier(strategy=strategy, random_state=random_state)
+    clf.fit(np.zeros((len(y_train), 1)), y_train)
+    pred = clf.predict(np.zeros((len(y_test), 1)))
+    proba = _positive_class_proba(clf, np.zeros((len(y_test), 1)))
+    return {
+        "balanced_accuracy": float(balanced_accuracy_score(y_test, pred)),
+        "macro_f1": float(f1_score(y_test, pred, average="macro",
+                                   zero_division=0)),
+        "roc_auc": _safe_auc(y_test, proba),
+    }
+
+
+def per_split_baselines(y_train, y_test, random_state=42):
+    """Dummies fitted on training labels, scored with the model metrics.
+
+    ``most_frequent``, ``stratified``, and ``uniform`` each return
+    balanced accuracy, macro F1, and ROC-AUC. The test-set majority rate
+    is not used as a score.
     """
     y_train = np.asarray(y_train).astype(int)
     y_test = np.asarray(y_test).astype(int)
-    if y_test.size == 0:
-        return {
-            "n_test": 0,
-            "positive_rate_train": (float(np.mean(y_train == 1))
-                                    if y_train.size else None),
-            "positive_rate_test": None,
-            "majority_class_accuracy": None,
-            "dummy_stratified_balanced_accuracy": None,
-            "dummy_uniform_balanced_accuracy": None,
-        }
-
-    dummy_shape = (
-        np.zeros((max(1, len(y_train)), 1))
-        if len(y_train) > 0
-        else np.zeros((1, 1))
-    )
-    strat = DummyClassifier(strategy="stratified", random_state=random_state)
-    strat.fit(dummy_shape, y_train if len(y_train) > 0 else np.array([0, 1]))
-    uni = DummyClassifier(strategy="uniform", random_state=random_state)
-    uni.fit(dummy_shape, y_train if len(y_train) > 0 else np.array([0, 1]))
-
-    strat_pred = strat.predict(np.zeros((len(y_test), 1)))
-    uni_pred = uni.predict(np.zeros((len(y_test), 1)))
-    pos = float(np.mean(y_test == 1))
-    return {
+    out = {
+        "fit_on": "training labels only",
+        "metrics": ["balanced_accuracy", "macro_f1", "roc_auc"],
         "n_test": int(len(y_test)),
-        "positive_rate_train": float(np.mean(y_train == 1)) if len(y_train) else None,
-        "positive_rate_test": float(pos),
-        "majority_class_accuracy": float(max(pos, 1.0 - pos)),
-        "dummy_stratified_balanced_accuracy": float(
-            balanced_accuracy_score(y_test, strat_pred)
+        "positive_rate_train": (
+            float(np.mean(y_train == 1)) if len(y_train) else None
         ),
-        "dummy_uniform_balanced_accuracy": float(
-            balanced_accuracy_score(y_test, uni_pred)
+        "positive_rate_test": (
+            float(np.mean(y_test == 1)) if len(y_test) else None
+        ),
+        "training_majority_class": (
+            int(np.bincount(y_train).argmax()) if len(y_train) else None
         ),
     }
+    for name, strategy in (
+        ("most_frequent", "most_frequent"),
+        ("stratified", "stratified"),
+        ("uniform", "uniform"),
+    ):
+        out[name] = _score_dummy(strategy, y_train, y_test, random_state)
+    return out
 
 
 def _safe_auc(y_true, proba):
@@ -101,16 +125,15 @@ def _fold_metrics(y_true, y_pred, proba):
 
 
 def merged_block_groups(block_ids, blocks_per_superblock):
-    """Partition an ordered sequence of block ids into contiguous super-blocks.
+    """Partition ordered blocks into contiguous super-blocks of a fixed size.
 
-    Pre-specify ``blocks_per_superblock`` before evaluating. The mapping is
-    deterministic: the k-th distinct block (in the order it first appears in
-    ``block_ids``) is assigned to super-block ``k // blocks_per_superblock``.
+    The k-th distinct block, in first-seen order, belongs to super-block
+    ``k // blocks_per_superblock``. If the number of distinct blocks is not
+    a multiple of that size, the leftover blocks join the last complete
+    super-block. They are not a separate fold. The size and the remainder
+    rule do not read labels or scores.
 
     Returns an array of super-block ids the same length as ``block_ids``.
-    Choosing folds by trying different values of ``blocks_per_superblock`` and
-    picking the one with best scores would be cheating; pick it once, up
-    front, on a structural criterion.
     """
     if blocks_per_superblock < 1:
         raise ValueError("blocks_per_superblock must be >= 1")
@@ -122,8 +145,85 @@ def merged_block_groups(block_ids, blocks_per_superblock):
         if b_int not in seen:
             seen.add(b_int)
             order.append(b_int)
-    to_super = {b: i // blocks_per_superblock for i, b in enumerate(order)}
+    n_complete = len(order) // blocks_per_superblock
+    to_super = {}
+    for i, b in enumerate(order):
+        group = i // blocks_per_superblock
+        if n_complete >= 1 and group >= n_complete:
+            group = n_complete - 1
+        to_super[b] = group
     return np.array([to_super[int(b)] for b in block_ids], dtype=int)
+
+
+def loro_subject_summary(rows, *, random_state=42, n_boot=10000, limitation):
+    """Bootstrap leave-one-run-out at the subject, not the run.
+
+    Each subject contributes one score: the mean of that subject's
+    run-level folds. The percentile interval resamples those subject
+    scores. ``run_folds`` keeps the per-run rows for inspection. Those
+    rows are not the resampled unit, and this function does not emit a
+    run-level interval.
+    """
+    metrics = ("balanced_accuracy", "macro_f1", "roc_auc")
+    by_subject = {}
+    for row in rows:
+        by_subject.setdefault(int(row["subject_id"]), []).append(row)
+    subject_rows = []
+    for sid in sorted(by_subject):
+        group = by_subject[sid]
+        entry = {
+            "subject_id": str(sid),
+            "n_runs": int(len(group)),
+            "held_out_runs": [int(g["held_out_run"]) for g in group],
+        }
+        for m in metrics:
+            vals = [float(g[m]) for g in group if g.get(m) is not None]
+            entry[m] = float(np.mean(vals)) if vals else None
+        subject_rows.append(entry)
+
+    summary, cis = {}, {}
+    for m in metrics:
+        vals = np.array(
+            [r[m] for r in subject_rows if r.get(m) is not None],
+            dtype=float,
+        )
+        n_valid = int(len(vals))
+        summary[m] = {
+            "mean": float(vals.mean()) if n_valid else None,
+            "std_across_subjects": (
+                float(vals.std(ddof=1)) if n_valid > 1 else None
+            ),
+            "median": float(np.median(vals)) if n_valid else None,
+            "n_subjects": n_valid,
+            "n_above_half_descriptive_count": (
+                int((vals > 0.5).sum()) if n_valid else 0
+            ),
+        }
+        cis[m] = (
+            bootstrap_ci(vals, n_boot=n_boot, random_state=random_state)
+            if n_valid > 1 else None
+        )
+    return {
+        "unit": "subject",
+        "n_run_folds": int(len(rows)),
+        "run_folds": rows,
+        "folds": rows,
+        "subject_scores": subject_rows,
+        "subject_mean": summary,
+        "subject_bootstrap_ci": cis,
+        "inference": (
+            "The bootstrap resamples one score per subject. That score is "
+            "the mean of the subject's leave-one-run-out folds. run_folds "
+            "are stored for inspection and are not resampled. A previous "
+            "interval that resampled the run-level rows is not this interval."
+        ),
+        "_limitation": limitation,
+        "_note_std_vs_ci": (
+            "std_across_subjects is the spread of the per-subject means. "
+            "The bootstrap CI resamples those subject means, not the "
+            "run-level folds and not trials."
+        ),
+    }
 
 
 def _extract_fold_coefficients(fitted_estimator):
@@ -405,10 +505,39 @@ def evaluate_naive_split(X, y, model_factory, n_splits=5, random_state=42,
         "train and test. Included to quantify inflation."
     )
     if include_baselines:
-        # The naive split does not have a single held-out set. Report the
-        # baseline the classifier is being compared to on the pooled dummy,
-        # using the same y as train and test for the majority calculation.
-        out["baselines"] = per_split_baselines(y, y, random_state=random_state)
+        out["baselines"] = _cv_dummy_baselines(y, cv, random_state)
+    return out
+
+
+def _cv_dummy_baselines(y, cv, random_state):
+    """Score dummies with the same StratifiedKFold the model used.
+
+    Each dummy is fitted inside the training fold. The pooled predictions
+    are then scored with balanced accuracy, macro F1, and ROC-AUC.
+    """
+    X = np.zeros((len(y), 1))
+    out = {
+        "fit_on": "training fold only, same StratifiedKFold as the model",
+        "metrics": ["balanced_accuracy", "macro_f1", "roc_auc"],
+        "n_test": int(len(y)),
+        "positive_rate_test": float(np.mean(y == 1)),
+    }
+    for name, strategy in (
+        ("most_frequent", "most_frequent"),
+        ("stratified", "stratified"),
+        ("uniform", "uniform"),
+    ):
+        clf = DummyClassifier(strategy=strategy, random_state=random_state)
+        pred = cross_val_predict(clf, X, y, cv=cv)
+        proba = cross_val_predict(
+            clf, X, y, cv=cv, method="predict_proba"
+        )[:, 1]
+        out[name] = {
+            "balanced_accuracy": float(balanced_accuracy_score(y, pred)),
+            "macro_f1": float(f1_score(y, pred, average="macro",
+                                       zero_division=0)),
+            "roc_auc": _safe_auc(y, proba),
+        }
     return out
 
 

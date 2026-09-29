@@ -102,27 +102,25 @@ protocol_errs = np.array([
      merged_ci["hi"] - merged_ci["point"],
      lobo_ci["hi"] - lobo_ci["point"]],
 ])
-# Majority baseline is only meaningful for splits with more than one class in
-# the test set. Naive and chronological have both classes; LOBO and
-# expanding-window folds are single-class by construction, so their majority
-# baseline is trivially 1.0 and is omitted rather than plotted misleadingly.
-majority_naive = naive_baselines["majority_class_accuracy"]
-majority_chrono = chrono_baselines["majority_class_accuracy"]
+# The ticks are balanced accuracy of a most-frequent dummy fitted on
+# training labels (naive: inside each CV fold; chronological: on the
+# training prefix). Expanding-window and native LOBO stay unplotted
+# because those test folds are single-class.
+majority_naive = naive_baselines["most_frequent"]["balanced_accuracy"]
+majority_chrono = chrono_baselines["most_frequent"]["balanced_accuracy"]
 bar_colors = [HOT, INK, INK, INK, GREY]
 
 bars = a1.bar(protocol_labels, protocol_scores, yerr=protocol_errs,
               capsize=5, color=bar_colors, zorder=2)
 a1.scatter([0, 1, 3], [majority_naive, majority_chrono, merged_dummy["point"]],
-           marker="_", s=1600, color=GREY, linewidths=2.5, zorder=3,
-           label="baseline (majority or dummy prior)")
+           marker="_", s=1600, color=GREY, linewidths=2.5, zorder=3)
 a1.text(1, majority_chrono + 0.02, f"{majority_chrono:.2f}", ha="center",
         fontsize=8.5, color=GREY)
 a1.text(0, majority_naive + 0.02, f"{majority_naive:.2f}", ha="center",
         fontsize=8.5, color=GREY)
 a1.text(3, merged_dummy["point"] + 0.02, f"{merged_dummy['point']:.2f}",
         ha="center", fontsize=8.5, color=GREY)
-# Expanding-window and native-LOBO: single-class fold structure makes the
-# majority baseline trivially 1.0, so we annotate rather than plot it.
+# Expanding-window and native LOBO test folds are single-class.
 a1.text(2, 0.94, "single-class\nfolds", ha="center",
         fontsize=7.5, style="italic", color=GREY)
 a1.text(4, 0.94, "single-class\nfolds", ha="center",
@@ -140,7 +138,6 @@ for b, v in zip(bars, protocol_scores):
             ha="center", fontweight="bold", fontsize=9)
 a1.text(0, naive_score / 2, "LEAKED", ha="center", color="white",
         fontweight="bold", rotation=90, fontsize=9)
-a1.legend(frameon=False, fontsize=8, loc="upper left")
 
 # Right panel: per-merged-block spread with the dummy-prior comparison so
 # the reader can see that any pooled-metric anomaly reproduces under a

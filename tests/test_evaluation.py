@@ -4,7 +4,12 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from src.core.evaluation import evaluate_loso, merged_block_groups
+from src.core.evaluation import (
+    evaluate_loso,
+    loro_subject_summary,
+    merged_block_groups,
+    per_split_baselines,
+)
 from src.core.statistics import bootstrap_ci, paired_subject_delta
 
 
@@ -145,9 +150,58 @@ def test_dummy_strategy_bypasses_the_model_factory():
 
 def test_merged_block_groups_partitions_contiguous_blocks():
     block_ids = np.array([0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 4, 4])
-    # size 2 -> super-blocks {0: [0,1], 1: [2,3], 2: [4]}
+    # size 2, five native blocks: leftovers join the last complete group.
+    # {0: [0,1], 1: [2,3,4]}
     supers = merged_block_groups(block_ids, blocks_per_superblock=2)
-    assert list(supers) == [0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
+    assert list(supers) == [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]
+
+
+def test_merged_block_remainder_is_not_its_own_fold():
+    block_ids = np.repeat(np.arange(19), 2)
+    supers = merged_block_groups(block_ids, blocks_per_superblock=4)
+    assert set(supers.tolist()) == {0, 1, 2, 3}
+    for native in range(12, 19):
+        assert set(supers[block_ids == native].tolist()) == {3}
+    for native in range(4):
+        assert set(supers[block_ids == native].tolist()) == {0}
+
+
+def test_most_frequent_dummy_is_fit_on_training_labels():
+    # Test labels are all class 1. A test-set majority score would be 1.
+    # The training majority is class 0, so every prediction is wrong.
+    baselines = per_split_baselines(
+        np.array([0, 0, 0, 0, 1]),
+        np.array([1, 1, 1]),
+        random_state=42,
+    )
+    assert baselines["training_majority_class"] == 0
+    assert baselines["most_frequent"]["balanced_accuracy"] == 0.0
+    assert baselines["most_frequent"]["roc_auc"] is None
+    assert "majority_class_accuracy" not in baselines
+
+
+def test_loro_bootstrap_resamples_subjects_not_runs():
+    rows = []
+    for subject in (0, 1, 2):
+        for run in (4, 8, 12):
+            rows.append({
+                "subject_id": str(subject),
+                "held_out_run": run,
+                "balanced_accuracy": 0.4 + 0.1 * subject,
+                "macro_f1": 0.4,
+                "roc_auc": 0.6,
+            })
+    summary = loro_subject_summary(
+        rows, random_state=42, n_boot=200,
+        limitation="test",
+    )
+    assert summary["n_run_folds"] == 9
+    assert summary["subject_mean"]["balanced_accuracy"]["n_subjects"] == 3
+    assert summary["subject_bootstrap_ci"]["balanced_accuracy"]["n_subjects"] == 3
+    assert "fold_bootstrap_ci" not in summary
+    # Subject means are 0.4, 0.5, 0.6. The mean of those is 0.5, which is
+    # also the mean of the nine run rows because each subject has three runs.
+    assert summary["subject_mean"]["balanced_accuracy"]["mean"] == pytest.approx(0.5)
 
 
 def test_merged_block_groups_respects_first_seen_order():

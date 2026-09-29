@@ -70,22 +70,53 @@ def test_validate_layout_lists_missing_files(tmp_path, monkeypatch):
     assert "refuses to skip" in msg
 
 
+def _minimal_edf(n_records=1, n_samples=1, extra=b""):
+    """One-signal EDF whose data length matches the header, plus ``extra``."""
+    n_signals = 1
+    header_bytes = 256 * (1 + n_signals)
+    fixed = bytearray(256)
+    fixed[0:8] = b"0       "
+    fixed[184:192] = f"{header_bytes:<8d}".encode()
+    fixed[236:244] = f"{n_records:<8d}".encode()
+    fixed[244:252] = b"1       "
+    fixed[252:256] = f"{n_signals:<4d}".encode()
+    signal = bytearray(256)
+    signal[216:224] = f"{n_samples:<8d}".encode()
+    data = b"\x00\x00" * (n_records * n_samples)
+    return bytes(fixed) + bytes(signal) + data + extra
+
+
+def test_assert_edf_complete_accepts_header_length(tmp_path):
+    path = tmp_path / "ok.edf"
+    path.write_bytes(_minimal_edf())
+    info = pf.assert_edf_complete(path)
+    assert info["nbytes"] == info["declared_nbytes"] == 514
+
+
+def test_assert_edf_complete_rejects_truncation_and_extra_bytes(tmp_path):
+    short = tmp_path / "short.edf"
+    short.write_bytes(_minimal_edf()[:-1])
+    with pytest.raises(ValueError, match="truncated"):
+        pf.assert_edf_complete(short)
+    long = tmp_path / "long.edf"
+    long.write_bytes(_minimal_edf(extra=b"\x00" * 500_000))
+    with pytest.raises(ValueError, match="longer than the header"):
+        pf.assert_edf_complete(long)
+
+
 def test_validate_layout_reports_truncated_files(tmp_path, monkeypatch):
-    """A file smaller than MIN_EDF_BYTES must trip the check, not be
-    silently accepted."""
+    """A file shorter than its header-declared length is rejected."""
     monkeypatch.setattr(pf, "DATA_ROOT", str(tmp_path))
-    # write one full-sized dummy for each expected file
     for subj in pf.EXPECTED_SUBJECTS:
         (tmp_path / subj).mkdir()
         for run in pf.IMAGERY_RUNS:
             f = tmp_path / subj / f"{subj}R{run:02d}.edf"
-            f.write_bytes(b"\0" * pf.MIN_EDF_BYTES)
-    # now truncate one
+            f.write_bytes(_minimal_edf())
     victim = tmp_path / pf.EXPECTED_SUBJECTS[0] / f"{pf.EXPECTED_SUBJECTS[0]}R04.edf"
-    victim.write_bytes(b"\0" * 100)
+    victim.write_bytes(_minimal_edf()[:-2])
     with pytest.raises(RuntimeError) as excinfo:
         pf._validate_layout()
-    assert "Truncated EDFs" in str(excinfo.value)
+    assert "EDF integrity failures" in str(excinfo.value)
     assert str(victim) in str(excinfo.value)
 
 

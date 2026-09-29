@@ -228,14 +228,42 @@ truth for what the earlier version claimed.
     balanced-accuracy lower endpoint is 0.522 and is described as close
     to 0.5.
 
-## What the audit does not change
+## Header check, subject-level LORO, and training-only rules
+
+40. An EDF is accepted only when its byte length equals the length declared
+    in the header. A 500 KB floor is not used. Downloads go to a temporary
+    file and are moved into place after that check. Three failed attempts
+    delete the partial and exit. Eleven files on disk failed the check and
+    were replaced. All 30 files then matched. The rebuilt cache has 450
+    trials, 15 per imagery run. The 383-trial cache was built from the
+    files that failed.
+41. Leave-one-run-out for band-power and CSP stores the 30 run rows and
+    bootstraps the 10 subject means. There is no run-level interval in
+    the JSON. Band-power balanced accuracy is 0.574 [0.498, 0.654]. CSP
+    balanced accuracy is 0.656 [0.560, 0.758]. These intervals are a new
+    computation on the 450-trial cache. They do not correct the previous
+    30-run intervals by changing a description.
+42. Most-frequent, stratified, and uniform dummies are fitted on training
+    labels and scored with balanced accuracy, macro F1, and ROC-AUC. The
+    chronological most-frequent dummy is 0.500, 0.189, and 0.500. The
+    model on that split is 0.416, 0.330, and 0.491.
+43. Merged blocks stay size 4. If the native-block count is not a multiple
+    of 4, the leftover blocks join the last complete super-block. Nineteen
+    blocks become four groups. All four contain both classes. That count
+    was measured after grouping. Merged-block balanced accuracy is 0.517
+    [0.401, 0.631]. The same-splits dummy prior is 0.500 on balanced
+    accuracy and AUC, and 0.351 [0.310, 0.394] on macro F1.
+44. The chronological gap uses lag correlations from the first 70 kept
+    windows only. Those values are 0.092, 0.079, 0.150, 0.082, and 0.082,
+    so the gap stays 0. The expanding-window gap is prespecified as 0
+    block groups.
+
+## What this pass does not change
 
 - The prespecified primary model, logistic regression with `C = 1.0`,
   `class_weight="balanced"`, `max_iter=5000`, `random_state=42`.
-- Feature bands, channel sets, window lengths, or the shared-core primitives
-  in `src/core/features.py` and `src/core/evaluation.py`.
-- The Phase 2 cross-subject LOSO point estimates (byte-identical up to
-  provenance stamps after re-extraction from the newly downloaded EDFs).
+- Feature bands, channel sets, and window lengths.
+- The pre-audit archive under `reports/results/archive/`.
 
-Where an audit rerun changes a headline number, the change is documented in
-`REFACTOR_NOTES.md` under the "Audit 2026-09" section.
+The pull request is not merged. The rebuilt JSON, figures, tables, and
+report are the record to review.

@@ -1,23 +1,42 @@
 {
   "_provenance": {
-    "git_commit": "4ad45a9",
+    "git_commit": "4b5698e",
     "numpy": "2.0.2",
     "python": "3.9.6",
-    "written_utc": "2026-09-29T13:02:25Z"
+    "written_utc": "2026-09-29T13:31:49Z"
   },
   "audit": {
-    "notes": "Naive split retained as descriptive only. Chronological holdout and expanding-window run with a temporal gap chosen from a measured autocorrelation threshold. Every leakage-safe split reports its own baselines; no baseline is shared across protocols. Leave-one-merged-block-out (super-block size 4 native blocks, declared before evaluation) is now the primary group protocol; leave-one-native-block-out is retained only as a labelled diagnostic with a DummyClassifier(strategy='prior') comparison on the same splits.",
+    "notes": "Naive split retained as descriptive only. Chronological holdout gap is chosen from autocorrelation of the training prefix only. The expanding-window gap is prespecified as 0 block groups. Dummies are fitted on training labels and scored with the same metrics as the model. Leave-one-merged-block-out groups native blocks in fours and attaches a non-multiple remainder to the last complete super-block; leave-one-native-block-out is retained only as a labelled diagnostic with a DummyClassifier(strategy='prior') comparison on the same splits.",
     "version": "2026-09"
   },
   "chronological_holdout": {
     "balanced_accuracy": 0.4161490683229814,
     "baselines": {
-      "dummy_stratified_balanced_accuracy": 0.36645962732919257,
-      "dummy_uniform_balanced_accuracy": 0.33850931677018636,
-      "majority_class_accuracy": 0.7666666666666666,
+      "fit_on": "training labels only",
+      "metrics": [
+        "balanced_accuracy",
+        "macro_f1",
+        "roc_auc"
+      ],
+      "most_frequent": {
+        "balanced_accuracy": 0.5,
+        "macro_f1": 0.1891891891891892,
+        "roc_auc": 0.5
+      },
       "n_test": 30,
       "positive_rate_test": 0.23333333333333334,
-      "positive_rate_train": 0.5428571428571428
+      "positive_rate_train": 0.5428571428571428,
+      "stratified": {
+        "balanced_accuracy": 0.36645962732919257,
+        "macro_f1": 0.3212669683257918,
+        "roc_auc": 0.36645962732919257
+      },
+      "training_majority_class": 1,
+      "uniform": {
+        "balanced_accuracy": 0.33850931677018636,
+        "macro_f1": 0.3301997649823737,
+        "roc_auc": 0.5
+      }
     },
     "gap_windows": 0,
     "macro_f1": 0.33035714285714285,
@@ -80,12 +99,31 @@
       {
         "balanced_accuracy": 0.0,
         "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.0,
-          "dummy_uniform_balanced_accuracy": 1.0,
-          "majority_class_accuracy": 1.0,
+          "fit_on": "training labels only",
+          "metrics": [
+            "balanced_accuracy",
+            "macro_f1",
+            "roc_auc"
+          ],
+          "most_frequent": {
+            "balanced_accuracy": 1.0,
+            "macro_f1": 1.0,
+            "roc_auc": null
+          },
           "n_test": 1,
           "positive_rate_test": 0.0,
-          "positive_rate_train": 0.5
+          "positive_rate_train": 0.5,
+          "stratified": {
+            "balanced_accuracy": 0.0,
+            "macro_f1": 0.0,
+            "roc_auc": null
+          },
+          "training_majority_class": 0,
+          "uniform": {
+            "balanced_accuracy": 1.0,
+            "macro_f1": 1.0,
+            "roc_auc": null
+          }
         },
         "confusion_matrix": [
           [
@@ -120,12 +158,31 @@
       {
         "balanced_accuracy": 1.0,
         "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.3333333333333333,
-          "dummy_uniform_balanced_accuracy": 0.6666666666666666,
-          "majority_class_accuracy": 1.0,
+          "fit_on": "training labels only",
+          "metrics": [
+            "balanced_accuracy",
+            "macro_f1",
+            "roc_auc"
+          ],
+          "most_frequent": {
+            "balanced_accuracy": 1.0,
+            "macro_f1": 1.0,
+            "roc_auc": null
+          },
           "n_test": 3,
           "positive_rate_test": 0.0,
-          "positive_rate_train": 0.47058823529411764
+          "positive_rate_train": 0.47058823529411764,
+          "stratified": {
+            "balanced_accuracy": 0.3333333333333333,
+            "macro_f1": 0.25,
+            "roc_auc": null
+          },
+          "training_majority_class": 0,
+          "uniform": {
+            "balanced_accuracy": 0.6666666666666666,
+            "macro_f1": 0.4,
+            "roc_auc": null
+          }
         },
         "confusion_matrix": [
           [
@@ -164,12 +221,31 @@
       {
         "balanced_accuracy": 0.2857142857142857,
         "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.2857142857142857,
-          "dummy_uniform_balanced_accuracy": 0.2857142857142857,
-          "majority_class_accuracy": 1.0,
+          "fit_on": "training labels only",
+          "metrics": [
+            "balanced_accuracy",
+            "macro_f1",
+            "roc_auc"
+          ],
+          "most_frequent": {
+            "balanced_accuracy": 0.0,
+            "macro_f1": 0.0,
+            "roc_auc": null
+          },
           "n_test": 7,
           "positive_rate_test": 1.0,
-          "positive_rate_train": 0.4
+          "positive_rate_train": 0.4,
+          "stratified": {
+            "balanced_accuracy": 0.2857142857142857,
+            "macro_f1": 0.2222222222222222,
+            "roc_auc": null
+          },
+          "training_majority_class": 0,
+          "uniform": {
+            "balanced_accuracy": 0.2857142857142857,
+            "macro_f1": 0.2222222222222222,
+            "roc_auc": null
+          }
         },
         "confusion_matrix": [
           [
@@ -216,12 +292,31 @@
       {
         "balanced_accuracy": 0.16666666666666666,
         "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.5,
-          "dummy_uniform_balanced_accuracy": 0.6666666666666666,
-          "majority_class_accuracy": 1.0,
+          "fit_on": "training labels only",
+          "metrics": [
+            "balanced_accuracy",
+            "macro_f1",
+            "roc_auc"
+          ],
+          "most_frequent": {
+            "balanced_accuracy": 0.0,
+            "macro_f1": 0.0,
+            "roc_auc": null
+          },
           "n_test": 6,
           "positive_rate_test": 0.0,
-          "positive_rate_train": 0.5555555555555556
+          "positive_rate_train": 0.5555555555555556,
+          "stratified": {
+            "balanced_accuracy": 0.5,
+            "macro_f1": 0.3333333333333333,
+            "roc_auc": null
+          },
+          "training_majority_class": 1,
+          "uniform": {
+            "balanced_accuracy": 0.6666666666666666,
+            "macro_f1": 0.4,
+            "roc_auc": null
+          }
         },
         "confusion_matrix": [
           [
@@ -266,12 +361,31 @@
       {
         "balanced_accuracy": 0.6,
         "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.6,
-          "dummy_uniform_balanced_accuracy": 0.2,
-          "majority_class_accuracy": 1.0,
+          "fit_on": "training labels only",
+          "metrics": [
+            "balanced_accuracy",
+            "macro_f1",
+            "roc_auc"
+          ],
+          "most_frequent": {
+            "balanced_accuracy": 0.0,
+            "macro_f1": 0.0,
+            "roc_auc": null
+          },
           "n_test": 5,
           "positive_rate_test": 1.0,
-          "positive_rate_train": 0.45454545454545453
+          "positive_rate_train": 0.45454545454545453,
+          "stratified": {
+            "balanced_accuracy": 0.6,
+            "macro_f1": 0.375,
+            "roc_auc": null
+          },
+          "training_majority_class": 0,
+          "uniform": {
+            "balanced_accuracy": 0.2,
+            "macro_f1": 0.16666666666666666,
+            "roc_auc": null
+          }
         },
         "confusion_matrix": [
           [
@@ -314,12 +428,31 @@
       {
         "balanced_accuracy": 0.75,
         "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.75,
-          "dummy_uniform_balanced_accuracy": 0.75,
-          "majority_class_accuracy": 1.0,
+          "fit_on": "training labels only",
+          "metrics": [
+            "balanced_accuracy",
+            "macro_f1",
+            "roc_auc"
+          ],
+          "most_frequent": {
+            "balanced_accuracy": 0.0,
+            "macro_f1": 0.0,
+            "roc_auc": null
+          },
           "n_test": 4,
           "positive_rate_test": 0.0,
-          "positive_rate_train": 0.5263157894736842
+          "positive_rate_train": 0.5263157894736842,
+          "stratified": {
+            "balanced_accuracy": 0.75,
+            "macro_f1": 0.42857142857142855,
+            "roc_auc": null
+          },
+          "training_majority_class": 1,
+          "uniform": {
+            "balanced_accuracy": 0.75,
+            "macro_f1": 0.42857142857142855,
+            "roc_auc": null
+          }
         },
         "confusion_matrix": [
           [
@@ -360,12 +493,31 @@
       {
         "balanced_accuracy": 0.4444444444444444,
         "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.5,
-          "dummy_uniform_balanced_accuracy": 0.3333333333333333,
-          "majority_class_accuracy": 1.0,
+          "fit_on": "training labels only",
+          "metrics": [
+            "balanced_accuracy",
+            "macro_f1",
+            "roc_auc"
+          ],
+          "most_frequent": {
+            "balanced_accuracy": 0.0,
+            "macro_f1": 0.0,
+            "roc_auc": null
+          },
           "n_test": 18,
           "positive_rate_test": 1.0,
-          "positive_rate_train": 0.47619047619047616
+          "positive_rate_train": 0.47619047619047616,
+          "stratified": {
+            "balanced_accuracy": 0.5,
+            "macro_f1": 0.3333333333333333,
+            "roc_auc": null
+          },
+          "training_majority_class": 0,
+          "uniform": {
+            "balanced_accuracy": 0.3333333333333333,
+            "macro_f1": 0.25,
+            "roc_auc": null
+          }
         },
         "confusion_matrix": [
           [
@@ -434,12 +586,31 @@
       {
         "balanced_accuracy": 0.26666666666666666,
         "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.4,
-          "dummy_uniform_balanced_accuracy": 0.7333333333333333,
-          "majority_class_accuracy": 1.0,
+          "fit_on": "training labels only",
+          "metrics": [
+            "balanced_accuracy",
+            "macro_f1",
+            "roc_auc"
+          ],
+          "most_frequent": {
+            "balanced_accuracy": 0.0,
+            "macro_f1": 0.0,
+            "roc_auc": null
+          },
           "n_test": 15,
           "positive_rate_test": 0.0,
-          "positive_rate_train": 0.6333333333333333
+          "positive_rate_train": 0.6333333333333333,
+          "stratified": {
+            "balanced_accuracy": 0.4,
+            "macro_f1": 0.2857142857142857,
+            "roc_auc": null
+          },
+          "training_majority_class": 1,
+          "uniform": {
+            "balanced_accuracy": 0.7333333333333333,
+            "macro_f1": 0.4230769230769231,
+            "roc_auc": null
+          }
         },
         "confusion_matrix": [
           [
@@ -502,12 +673,31 @@
       {
         "balanced_accuracy": 0.5714285714285714,
         "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.5714285714285714,
-          "dummy_uniform_balanced_accuracy": 0.2857142857142857,
-          "majority_class_accuracy": 1.0,
+          "fit_on": "training labels only",
+          "metrics": [
+            "balanced_accuracy",
+            "macro_f1",
+            "roc_auc"
+          ],
+          "most_frequent": {
+            "balanced_accuracy": 1.0,
+            "macro_f1": 1.0,
+            "roc_auc": null
+          },
           "n_test": 7,
           "positive_rate_test": 1.0,
-          "positive_rate_train": 0.5066666666666667
+          "positive_rate_train": 0.5066666666666667,
+          "stratified": {
+            "balanced_accuracy": 0.5714285714285714,
+            "macro_f1": 0.36363636363636365,
+            "roc_auc": null
+          },
+          "training_majority_class": 1,
+          "uniform": {
+            "balanced_accuracy": 0.2857142857142857,
+            "macro_f1": 0.2222222222222222,
+            "roc_auc": null
+          }
         },
         "confusion_matrix": [
           [
@@ -554,12 +744,31 @@
       {
         "balanced_accuracy": 0.5,
         "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.75,
-          "dummy_uniform_balanced_accuracy": 0.75,
-          "majority_class_accuracy": 1.0,
+          "fit_on": "training labels only",
+          "metrics": [
+            "balanced_accuracy",
+            "macro_f1",
+            "roc_auc"
+          ],
+          "most_frequent": {
+            "balanced_accuracy": 0.0,
+            "macro_f1": 0.0,
+            "roc_auc": null
+          },
           "n_test": 4,
           "positive_rate_test": 0.0,
-          "positive_rate_train": 0.5487804878048781
+          "positive_rate_train": 0.5487804878048781,
+          "stratified": {
+            "balanced_accuracy": 0.75,
+            "macro_f1": 0.42857142857142855,
+            "roc_auc": null
+          },
+          "training_majority_class": 1,
+          "uniform": {
+            "balanced_accuracy": 0.75,
+            "macro_f1": 0.42857142857142855,
+            "roc_auc": null
+          }
         },
         "confusion_matrix": [
           [
@@ -600,12 +809,31 @@
       {
         "balanced_accuracy": 0.0,
         "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.0,
-          "dummy_uniform_balanced_accuracy": 1.0,
-          "majority_class_accuracy": 1.0,
+          "fit_on": "training labels only",
+          "metrics": [
+            "balanced_accuracy",
+            "macro_f1",
+            "roc_auc"
+          ],
+          "most_frequent": {
+            "balanced_accuracy": 0.0,
+            "macro_f1": 0.0,
+            "roc_auc": null
+          },
           "n_test": 1,
           "positive_rate_test": 0.0,
-          "positive_rate_train": 0.5232558139534884
+          "positive_rate_train": 0.5232558139534884,
+          "stratified": {
+            "balanced_accuracy": 0.0,
+            "macro_f1": 0.0,
+            "roc_auc": null
+          },
+          "training_majority_class": 1,
+          "uniform": {
+            "balanced_accuracy": 1.0,
+            "macro_f1": 1.0,
+            "roc_auc": null
+          }
         },
         "confusion_matrix": [
           [
@@ -640,12 +868,31 @@
       {
         "balanced_accuracy": 0.1111111111111111,
         "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.5555555555555556,
-          "dummy_uniform_balanced_accuracy": 0.7777777777777778,
-          "majority_class_accuracy": 1.0,
+          "fit_on": "training labels only",
+          "metrics": [
+            "balanced_accuracy",
+            "macro_f1",
+            "roc_auc"
+          ],
+          "most_frequent": {
+            "balanced_accuracy": 0.0,
+            "macro_f1": 0.0,
+            "roc_auc": null
+          },
           "n_test": 9,
           "positive_rate_test": 0.0,
-          "positive_rate_train": 0.5172413793103449
+          "positive_rate_train": 0.5172413793103449,
+          "stratified": {
+            "balanced_accuracy": 0.5555555555555556,
+            "macro_f1": 0.35714285714285715,
+            "roc_auc": null
+          },
+          "training_majority_class": 1,
+          "uniform": {
+            "balanced_accuracy": 0.7777777777777778,
+            "macro_f1": 0.4375,
+            "roc_auc": null
+          }
         },
         "confusion_matrix": [
           [
@@ -696,12 +943,31 @@
       {
         "balanced_accuracy": 0.25,
         "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.25,
-          "dummy_uniform_balanced_accuracy": 0.75,
-          "majority_class_accuracy": 1.0,
+          "fit_on": "training labels only",
+          "metrics": [
+            "balanced_accuracy",
+            "macro_f1",
+            "roc_auc"
+          ],
+          "most_frequent": {
+            "balanced_accuracy": 1.0,
+            "macro_f1": 1.0,
+            "roc_auc": null
+          },
           "n_test": 4,
           "positive_rate_test": 0.0,
-          "positive_rate_train": 0.46875
+          "positive_rate_train": 0.46875,
+          "stratified": {
+            "balanced_accuracy": 0.25,
+            "macro_f1": 0.2,
+            "roc_auc": null
+          },
+          "training_majority_class": 0,
+          "uniform": {
+            "balanced_accuracy": 0.75,
+            "macro_f1": 0.42857142857142855,
+            "roc_auc": null
+          }
         },
         "confusion_matrix": [
           [
@@ -807,6 +1073,8 @@
       }
     }
   },
+  "expanding_window_gap_groups": 0,
+  "expanding_window_gap_source": "prespecified as 0 block groups; not estimated from later blocks",
   "grouping_unit": "contiguous label block (single subject, so no LOSO)",
   "leave_one_block_out_diagnostic": {
     "dummy_prior_diagnostic": {
@@ -2076,12 +2344,31 @@
         {
           "balanced_accuracy": 1.0,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 1.0,
-            "dummy_uniform_balanced_accuracy": 1.0,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            },
             "n_test": 1,
             "positive_rate_test": 0.0,
-            "positive_rate_train": 0.45454545454545453
+            "positive_rate_train": 0.45454545454545453,
+            "stratified": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -2124,12 +2411,31 @@
         {
           "balanced_accuracy": 0.75,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.75,
-            "dummy_uniform_balanced_accuracy": 0.25,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 0.0,
+              "macro_f1": 0.0,
+              "roc_auc": null
+            },
             "n_test": 4,
             "positive_rate_test": 1.0,
-            "positive_rate_train": 0.4270833333333333
+            "positive_rate_train": 0.4270833333333333,
+            "stratified": {
+              "balanced_accuracy": 0.75,
+              "macro_f1": 0.42857142857142855,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.25,
+              "macro_f1": 0.2,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -2187,12 +2493,31 @@
         {
           "balanced_accuracy": 0.6666666666666666,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.3333333333333333,
-            "dummy_uniform_balanced_accuracy": 0.6666666666666666,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            },
             "n_test": 3,
             "positive_rate_test": 0.0,
-            "positive_rate_train": 0.4639175257731959
+            "positive_rate_train": 0.4639175257731959,
+            "stratified": {
+              "balanced_accuracy": 0.3333333333333333,
+              "macro_f1": 0.25,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.6666666666666666,
+              "macro_f1": 0.4,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -2245,12 +2570,31 @@
         {
           "balanced_accuracy": 0.0,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.0,
-            "dummy_uniform_balanced_accuracy": 0.0,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 0.0,
+              "macro_f1": 0.0,
+              "roc_auc": null
+            },
             "n_test": 1,
             "positive_rate_test": 1.0,
-            "positive_rate_train": 0.4444444444444444
+            "positive_rate_train": 0.4444444444444444,
+            "stratified": {
+              "balanced_accuracy": 0.0,
+              "macro_f1": 0.0,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.0,
+              "macro_f1": 0.0,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -2293,12 +2637,31 @@
         {
           "balanced_accuracy": 0.0,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.25,
-            "dummy_uniform_balanced_accuracy": 0.75,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            },
             "n_test": 4,
             "positive_rate_test": 0.0,
-            "positive_rate_train": 0.46875
+            "positive_rate_train": 0.46875,
+            "stratified": {
+              "balanced_accuracy": 0.25,
+              "macro_f1": 0.2,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.75,
+              "macro_f1": 0.42857142857142855,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -2356,12 +2719,31 @@
         {
           "balanced_accuracy": 0.3333333333333333,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.6666666666666666,
-            "dummy_uniform_balanced_accuracy": 0.3333333333333333,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 0.0,
+              "macro_f1": 0.0,
+              "roc_auc": null
+            },
             "n_test": 3,
             "positive_rate_test": 1.0,
-            "positive_rate_train": 0.4329896907216495
+            "positive_rate_train": 0.4329896907216495,
+            "stratified": {
+              "balanced_accuracy": 0.6666666666666666,
+              "macro_f1": 0.4,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.3333333333333333,
+              "macro_f1": 0.25,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -2414,12 +2796,31 @@
         {
           "balanced_accuracy": 1.0,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 1.0,
-            "dummy_uniform_balanced_accuracy": 1.0,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            },
             "n_test": 1,
             "positive_rate_test": 0.0,
-            "positive_rate_train": 0.45454545454545453
+            "positive_rate_train": 0.45454545454545453,
+            "stratified": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -2462,12 +2863,31 @@
         {
           "balanced_accuracy": 1.0,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.3333333333333333,
-            "dummy_uniform_balanced_accuracy": 0.6666666666666666,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            },
             "n_test": 3,
             "positive_rate_test": 0.0,
-            "positive_rate_train": 0.4639175257731959
+            "positive_rate_train": 0.4639175257731959,
+            "stratified": {
+              "balanced_accuracy": 0.3333333333333333,
+              "macro_f1": 0.25,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.6666666666666666,
+              "macro_f1": 0.4,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -2520,12 +2940,31 @@
         {
           "balanced_accuracy": 0.7142857142857143,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.42857142857142855,
-            "dummy_uniform_balanced_accuracy": 0.2857142857142857,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 0.0,
+              "macro_f1": 0.0,
+              "roc_auc": null
+            },
             "n_test": 7,
             "positive_rate_test": 1.0,
-            "positive_rate_train": 0.40860215053763443
+            "positive_rate_train": 0.40860215053763443,
+            "stratified": {
+              "balanced_accuracy": 0.42857142857142855,
+              "macro_f1": 0.3,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.2857142857142857,
+              "macro_f1": 0.2222222222222222,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -2598,12 +3037,31 @@
         {
           "balanced_accuracy": 0.3333333333333333,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.5,
-            "dummy_uniform_balanced_accuracy": 0.6666666666666666,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            },
             "n_test": 6,
             "positive_rate_test": 0.0,
-            "positive_rate_train": 0.4787234042553192
+            "positive_rate_train": 0.4787234042553192,
+            "stratified": {
+              "balanced_accuracy": 0.5,
+              "macro_f1": 0.3333333333333333,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.6666666666666666,
+              "macro_f1": 0.4,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -2671,12 +3129,31 @@
         {
           "balanced_accuracy": 0.6,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.6,
-            "dummy_uniform_balanced_accuracy": 0.2,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 0.0,
+              "macro_f1": 0.0,
+              "roc_auc": null
+            },
             "n_test": 5,
             "positive_rate_test": 1.0,
-            "positive_rate_train": 0.42105263157894735
+            "positive_rate_train": 0.42105263157894735,
+            "stratified": {
+              "balanced_accuracy": 0.6,
+              "macro_f1": 0.375,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.2,
+              "macro_f1": 0.16666666666666666,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -2739,12 +3216,31 @@
         {
           "balanced_accuracy": 0.75,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.25,
-            "dummy_uniform_balanced_accuracy": 0.75,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            },
             "n_test": 4,
             "positive_rate_test": 0.0,
-            "positive_rate_train": 0.46875
+            "positive_rate_train": 0.46875,
+            "stratified": {
+              "balanced_accuracy": 0.25,
+              "macro_f1": 0.2,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.75,
+              "macro_f1": 0.42857142857142855,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -2802,12 +3298,31 @@
         {
           "balanced_accuracy": 0.3333333333333333,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.3333333333333333,
-            "dummy_uniform_balanced_accuracy": 0.3333333333333333,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 0.0,
+              "macro_f1": 0.0,
+              "roc_auc": null
+            },
             "n_test": 18,
             "positive_rate_test": 1.0,
-            "positive_rate_train": 0.32926829268292684
+            "positive_rate_train": 0.32926829268292684,
+            "stratified": {
+              "balanced_accuracy": 0.3333333333333333,
+              "macro_f1": 0.25,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.3333333333333333,
+              "macro_f1": 0.25,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -2935,12 +3450,31 @@
         {
           "balanced_accuracy": 0.5333333333333333,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.5333333333333333,
-            "dummy_uniform_balanced_accuracy": 0.7333333333333333,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 0.0,
+              "macro_f1": 0.0,
+              "roc_auc": null
+            },
             "n_test": 15,
             "positive_rate_test": 0.0,
-            "positive_rate_train": 0.5294117647058824
+            "positive_rate_train": 0.5294117647058824,
+            "stratified": {
+              "balanced_accuracy": 0.5333333333333333,
+              "macro_f1": 0.34782608695652173,
+              "roc_auc": null
+            },
+            "training_majority_class": 1,
+            "uniform": {
+              "balanced_accuracy": 0.7333333333333333,
+              "macro_f1": 0.4230769230769231,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -3053,12 +3587,31 @@
         {
           "balanced_accuracy": 0.2857142857142857,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.42857142857142855,
-            "dummy_uniform_balanced_accuracy": 0.2857142857142857,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 0.0,
+              "macro_f1": 0.0,
+              "roc_auc": null
+            },
             "n_test": 7,
             "positive_rate_test": 1.0,
-            "positive_rate_train": 0.40860215053763443
+            "positive_rate_train": 0.40860215053763443,
+            "stratified": {
+              "balanced_accuracy": 0.42857142857142855,
+              "macro_f1": 0.3,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.2857142857142857,
+              "macro_f1": 0.2222222222222222,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -3131,12 +3684,31 @@
         {
           "balanced_accuracy": 0.5,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.25,
-            "dummy_uniform_balanced_accuracy": 0.75,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            },
             "n_test": 4,
             "positive_rate_test": 0.0,
-            "positive_rate_train": 0.46875
+            "positive_rate_train": 0.46875,
+            "stratified": {
+              "balanced_accuracy": 0.25,
+              "macro_f1": 0.2,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.75,
+              "macro_f1": 0.42857142857142855,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -3194,12 +3766,31 @@
         {
           "balanced_accuracy": 0.0,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 1.0,
-            "dummy_uniform_balanced_accuracy": 1.0,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            },
             "n_test": 1,
             "positive_rate_test": 0.0,
-            "positive_rate_train": 0.45454545454545453
+            "positive_rate_train": 0.45454545454545453,
+            "stratified": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -3242,12 +3833,31 @@
         {
           "balanced_accuracy": 0.1111111111111111,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.4444444444444444,
-            "dummy_uniform_balanced_accuracy": 0.7777777777777778,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            },
             "n_test": 9,
             "positive_rate_test": 0.0,
-            "positive_rate_train": 0.4945054945054945
+            "positive_rate_train": 0.4945054945054945,
+            "stratified": {
+              "balanced_accuracy": 0.4444444444444444,
+              "macro_f1": 0.3076923076923077,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.7777777777777778,
+              "macro_f1": 0.4375,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -3330,12 +3940,31 @@
         {
           "balanced_accuracy": 0.25,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.25,
-            "dummy_uniform_balanced_accuracy": 0.75,
-            "majority_class_accuracy": 1.0,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "roc_auc": null
+            },
             "n_test": 4,
             "positive_rate_test": 0.0,
-            "positive_rate_train": 0.46875
+            "positive_rate_train": 0.46875,
+            "stratified": {
+              "balanced_accuracy": 0.25,
+              "macro_f1": 0.2,
+              "roc_auc": null
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.75,
+              "macro_f1": 0.42857142857142855,
+              "roc_auc": null
+            }
           },
           "confusion_matrix": [
             [
@@ -3468,7 +4097,7 @@
         "n_boot": 10000,
         "n_features": 1792,
         "n_samples": 100,
-        "n_subjects": 5,
+        "n_subjects": 4,
         "param_grid": {},
         "predictions_persisted": true,
         "random_state": 42,
@@ -3842,7 +4471,7 @@
           "balanced_accuracy": 0.5,
           "confusion_matrix": [
             [
-              19,
+              33,
               0
             ],
             [
@@ -3850,12 +4479,12 @@
               0
             ]
           ],
-          "macro_f1": 0.30158730158730157,
+          "macro_f1": 0.3626373626373626,
           "n_positive": 25,
-          "n_test": 44,
+          "n_test": 58,
           "provenance": {
-            "n_train": 56,
-            "test_indices_hash": "187168a64755",
+            "n_train": 42,
+            "test_indices_hash": "96886f75f5fe",
             "test_native_block_id": [
               13,
               13,
@@ -3900,7 +4529,21 @@
               16,
               16,
               16,
-              16
+              16,
+              18,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              22,
+              22,
+              22,
+              22
             ],
             "test_start_sample": [
               6656,
@@ -3946,7 +4589,21 @@
               12160,
               12288,
               12416,
-              12544
+              12544,
+              12800,
+              13056,
+              13184,
+              13312,
+              13440,
+              13568,
+              13696,
+              13824,
+              13952,
+              14080,
+              14336,
+              14464,
+              14592,
+              14720
             ],
             "test_super_block_id": [
               3,
@@ -3992,9 +4649,23 @@
               3,
               3,
               3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
               3
             ],
-            "train_indices_hash": "b8c84a49fff4"
+            "train_indices_hash": "12934f3ed473"
           },
           "roc_auc": 0.5,
           "sensitivity": 0.0,
@@ -4044,53 +4715,81 @@
             0,
             0,
             0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             0
           ],
           "y_proba": [
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715,
-            0.35714285714285715
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616,
+            0.47619047619047616
           ],
           "y_true": [
             1,
@@ -4136,114 +4835,7 @@
             0,
             0,
             0,
-            0
-          ]
-        },
-        {
-          "balanced_accuracy": 0.0,
-          "confusion_matrix": [
-            [
-              0,
-              14
-            ],
-            [
-              0,
-              0
-            ]
-          ],
-          "macro_f1": 0.0,
-          "n_positive": 0,
-          "n_test": 14,
-          "provenance": {
-            "n_train": 86,
-            "test_indices_hash": "f2b19c776e1e",
-            "test_native_block_id": [
-              18,
-              20,
-              20,
-              20,
-              20,
-              20,
-              20,
-              20,
-              20,
-              20,
-              22,
-              22,
-              22,
-              22
-            ],
-            "test_start_sample": [
-              12800,
-              13056,
-              13184,
-              13312,
-              13440,
-              13568,
-              13696,
-              13824,
-              13952,
-              14080,
-              14336,
-              14464,
-              14592,
-              14720
-            ],
-            "test_super_block_id": [
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4
-            ],
-            "train_indices_hash": "de38531c1914"
-          },
-          "roc_auc": null,
-          "sensitivity": null,
-          "specificity": 0.0,
-          "subject_id": "4",
-          "y_pred": [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "y_proba": [
-            0.5232558139534884,
-            0.5232558139534884,
-            0.5232558139534884,
-            0.5232558139534884,
-            0.5232558139534884,
-            0.5232558139534884,
-            0.5232558139534884,
-            0.5232558139534884,
-            0.5232558139534884,
-            0.5232558139534884,
-            0.5232558139534884,
-            0.5232558139534884,
-            0.5232558139534884,
-            0.5232558139534884
-          ],
-          "y_true": [
+            0,
             0,
             0,
             0,
@@ -4263,43 +4855,43 @@
       ],
       "pooled_descriptive_metrics": {
         "_warning": "Descriptive only. Pools correlated epochs across subjects and treats them as independent. Not the inferential result.",
-        "balanced_accuracy": 0.37272727272727274,
+        "balanced_accuracy": 0.5,
         "confusion_matrix": [
           [
-            41,
-            14
+            55,
+            0
           ],
           [
             45,
             0
           ]
         ],
-        "macro_f1": 0.2907801418439716,
+        "macro_f1": 0.3548387096774194,
         "n_positive": 45,
         "n_test": 100,
-        "roc_auc": 0.3197979797979798,
+        "roc_auc": 0.4591919191919192,
         "sensitivity": 0.0,
-        "specificity": 0.7454545454545455
+        "specificity": 1.0
       },
       "subject_bootstrap_ci": {
         "balanced_accuracy": {
           "hi": 0.5,
           "level": 0.95,
-          "lo": 0.2,
+          "lo": 0.5,
           "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
           "n_boot": 10000,
-          "n_subjects": 5,
-          "point": 0.4,
+          "n_subjects": 4,
+          "point": 0.5,
           "random_state": 42
         },
         "macro_f1": {
-          "hi": 0.3744875008032903,
+          "hi": 0.3939144736842105,
           "level": 0.95,
-          "lo": 0.12307692307692308,
+          "lo": 0.31009615384615385,
           "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
           "n_boot": 10000,
-          "n_subjects": 5,
-          "point": 0.2685664481717113,
+          "n_subjects": 4,
+          "point": 0.35097057547715443,
           "random_state": 42
         },
         "roc_auc": {
@@ -4315,18 +4907,18 @@
       },
       "subject_mean": {
         "balanced_accuracy": {
-          "mean": 0.4,
+          "mean": 0.5,
           "median": 0.5,
           "n_above_chance": 0,
-          "n_subjects": 5,
-          "std": 0.22360679774997896
+          "n_subjects": 4,
+          "std": 0.0
         },
         "macro_f1": {
-          "mean": 0.2685664481717113,
-          "median": 0.3076923076923077,
+          "mean": 0.35097057547715443,
+          "median": 0.33756868131868134,
           "n_above_chance": 0,
-          "n_subjects": 5,
-          "std": 0.15805959306021414
+          "n_subjects": 4,
+          "std": 0.052916922781837274
         },
         "roc_auc": {
           "mean": 0.5,
@@ -4362,21 +4954,14 @@
       {
         "is_both_classes": true,
         "n_closed": 25,
-        "n_open": 19,
-        "n_test": 44,
+        "n_open": 33,
+        "n_test": 58,
         "super_block_id": 3
-      },
-      {
-        "is_both_classes": false,
-        "n_closed": 0,
-        "n_open": 14,
-        "n_test": 14,
-        "super_block_id": 4
       }
     ],
-    "grouping_rule_description": "Contiguous native blocks partitioned into fixed-size super-blocks of MERGED_BLOCK_SIZE = 4. Rule declared in source before evaluation; not tuned on results.",
+    "grouping_rule_description": "Contiguous native blocks are grouped by first-seen order into super-blocks of MERGED_BLOCK_SIZE = 4. If the block count is not a multiple of 4, the leftover blocks join the last complete super-block and are not a separate fold. The size stays 4. The remainder rule does not read labels or scores.",
     "grouping_rule_prespecified": true,
-    "n_folds_total": 5,
+    "n_folds_total": 4,
     "n_folds_with_both_classes": 4,
     "primary_model": {
       "config": {
@@ -4443,7 +5028,7 @@
         "n_boot": 10000,
         "n_features": 1792,
         "n_samples": 100,
-        "n_subjects": 5,
+        "n_subjects": 4,
         "param_grid": {},
         "predictions_persisted": true,
         "random_state": 42,
@@ -4453,12 +5038,31 @@
         {
           "balanced_accuracy": 0.675,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.775,
-            "dummy_uniform_balanced_accuracy": 0.475,
-            "majority_class_accuracy": 0.5555555555555556,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 0.5,
+              "macro_f1": 0.3076923076923077,
+              "roc_auc": 0.5
+            },
             "n_test": 9,
             "positive_rate_test": 0.5555555555555556,
-            "positive_rate_train": 0.43956043956043955
+            "positive_rate_train": 0.43956043956043955,
+            "stratified": {
+              "balanced_accuracy": 0.775,
+              "macro_f1": 0.775,
+              "roc_auc": 0.775
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.475,
+              "macro_f1": 0.41558441558441556,
+              "roc_auc": 0.5
+            }
           },
           "coefficients": [
             0.3511842444977821,
@@ -4610,12 +5214,31 @@
         {
           "balanced_accuracy": 0.35416666666666663,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.125,
-            "dummy_uniform_balanced_accuracy": 0.5416666666666666,
-            "majority_class_accuracy": 0.7272727272727273,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 0.5,
+              "macro_f1": 0.42105263157894735,
+              "roc_auc": 0.5
+            },
             "n_test": 11,
             "positive_rate_test": 0.2727272727272727,
-            "positive_rate_train": 0.47191011235955055
+            "positive_rate_train": 0.47191011235955055,
+            "stratified": {
+              "balanced_accuracy": 0.125,
+              "macro_f1": 0.15384615384615385,
+              "roc_auc": 0.125
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.5416666666666666,
+              "macro_f1": 0.5416666666666666,
+              "roc_auc": 0.5
+            }
           },
           "coefficients": [
             0.7172975702560224,
@@ -4779,12 +5402,31 @@
         {
           "balanced_accuracy": 0.5416666666666667,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.325,
-            "dummy_uniform_balanced_accuracy": 0.5583333333333333,
-            "majority_class_accuracy": 0.5454545454545454,
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 0.5,
+              "macro_f1": 0.3125,
+              "roc_auc": 0.5
+            },
             "n_test": 22,
             "positive_rate_test": 0.5454545454545454,
-            "positive_rate_train": 0.4230769230769231
+            "positive_rate_train": 0.4230769230769231,
+            "stratified": {
+              "balanced_accuracy": 0.325,
+              "macro_f1": 0.3167701863354037,
+              "roc_auc": 0.325
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.5583333333333333,
+              "macro_f1": 0.5416666666666667,
+              "roc_auc": 0.5
+            }
           },
           "coefficients": [
             0.3429744036145716,
@@ -5012,89 +5654,108 @@
           ]
         },
         {
-          "balanced_accuracy": 0.5673684210526315,
+          "balanced_accuracy": 0.49757575757575756,
           "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.6473684210526316,
-            "dummy_uniform_balanced_accuracy": 0.33789473684210525,
-            "majority_class_accuracy": 0.5681818181818182,
-            "n_test": 44,
-            "positive_rate_test": 0.5681818181818182,
-            "positive_rate_train": 0.35714285714285715
+            "fit_on": "training labels only",
+            "metrics": [
+              "balanced_accuracy",
+              "macro_f1",
+              "roc_auc"
+            ],
+            "most_frequent": {
+              "balanced_accuracy": 0.5,
+              "macro_f1": 0.3626373626373626,
+              "roc_auc": 0.5
+            },
+            "n_test": 58,
+            "positive_rate_test": 0.43103448275862066,
+            "positive_rate_train": 0.47619047619047616,
+            "stratified": {
+              "balanced_accuracy": 0.563030303030303,
+              "macro_f1": 0.5625942684766214,
+              "roc_auc": 0.563030303030303
+            },
+            "training_majority_class": 0,
+            "uniform": {
+              "balanced_accuracy": 0.3466666666666667,
+              "macro_f1": 0.34404761904761905,
+              "roc_auc": 0.5
+            }
           },
           "coefficients": [
-            0.09775562372058981,
-            -0.21377973590445687,
-            0.1501922171478955,
-            0.043654793314551375,
-            -0.2754110133559434,
-            -0.35477271199725563,
-            -0.49058809481156423,
-            0.1447029508128248,
-            1.1660103584094794,
-            0.3679431983590642,
-            0.11575948443855799,
-            0.15737190790456723,
-            0.4212981106711534,
-            -0.3480151619362358,
-            -0.3470166421033244,
-            0.07768440534798929,
-            -0.31456813265336203,
-            0.4402789722252447,
-            -0.2357884790222236,
-            -0.027399102909625394,
-            0.3693179224579539,
-            0.1130439113626335,
-            0.24854816174160704,
-            0.7305134192285528,
-            -0.31006133252115264,
-            -0.330503657991906,
-            -1.085186464589809,
-            -0.3659608292209609,
-            0.5053252416904865,
-            -0.2123161726081183,
-            -0.03954986203471411,
-            -0.4888534677797273,
-            0.2820347895776993,
-            -0.40975663070687934,
-            -0.4117715121385191,
-            1.0140898047725408,
-            -0.2490389782020454,
-            0.4370627621026034,
-            -0.3005099674463294,
-            -0.6295977045634462,
-            -0.6415894244376796,
-            0.35397535654575596,
-            -0.03144557726302236,
-            -0.8720231698486033,
-            -0.24585785523504142,
-            0.5936154788488123,
-            0.06490490782121854,
-            0.913919517669997,
-            -0.3673914487049472,
-            -0.047114796974480073,
-            0.3571044587226118,
-            0.5586218703724527,
-            0.032135486997087064,
-            -0.18503043572144295,
-            0.14798361183963518,
-            0.14738169890916528
+            0.05712960962415936,
+            0.10245459498823281,
+            -0.16700905554538853,
+            0.03544404879814586,
+            -0.08451298542286863,
+            -0.11324625402101401,
+            -0.5413880955313538,
+            0.20949824602555137,
+            1.0918115788653902,
+            0.3267261142050906,
+            0.25187589418483036,
+            0.24556637910722914,
+            0.3706770731798195,
+            -0.21407532292872802,
+            -0.3099174117519401,
+            0.06174039790904178,
+            -0.4826341667829883,
+            -0.06858226352696142,
+            -0.2621790211505453,
+            0.009100543479046808,
+            0.06545369818430703,
+            -0.11648078277473192,
+            0.26199517133267874,
+            0.432248840760813,
+            0.049236278313422865,
+            -0.7578482487284952,
+            -0.8570808514326861,
+            -0.3635800571299422,
+            0.4759412687439246,
+            -0.6282671013236275,
+            0.2844866189199034,
+            -0.500307190858315,
+            0.1486637233677835,
+            -0.42012405378365275,
+            -0.23716698382619175,
+            0.6265685684786344,
+            0.11036978974817507,
+            0.5420012293207825,
+            -0.03172685585779779,
+            -0.541224869658909,
+            -0.6497304241656763,
+            0.06033088855821559,
+            0.2964567424015276,
+            -0.7476473465320639,
+            -0.4398186958791981,
+            0.4549731392267794,
+            0.051102843231879254,
+            0.7578316834780964,
+            -0.27222737246441986,
+            -0.04770466275965287,
+            0.24288896034184868,
+            0.15405333040572394,
+            -0.12649140532507383,
+            -0.09426098335801142,
+            0.07874517684486376,
+            -0.021534794068795444
           ],
           "confusion_matrix": [
             [
               17,
-              2
+              16
             ],
             [
-              19,
-              6
+              13,
+              12
             ]
           ],
-          "macro_f1": 0.4909090909090909,
+          "macro_f1": 0.4962563641808925,
           "n_positive": 25,
-          "n_test": 44,
+          "n_test": 58,
           "provenance": {
-            "n_train": 56,
-            "test_indices_hash": "187168a64755",
+            "n_train": 42,
+            "test_indices_hash": "96886f75f5fe",
             "test_native_block_id": [
               13,
               13,
@@ -5139,7 +5800,21 @@
               16,
               16,
               16,
-              16
+              16,
+              18,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              22,
+              22,
+              22,
+              22
             ],
             "test_start_sample": [
               6656,
@@ -5185,9 +5860,37 @@
               12160,
               12288,
               12416,
-              12544
+              12544,
+              12800,
+              13056,
+              13184,
+              13312,
+              13440,
+              13568,
+              13696,
+              13824,
+              13952,
+              14080,
+              14336,
+              14464,
+              14592,
+              14720
             ],
             "test_super_block_id": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
               3,
               3,
               3,
@@ -5233,16 +5936,47 @@
               3,
               3
             ],
-            "train_indices_hash": "b8c84a49fff4"
+            "train_indices_hash": "12934f3ed473"
           },
-          "roc_auc": 0.5663157894736842,
-          "sensitivity": 0.24,
-          "specificity": 0.8947368421052632,
+          "roc_auc": 0.5054545454545454,
+          "sensitivity": 0.48,
+          "specificity": 0.5151515151515151,
           "subject_id": "3",
           "y_pred": [
             0,
             0,
+            1,
             0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
             0,
             0,
             0,
@@ -5250,86 +5984,83 @@
             1,
             1,
             1,
-            0,
             1,
-            0,
-            1,
-            0,
-            0,
-            0,
             0,
             0,
             0,
             1,
             0,
             1,
+            1,
             0,
             0,
             0,
             0,
+            1,
             0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
+            1,
+            1,
+            1
           ],
           "y_proba": [
-            0.00020931207239482342,
-            0.009866797958090404,
-            0.27623804023025583,
-            0.06846518321438018,
-            0.39379739000541397,
-            0.12246344404939248,
-            0.8633257545296579,
-            0.9827827737822403,
-            0.6349930112122864,
-            0.6800878519261011,
-            0.1535281643073226,
-            0.8134794948260186,
-            0.07069269848000848,
-            0.5564445295898472,
-            0.3793735020822484,
-            0.018662126692423796,
-            0.03196107863773076,
-            0.4315298268762766,
-            0.14855029182577234,
-            0.2319369373587967,
-            0.8757500647800315,
-            0.09545354980406413,
-            0.8792383503793411,
-            0.26495903138243315,
-            0.02059939785387576,
-            0.35602081571140687,
-            0.3138583340977527,
-            0.027035211577066426,
-            0.10562372527906543,
-            0.4644520558347632,
-            0.00017017252963369498,
-            0.06840211110320835,
-            0.04966621385158571,
-            0.2083971500138012,
-            0.4187583592268643,
-            0.029224503920797496,
-            0.165550108821879,
-            0.3982226755955189,
-            0.01840815585886221,
-            0.2918769801535825,
-            0.04189226125824859,
-            0.4053382832856273,
-            0.40635465489470535,
-            0.012486162568459807
+            0.09250191892856367,
+            0.042627526870398016,
+            0.6729268845178673,
+            0.14189686817785144,
+            0.8604863722986882,
+            0.10282979857919924,
+            0.8235449547571776,
+            0.9319822766869145,
+            0.8464456798623381,
+            0.8195948454137846,
+            0.24378676457123238,
+            0.9063922486899434,
+            0.1630392165651758,
+            0.06459696371182769,
+            0.7408821356092851,
+            0.06098915220948785,
+            0.008007265638443237,
+            0.33859884472794644,
+            0.6406589178996303,
+            0.6249354491617186,
+            0.8503839836857485,
+            0.495870202626821,
+            0.5004213022618176,
+            0.45901132466281047,
+            0.28365463360487114,
+            0.7106640663710281,
+            0.07736606059521504,
+            0.008366410956890705,
+            0.4472800057630297,
+            0.7241747669382274,
+            0.11030035212663808,
+            0.7784698301363423,
+            0.22718895194533134,
+            0.5106203180599672,
+            0.2632010975401139,
+            0.007692312202323624,
+            0.3765748347018429,
+            0.9440954662342065,
+            0.5550577330438844,
+            0.9116544491787215,
+            0.827743445316452,
+            0.8042482885377323,
+            0.09598932062701424,
+            0.03414255240733898,
+            0.4223731347679479,
+            0.5661881734112952,
+            0.003183624586471723,
+            0.9383210729389604,
+            0.5404087846941461,
+            0.2567315255042991,
+            0.36034644721174147,
+            0.05658699924226005,
+            0.4236139793335837,
+            0.9265937415902251,
+            0.0816641507291475,
+            0.5584991673928342,
+            0.6050448921217929,
+            0.7566551012028963
           ],
           "y_true": [
             1,
@@ -5375,180 +6106,7 @@
             0,
             0,
             0,
-            0
-          ]
-        },
-        {
-          "balanced_accuracy": 0.14285714285714285,
-          "baselines": {
-            "dummy_stratified_balanced_accuracy": 0.5714285714285714,
-            "dummy_uniform_balanced_accuracy": 0.7857142857142857,
-            "majority_class_accuracy": 1.0,
-            "n_test": 14,
-            "positive_rate_test": 0.0,
-            "positive_rate_train": 0.5232558139534884
-          },
-          "coefficients": [
-            0.45967285262191976,
-            0.27245901094590047,
-            -0.28134458098472126,
-            -0.11633673179343194,
-            -0.016813151093062834,
-            -0.6615391322607193,
-            -0.1643542302170185,
-            0.752824980327644,
-            0.4110055750037089,
-            -0.6352709854865088,
-            0.313333686396282,
-            -0.059739639761142035,
-            0.4021727021701033,
-            0.20340891999656796,
-            -0.32996580486705773,
-            0.05509277509672404,
-            -0.35239193010423575,
-            0.2227743564114852,
-            0.5163550116326245,
-            -0.48777564063140877,
-            -0.36999468196515095,
-            -0.587898074628724,
-            -0.025375130333762746,
-            0.29114022107162346,
-            0.33885008562529767,
-            -0.05136702832452394,
-            -0.13381695040569014,
-            -0.35148284726362883,
-            0.24624051095923166,
-            -0.46743305475702557,
-            0.26599226922083025,
-            -0.8405407132113265,
-            -0.011681631470709145,
-            0.28044047474747785,
-            -0.18417934497477836,
-            0.8692775719423248,
-            -0.19284097656897206,
-            0.36418517662728916,
-            0.12880739037847794,
-            -0.5366865669670788,
-            -1.0667533580178918,
-            -0.13685523248117862,
-            0.0315832381409887,
-            -0.6892006407819656,
-            -0.0010680173101573437,
-            0.6085738570530494,
-            0.559453632359269,
-            1.5404896977188518,
-            0.11036677796978715,
-            -0.5722069591449981,
-            0.2535462526247568,
-            0.548666498581933,
-            -0.031083796903596857,
-            0.2601693143806807,
-            -0.4429660978751926,
-            -1.0804654671446297
-          ],
-          "confusion_matrix": [
-            [
-              2,
-              12
-            ],
-            [
-              0,
-              0
-            ]
-          ],
-          "macro_f1": 0.125,
-          "n_positive": 0,
-          "n_test": 14,
-          "provenance": {
-            "n_train": 86,
-            "test_indices_hash": "f2b19c776e1e",
-            "test_native_block_id": [
-              18,
-              20,
-              20,
-              20,
-              20,
-              20,
-              20,
-              20,
-              20,
-              20,
-              22,
-              22,
-              22,
-              22
-            ],
-            "test_start_sample": [
-              12800,
-              13056,
-              13184,
-              13312,
-              13440,
-              13568,
-              13696,
-              13824,
-              13952,
-              14080,
-              14336,
-              14464,
-              14592,
-              14720
-            ],
-            "test_super_block_id": [
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4,
-              4
-            ],
-            "train_indices_hash": "de38531c1914"
-          },
-          "roc_auc": null,
-          "sensitivity": null,
-          "specificity": 0.14285714285714285,
-          "subject_id": "4",
-          "y_pred": [
-            1,
-            1,
-            1,
-            1,
-            1,
             0,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            0
-          ],
-          "y_proba": [
-            0.8215249278901414,
-            0.7628364863764628,
-            0.9885862019607415,
-            0.5432847898745375,
-            0.7250743886604252,
-            0.16697195011750962,
-            0.94585317440393,
-            0.6129801149460959,
-            0.6759910941782661,
-            0.6428669063719252,
-            0.5454217321428259,
-            0.7568354942229927,
-            0.8358080059840434,
-            0.45658386322953187
-          ],
-          "y_true": [
             0,
             0,
             0,
@@ -5568,77 +6126,77 @@
       ],
       "pooled_descriptive_metrics": {
         "_warning": "Descriptive only. Pools correlated epochs across subjects and treats them as independent. Not the inferential result.",
-        "balanced_accuracy": 0.4616161616161616,
+        "balanced_accuracy": 0.51010101010101,
         "confusion_matrix": [
           [
-            30,
-            25
+            28,
+            27
           ],
           [
-            28,
-            17
+            22,
+            23
           ]
         ],
-        "macro_f1": 0.4608890245142916,
+        "macro_f1": 0.5087719298245614,
         "n_positive": 45,
         "n_test": 100,
-        "roc_auc": 0.4513131313131313,
-        "sensitivity": 0.37777777777777777,
-        "specificity": 0.5454545454545454
+        "roc_auc": 0.5062626262626263,
+        "sensitivity": 0.5111111111111111,
+        "specificity": 0.509090909090909
       },
       "subject_bootstrap_ci": {
         "balanced_accuracy": {
-          "hi": 0.605280701754386,
+          "hi": 0.6306439393939395,
           "level": 0.95,
-          "lo": 0.27002130325814533,
+          "lo": 0.40104166666666663,
           "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
           "n_boot": 10000,
-          "n_subjects": 5,
-          "point": 0.4562117794486215,
+          "n_subjects": 4,
+          "point": 0.5171022727272727,
           "random_state": 42
         },
         "macro_f1": {
-          "hi": 0.5815151515151515,
+          "hi": 0.6240640910452231,
           "level": 0.95,
-          "lo": 0.2551282051282051,
+          "lo": 0.39182692307692313,
           "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
           "n_boot": 10000,
-          "n_subjects": 5,
-          "point": 0.4332245532245532,
+          "n_subjects": 4,
+          "point": 0.511617509848642,
           "random_state": 42
         },
         "roc_auc": {
-          "hi": 0.6290789473684212,
+          "hi": 0.6166666666666668,
           "level": 0.95,
           "lo": 0.3958333333333333,
           "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
           "n_boot": 10000,
           "n_subjects": 4,
-          "point": 0.5332456140350877,
+          "point": 0.5180303030303031,
           "random_state": 42
         }
       },
       "subject_mean": {
         "balanced_accuracy": {
-          "mean": 0.4562117794486215,
-          "median": 0.5416666666666667,
-          "n_above_chance": 3,
-          "n_subjects": 5,
-          "std": 0.2098397933485385
+          "mean": 0.5171022727272727,
+          "median": 0.5196212121212122,
+          "n_above_chance": 2,
+          "n_subjects": 4,
+          "std": 0.1322427039497223
         },
         "macro_f1": {
-          "mean": 0.4332245532245532,
-          "median": 0.4909090909090909,
+          "mean": 0.511617509848642,
+          "median": 0.5189615154237797,
           "n_above_chance": 2,
-          "n_subjects": 5,
-          "std": 0.20792339835896476
+          "n_subjects": 4,
+          "std": 0.13415148631501053
         },
         "roc_auc": {
-          "mean": 0.5332456140350877,
-          "median": 0.5748245614035088,
+          "mean": 0.5180303030303031,
+          "median": 0.5443939393939394,
           "n_above_chance": 3,
           "n_subjects": 4,
-          "std": 0.1380808009167823
+          "std": 0.13656696401262858
         }
       }
     },
@@ -5648,12 +6206,29 @@
     "_warning": "Leaky by construction: epochs from the same subject appear in both train and test. Included to quantify inflation.",
     "balanced_accuracy": 0.5333333333333333,
     "baselines": {
-      "dummy_stratified_balanced_accuracy": 0.5515151515151515,
-      "dummy_uniform_balanced_accuracy": 0.5363636363636364,
-      "majority_class_accuracy": 0.55,
+      "fit_on": "training fold only, same StratifiedKFold as the model",
+      "metrics": [
+        "balanced_accuracy",
+        "macro_f1",
+        "roc_auc"
+      ],
+      "most_frequent": {
+        "balanced_accuracy": 0.5,
+        "macro_f1": 0.3548387096774194,
+        "roc_auc": 0.5
+      },
       "n_test": 100,
       "positive_rate_test": 0.45,
-      "positive_rate_train": 0.45
+      "stratified": {
+        "balanced_accuracy": 0.5808080808080808,
+        "macro_f1": 0.5805626598465473,
+        "roc_auc": 0.5808080808080808
+      },
+      "uniform": {
+        "balanced_accuracy": 0.4444444444444444,
+        "macro_f1": 0.4375,
+        "roc_auc": 0.5
+      }
     },
     "confusion_matrix": [
       [
@@ -5679,114 +6254,114 @@
     "RandomForest(300)": {
       "subject_bootstrap_ci": {
         "balanced_accuracy": {
-          "hi": 0.5700701754385964,
+          "hi": 0.5813636363636363,
           "level": 0.95,
-          "lo": 0.4342857142857143,
+          "lo": 0.5323484848484847,
           "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
           "n_boot": 10000,
-          "n_subjects": 5,
-          "point": 0.5131654135338345,
+          "n_subjects": 4,
+          "point": 0.5635984848484847,
           "random_state": 42
         },
         "macro_f1": {
-          "hi": 0.5300710751237067,
+          "hi": 0.5534722222222223,
           "level": 0.95,
-          "lo": 0.34960134116706143,
+          "lo": 0.5053947368421052,
           "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
           "n_boot": 10000,
-          "n_subjects": 5,
-          "point": 0.44842635241312534,
+          "n_subjects": 4,
+          "point": 0.5318463225371121,
           "random_state": 42
         },
         "roc_auc": {
           "hi": 0.6145833333333333,
           "level": 0.95,
-          "lo": 0.48854166666666665,
+          "lo": 0.468030303030303,
           "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
           "n_boot": 10000,
           "n_subjects": 4,
-          "point": 0.5521600877192983,
+          "point": 0.5413068181818181,
           "random_state": 42
         }
       },
       "subject_mean": {
         "balanced_accuracy": {
-          "mean": 0.5131654135338345,
-          "median": 0.5336842105263158,
+          "mean": 0.5635984848484847,
+          "median": 0.5771969696969697,
           "n_above_chance": 4,
-          "n_subjects": 5,
-          "std": 0.09154694281996137
+          "n_subjects": 4,
+          "std": 0.03147247863673338
         },
         "macro_f1": {
-          "mean": 0.44842635241312534,
-          "median": 0.4905263157894737,
-          "n_above_chance": 2,
-          "n_subjects": 5,
-          "std": 0.11688222183466349
-        },
-        "roc_auc": {
-          "mean": 0.5521600877192983,
-          "median": 0.5668201754385964,
+          "mean": 0.5318463225371121,
+          "median": 0.539957264957265,
           "n_above_chance": 3,
           "n_subjects": 4,
-          "std": 0.07950197796668691
+          "std": 0.02983592079503848
+        },
+        "roc_auc": {
+          "mean": 0.5413068181818181,
+          "median": 0.5451136363636364,
+          "n_above_chance": 2,
+          "n_subjects": 4,
+          "std": 0.08630370450646736
         }
       }
     },
     "SVM-RBF": {
       "subject_bootstrap_ci": {
         "balanced_accuracy": {
-          "hi": 0.6815,
+          "hi": 0.7218749999999998,
           "level": 0.95,
-          "lo": 0.4014285714285714,
-          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
-          "n_boot": 10000,
-          "n_subjects": 5,
-          "point": 0.5453095238095237,
-          "random_state": 42
-        },
-        "macro_f1": {
-          "hi": 0.6414826302729528,
-          "level": 0.95,
-          "lo": 0.3203749655362559,
-          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
-          "n_boot": 10000,
-          "n_subjects": 5,
-          "point": 0.4793794556697783,
-          "random_state": 42
-        },
-        "roc_auc": {
-          "hi": 0.65625,
-          "level": 0.95,
-          "lo": 0.38414473684210526,
+          "lo": 0.5178409090909091,
           "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
           "n_boot": 10000,
           "n_subjects": 4,
-          "point": 0.5153947368421052,
+          "point": 0.604905303030303,
+          "random_state": 42
+        },
+        "macro_f1": {
+          "hi": 0.7053571428571428,
+          "level": 0.95,
+          "lo": 0.49372502497502496,
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
+          "n_subjects": 4,
+          "point": 0.5770708458208458,
+          "random_state": 42
+        },
+        "roc_auc": {
+          "hi": 0.6436742424242423,
+          "level": 0.95,
+          "lo": 0.38125,
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
+          "n_subjects": 4,
+          "point": 0.4999242424242424,
           "random_state": 42
         }
       },
       "subject_mean": {
         "balanced_accuracy": {
-          "mean": 0.5453095238095237,
+          "mean": 0.604905303030303,
           "median": 0.575,
-          "n_above_chance": 4,
-          "n_subjects": 5,
-          "std": 0.17367663706739184
+          "n_above_chance": 3,
+          "n_subjects": 4,
+          "std": 0.11630659664117433
         },
         "macro_f1": {
-          "mean": 0.4793794556697783,
-          "median": 0.5089285714285714,
+          "mean": 0.5770708458208458,
+          "median": 0.5294642857142857,
           "n_above_chance": 3,
-          "n_subjects": 5,
-          "std": 0.2091750487251021
+          "n_subjects": 4,
+          "std": 0.1324538656978855
         },
         "roc_auc": {
-          "mean": 0.5153947368421052,
-          "median": 0.5057894736842106,
-          "n_above_chance": 2,
+          "mean": 0.4999242424242424,
+          "median": 0.47484848484848485,
+          "n_above_chance": 1,
           "n_subjects": 4,
-          "std": 0.15017578872178672
+          "std": 0.153842553847593
         }
       }
     }
@@ -5807,25 +6382,28 @@
         5
       ],
       "mean_abs_autocorr": [
-        0.08344258380184792,
-        0.09485936703740669,
-        0.12993035217695886,
-        0.07109400361322046,
-        0.07186426485816899
+        0.09244061024875956,
+        0.07932326247313551,
+        0.1501460094204225,
+        0.08217309992531477,
+        0.0815730461667128
       ],
-      "n_index_adjacent_pairs": 99,
-      "n_index_adjacent_pairs_with_time_gap": 16,
+      "n_index_adjacent_pairs": 69,
+      "n_index_adjacent_pairs_with_time_gap": 11,
       "n_pairs": [
-        83,
-        86,
-        82,
-        83,
-        84
+        58,
+        60,
+        57,
+        58,
+        57
       ],
       "not_an_independence_test": true,
       "win_samples": 128
     },
-    "note": "Pearson correlation of band-power features, clipper fitted on the first 70% of kept windows. Pairs are aligned by start sample, so a discarded mixed-label window is a time gap and is not counted as lag 1. A value below the threshold is not evidence that neighbouring windows are independent."
+    "n_windows_used": 70,
+    "note": "Pearson correlation of band-power features on the first 70% of kept windows. The clipper is fitted on that prefix and is not applied to later windows. Pairs are aligned by start sample, so a discarded mixed-label window is a time gap and is not counted as lag 1. A value below the threshold is not evidence that neighbouring windows are independent.",
+    "selected_from": "chronological training windows only"
   },
+  "temporal_gap_selected_from": "chronological training windows only",
   "temporal_gap_windows_used": 0
 }

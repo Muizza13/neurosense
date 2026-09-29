@@ -37,6 +37,7 @@ from src.core.evaluation import (
     evaluate_loso,
     evaluate_naive_split,
     evaluate_within_subject_shuffled_cv,
+    loro_subject_summary,
 )
 from src.core.results import format_ci, save_results
 from src.core.statistics import bootstrap_ci
@@ -143,9 +144,10 @@ def _within_subject_leave_one_run_out(X, y, g, run, factory):
                 if len(np.unique(ys[te])) > 1 else None
             )
             rows.append(row)
-    return _summarise(rows, unit="fold", limitation=(
-        "Leave-one-run-out within subject. Tests transfer across recording "
-        "runs of the same session; does NOT establish transfer to a new "
+    return loro_subject_summary(rows, random_state=RANDOM_STATE, limitation=(
+        "Leave-one-run-out within subject. The interval resamples subject "
+        "means of the run-level folds. It tests transfer across recording "
+        "runs of the same session; it does NOT establish transfer to a new "
         "recording session."
     ))
 
@@ -229,7 +231,7 @@ def main():
         print("\n=== WITHIN-SUBJECT (leave-one-run-out) ===")
         within_loro = _within_subject_leave_one_run_out(
             X, y, g, run, factory)
-        _print_summary("within-LORO", within_loro, unit="fold")
+        _print_summary("within-LORO", within_loro, unit="subject")
         print("  note: tests transfer across runs of the same session; "
               "does NOT establish transfer to a new recording session.")
 

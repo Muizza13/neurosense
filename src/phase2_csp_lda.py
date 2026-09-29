@@ -49,6 +49,7 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import StratifiedKFold
 
+from src.core.evaluation import loro_subject_summary
 from src.core.results import format_ci, save_results
 from src.core.statistics import bootstrap_ci
 
@@ -235,7 +236,12 @@ def within_loro(epochs, y, g, run):
             row["subject_id"] = str(int(s))
             row["held_out_run"] = int(r)
             rows.append(row)
-    return _summary(rows, unit="fold")
+    return loro_subject_summary(rows, random_state=RANDOM_STATE, limitation=(
+        "Leave-one-run-out within subject. The interval resamples subject "
+        "means of the run-level folds. It tests transfer across recording "
+        "runs of the same session; it does NOT establish transfer to a new "
+        "recording session."
+    ))
 
 
 def cross_loso(epochs, y, g):

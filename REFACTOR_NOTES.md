@@ -22,21 +22,22 @@ survive.
 ## Phase 2, corrected
 
 Primary model, prespecified: logistic regression, C = 1.0, balanced.
-Intervals are percentile bootstrap over the 10 subjects (or 30 LORO folds).
-Numbers below reflect the post-audit re-extraction with run IDs (383 trials
-across 10 subjects; the pre-audit cache had 437 trials because an older MNE
-version retained more edge epochs near the concatenation boundary).
+Intervals are percentile bootstrap over subjects. Leave-one-run-out
+resamples 10 subject means, not 30 run rows. The cache has 450 trials
+after every EDF was required to match its header length. An earlier
+383-trial cache was built from files that failed that check. The
+pre-audit archive still has 437 trials.
 
 | Protocol | balanced accuracy | macro F1 | ROC AUC |
 |---|---|---|---|
-| Within-subject shuffled trial CV | 0.607 [0.522, 0.700] | 0.605 [0.518, 0.698] | 0.632 [0.534, 0.735] |
-| Within-subject leave-one-run-out (30 folds) | 0.588 [0.529, 0.648] | 0.556 [0.490, 0.622] | 0.657 [0.598, 0.718] |
-| Cross-subject (LOSO) | 0.474 [0.432, 0.516] | 0.427 [0.380, 0.474] | 0.511 [0.447, 0.583] |
-| Naive random trial split | 0.504 | - | 0.521 |
+| Within-subject shuffled trial CV | 0.607 [0.546, 0.688] | 0.606 [0.544, 0.687] | 0.644 [0.577, 0.729] |
+| Within-subject leave-one-run-out (10 subject means) | 0.574 [0.498, 0.654] | 0.543 [0.458, 0.632] | 0.633 [0.545, 0.729] |
+| Cross-subject (LOSO) | 0.470 [0.423, 0.524] | 0.421 [0.377, 0.473] | 0.518 [0.450, 0.593] |
+| Naive random trial split | 0.516 | 0.515 | 0.551 |
 
-Per-subject cross-subject balanced accuracy, which the pooled number hid
-entirely: 0.545, 0.471, 0.381, 0.600, 0.487, 0.353, 0.500, 0.496, 0.449, 0.461
-(range 0.353 to 0.600, std across subjects 0.072).
+Per-subject cross-subject balanced accuracy: 0.638, 0.395, 0.361, 0.542,
+0.464, 0.393, 0.499, 0.546, 0.402, 0.464 (range 0.361 to 0.638, std across
+subjects 0.087).
 
 ### Two claims that did not survive
 
@@ -46,17 +47,18 @@ entirely: 0.545, 0.471, 0.381, 0.600, 0.487, 0.353, 0.500, 0.496, 0.449, 0.461
    AUC is 0.511 with an interval of [0.447, 0.583]. The honest statement is
    chance, not below chance.
 
-2. **"Within-subject decoding is real."** The documented bootstrap interval
-   for shuffled-trial balanced accuracy is [0.522, 0.700]. The lower endpoint
-   is close to 0.5. Leave-one-run-out is [0.529, 0.648] and uses three runs
-   from the same recording.
+2. **"Within-subject decoding is real."** On this cache the shuffled-trial
+   balanced-accuracy interval is [0.546, 0.688]. Leave-one-run-out, resampling
+   subject means, is [0.498, 0.654] and uses three runs from the same recording.
+   The earlier [0.522, 0.700] and [0.529, 0.648] intervals resampled a different
+   cache and, for leave-one-run-out, a different unit. They are not this result.
 
-The overall conclusion is unchanged. Motor imagery decodes modestly within
-subject and not at all across subjects.
+The per-subject cross-subject AUC mean is 0.518 [0.450, 0.593]. The pooled
+descriptive AUC is 0.476.
 
 ### Also worth noting
 
-The naive random trial split reaches only 0.504, barely above the LOSO 0.474.
+The naive random trial split reaches 0.516. Leave-one-subject-out is 0.470.
 Phase 2 uses discrete trials, so random splitting leaks far less than it does in
 Phase 1's continuous windows. The inflation story is a Phase 1 phenomenon and
 should be presented as such rather than as a general claim.
@@ -74,7 +76,7 @@ fold.
 | Chronological 70/30 holdout | 0.416 | 0.330 | 0.491 |
 | Leave-one-block-out | 0.482 [0.334, 0.630] | 0.369 [0.239, 0.515] | undefined |
 
-Majority baseline accuracy on the chronological test segment is 0.767.
+On the chronological test segment, a most-frequent dummy fitted on the training prefix scores balanced accuracy 0.500, macro F1 0.189, and AUC 0.500. The model scores 0.416, 0.330, and 0.491.
 
 Two structural facts that deserve to be visible in the report:
 
@@ -151,15 +153,17 @@ hardcoded baseline was present in the code at the start of the audit.
 Primary model unchanged (logistic regression, C = 1.0, balanced). Numbers
 below come from `reports/results/phase1_results.json`.
 
-| Protocol | balAcc | AUC | majority-class | stratified dummy | uniform dummy |
-|---|---|---|---|---|---|
-| Naive random window split | 0.533 | 0.566 | 0.550 | 0.552 | 0.536 |
-| Chronological 70/30 (gap = 0) | 0.416 | 0.491 | 0.767 | 0.366 | 0.339 |
-| Expanding-window (13 folds) | 0.380 [0.230, 0.545] | undefined | single-class folds | | |
-| **Leave-one-merged-block-out (primary, 5 folds)** | 0.456 [0.270, 0.605] | 0.533 [0.396, 0.629] | mixed | mixed | mixed |
-| Leave-one-native-block-out (diagnostic, 19 folds) | 0.482 [0.334, 0.630] | undefined | single-class folds | | |
+Dummy columns are balanced accuracy of classifiers fitted on training labels.
 
-None of the leakage-aware protocols shows evidence of decoding.
+| Protocol | balAcc | AUC | most-frequent balAcc | stratified balAcc | uniform balAcc |
+|---|---|---|---|---|---|
+| Naive random window split | 0.533 | 0.566 | 0.500 | 0.581 | 0.444 |
+| Chronological 70/30 (gap = 0) | 0.416 | 0.491 | 0.500 | 0.366 | 0.339 |
+| Expanding-window (13 folds) | 0.380 [0.230, 0.545] | undefined | 0 or 1 per fold | | |
+| **Leave-one-merged-block-out (primary, 4 folds)** | 0.517 [0.401, 0.631] | 0.518 [0.396, 0.617] | 0.500 | | |
+| Leave-one-native-block-out (diagnostic, 19 folds) | 0.482 [0.334, 0.630] | undefined | 0 or 1 per fold | | |
+
+On the merged splits the dummy prior is balAcc 0.500, macro F1 0.351 [0.310, 0.394], AUC 0.500. The model's macro F1 is 0.512 [0.392, 0.624]. The balanced-accuracy and AUC intervals include 0.500. The macro F1 intervals do not.
 
 **Task 4: correcting the LOBO analysis.** Native leave-one-block-out
 produced single-class test folds by construction, so per-fold AUC was
@@ -169,10 +173,10 @@ the same native splits: it scores pooled AUC = 0.000 while learning nothing,
 which reproduces the below-chance pooled-AUC artefact and rules out the
 "electrode drift" reading. A pre-specified grouping rule (declared in
 `src/phase1_eyestate.py` as `MERGED_BLOCK_SIZE = 4` native blocks per
-super-block, chosen for structural reasons before evaluation and not tuned
-on results) partitions the 19 native blocks into 5 super-blocks. 4 of the
-5 super-blocks contain both classes, giving well-defined per-fold AUC
-under leave-one-merged-block-out. This is the primary Phase 1 group
+super-block. If the block count is not a multiple of 4, the leftover
+blocks join the last complete super-block. Nineteen native blocks become
+four groups, and all four contain both classes. That count was measured
+after grouping. Per-fold AUC is defined under leave-one-merged-block-out. This is the primary Phase 1 group
 protocol; native LOBO is retained only as a labelled diagnostic.
 
 ### Phase 2 audit rerun
@@ -224,19 +228,21 @@ session. The shuffled trial CV is retained and labelled as such
   run.
 - Softened the "widely reported high accuracies on this dataset are an
   artifact" language: on this recording under the leakage-aware
-  protocols implemented here, the model does not clear a same-split
-  dummy; that is not evidence that every published high-accuracy result
-  on this dataset used a leaky evaluation, only that ours does not
-  survive a stricter one.
+  protocols implemented here, the merged-block balanced-accuracy and
+  AUC intervals include the dummy prior, and the macro F1 intervals do
+  not. That is not evidence that every published high-accuracy result
+  on this dataset used a leaky evaluation.
 - Documented explanation-faithfulness and model-randomisation tests as
   future work (not implemented).
 
 **Task 7 (raw-data reproduction):**
 
-- `scripts/download_data.sh` now validates every expected EDF (10
-  subjects x 3 imagery runs = 30 files), rejects files below 500 KB as
-  truncated, retries failed downloads up to 3 times, and exits non-zero
-  if any file is missing or truncated after retries. No silent skips.
+- `scripts/download_data.sh` validates every expected EDF (10 subjects
+  x 3 imagery runs = 30 files) by comparing the file length with the
+  length declared in the EDF header. It writes to a temporary file,
+  moves the file into place only after that check, retries up to 3
+  times, and exits non-zero after exhausted retries. A size floor is
+  not used. No silent skips.
 - `src/physionet_features.py` rewritten to (a) validate the raw-data
   layout up front, (b) allow only R04, R08, R12, (c) read and validate
   the sampling rate on every EDF against `EXPECTED_FS = 160.0`, and (d)
@@ -350,10 +356,9 @@ session. The shuffled trial CV is retained and labelled as such
 - The primary model, feature bands, channel sets, window lengths, or the
   shared-core primitives in `src/core/features.py`.
 - The withdrawn-claims list from the shared-core rebuild above.
-- The Phase 2 cross-subject leave-one-subject-out protocol structure
-  (LOSO with subject-level bootstrap); the point estimates moved
-  slightly because the round-2 re-extraction with run IDs preserved
-  gave 383 trials vs the pre-audit 437.
+- The Phase 2 cross-subject protocol is still leave-one-subject-out
+  with a subject-level bootstrap. The point estimates in this file are
+  from the 450-trial cache, not from the withdrawn 383-trial cache.
 
 ### Framing note
 

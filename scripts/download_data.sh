@@ -2,75 +2,119 @@
 # Downloads the datasets used in this project. Data is NOT stored in the repo.
 #
 # Two datasets:
-#   1. UCI EEG Eye State (Phase 1). ~200 KB.
+#   1. UCI EEG Eye State (Phase 1).
 #   2. PhysioNet EEG Motor Movement/Imagery, imagery runs R04/R08/R12 only,
-#      subjects S001..S010. ~60 MB total.
+#      subjects S001..S010.
 #
-# The Phase 2 script does not need this data if data/processed/physionet_features.npz
-# is already present (see "Cached vs. raw reproduction" in README.md).
-# Rerun this script to force a fresh raw-data reproduction. It will fail loudly
-# on any missing or truncated EDF rather than silently skipping.
+# Each file is written to a temporary path and moved into place only after
+# the download succeeds. An EDF is accepted only when its byte length matches
+# the length declared in its header. A failed file is retried, then the
+# script exits. A partial file is never left at the destination.
 
 set -euo pipefail
 
-MIN_EDF_BYTES=500000
+cd "$(dirname "$0")/.."
+
+MAX_ATTEMPTS=3
+PY=""
+for candidate in python3 /usr/bin/python3 python; do
+  if "$candidate" -c 'import numpy' >/dev/null 2>&1; then
+    PY=$candidate
+    break
+  fi
+done
+if [ -z "$PY" ]; then
+  echo "a python with numpy is required to check EDF headers" >&2
+  exit 1
+fi
+
+download_atomic() {
+  local url="$1"
+  local dest="$2"
+  local kind="$3"
+  local tmp="${dest}.partial"
+  local attempt
+  rm -f "$tmp"
+  for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+    if curl -fL --retry 0 --max-time 300 -o "$tmp" "$url"; then
+      if [ "$kind" = "edf" ]; then
+        if "$PY" -m src.physionet_features --check-edf "$tmp"; then
+          mv -f "$tmp" "$dest"
+          return 0
+        fi
+        echo "  integrity check failed, attempt ${attempt}/${MAX_ATTEMPTS}: $dest" >&2
+      else
+        mv -f "$tmp" "$dest"
+        return 0
+      fi
+    else
+      echo "  download failed, attempt ${attempt}/${MAX_ATTEMPTS}: $url" >&2
+    fi
+    rm -f "$tmp"
+    if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+      sleep 5
+    fi
+  done
+  rm -f "$tmp" "$dest"
+  echo "FAILED after ${MAX_ATTEMPTS} attempts: $dest" >&2
+  exit 1
+}
 
 echo "[1/2] UCI EEG Eye State (Phase 1)"
 mkdir -p data/raw
-curl -sL -o data/raw/uci.zip "https://archive.ics.uci.edu/static/public/264/eeg+eye+state.zip"
-unzip -o data/raw/uci.zip -d data/raw >/dev/null && rm -f data/raw/uci.zip
+if [ -s "data/raw/EEG Eye State.arff" ]; then
+  echo "  ARFF already present, skipping download"
+else
+  uci_url="https://archive.ics.uci.edu/static/public/264/eeg+eye+state.zip"
+  uci_ok=0
+  for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+    uci_tmp="$(mktemp)"
+    if curl -sfL --max-time 300 -o "$uci_tmp" "$uci_url" && unzip -t "$uci_tmp" >/dev/null; then
+      unzip -o "$uci_tmp" -d data/raw >/dev/null
+      rm -f "$uci_tmp"
+      uci_ok=1
+      break
+    fi
+    rm -f "$uci_tmp"
+    echo "  UCI download failed, attempt ${attempt}/${MAX_ATTEMPTS}" >&2
+    if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+      sleep 5
+    fi
+  done
+  if [ "$uci_ok" -ne 1 ]; then
+    echo "FAILED after ${MAX_ATTEMPTS} attempts: UCI EEG Eye State" >&2
+    exit 1
+  fi
+fi
 
 echo "[2/2] PhysioNet Motor Movement/Imagery, imagery runs R04/R08/R12 (Phase 2)"
 base="https://physionet.org/files/eegmmidb/1.0.0"
 for s in $(seq -w 1 10); do
   mkdir -p "data/physionet/S0$s"
   for r in 04 08 12; do
-    f="data/physionet/S0$s/S0${s}R$r.edf"
-    if [ -s "$f" ] && [ "$(stat -f%z "$f" 2>/dev/null || stat -c%s "$f")" -ge $MIN_EDF_BYTES ]; then
-      continue                  # already present and non-truncated
+    dest="data/physionet/S0$s/S0${s}R$r.edf"
+    if [ -f "$dest" ] && "$PY" -m src.physionet_features --check-edf "$dest"; then
+      continue
     fi
-    # 300 s per file: PhysioNet is often throttled; a 30 s ceiling had
-    # produced truncated EDFs. Retry up to 3 times.
-    for attempt in 1 2 3; do
-      if curl -sfL --max-time 300 -o "$f" "$base/S0$s/S0${s}R$r.edf"; then
-        break
-      fi
-      echo "  retry $attempt for S0${s}R$r"
-      sleep 5
-    done
+    download_atomic "$base/S0$s/S0${s}R$r.edf" "$dest" edf
   done
 done
 
 echo ""
-echo "Validating downloads..."
-missing=""
-truncated=""
-for s in $(seq -w 1 10); do
-  for r in 04 08 12; do
-    f="data/physionet/S0$s/S0${s}R$r.edf"
-    if [ ! -s "$f" ]; then
-      missing="$missing\n  $f"
-    else
-      sz=$(stat -f%z "$f" 2>/dev/null || stat -c%s "$f")
-      if [ "$sz" -lt $MIN_EDF_BYTES ]; then
-        truncated="$truncated\n  $f ($sz bytes)"
-      fi
-    fi
-  done
-done
+echo "Validating every EDF against its header..."
+"$PY" - << 'PY'
+from src.physionet_features import EXPECTED_SUBJECTS, IMAGERY_RUNS, _expected_edf, assert_edf_complete
 
-if [ -n "$missing" ] || [ -n "$truncated" ]; then
-  echo ""
-  if [ -n "$missing" ]; then
-    printf "MISSING EDFs:%b\n" "$missing" >&2
-  fi
-  if [ -n "$truncated" ]; then
-    printf "TRUNCATED EDFs (< $MIN_EDF_BYTES bytes):%b\n" "$truncated" >&2
-  fi
-  echo ""
-  echo "Rerun this script. Do not proceed with a partial download." >&2
-  exit 1
-fi
-
-echo "OK: 30 EDFs present (S001..S010, R04/R08/R12), all above $MIN_EDF_BYTES bytes."
+failures = []
+for subj in EXPECTED_SUBJECTS:
+    for run in IMAGERY_RUNS:
+        path = _expected_edf(subj, run)
+        try:
+            assert_edf_complete(path)
+        except ValueError as exc:
+            failures.append(str(exc))
+if failures:
+    raise SystemExit("EDF integrity failures:\n  " + "\n  ".join(failures))
+print(f"OK: {len(EXPECTED_SUBJECTS) * len(IMAGERY_RUNS)} EDFs match their headers.")
+PY
 echo "done."
