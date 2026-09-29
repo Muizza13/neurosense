@@ -177,16 +177,19 @@ a2.text(0, -0.03,
         ha="center", fontsize=8.5, style="italic", color=GREY)
 a2.legend(frameon=False, fontsize=8, loc="upper right")
 
-# Autocorrelation subtitle: makes explicit that gap=0 was measured, not chosen.
 ac = p1["temporal_dependence"]["lag_report"]
-ac_str = ", ".join(f"lag{l}={v:.2f}"
-                   for l, v in zip(ac["lags"], ac["mean_abs_autocorr"]))
+ac_str = ", ".join(
+    f"lag{l}={'na' if v is None else f'{v:.2f}'}"
+    for l, v in zip(ac["lags"], ac["mean_abs_autocorr"])
+)
 gap_reason = p1["temporal_dependence"]["gap_choice"]["reason"]
+n_gaps = ac.get("n_index_adjacent_pairs_with_time_gap")
+gap_note = "" if n_gaps is None else f", {n_gaps} discarded-window gaps"
 fig.suptitle(
     "Phase 1  |  UCI EEG Eye State, 100 windows, 1 subject\n"
-    f"feature autocorrelation {ac_str}   →   gap = {chrono_gap} windows "
-    f"({gap_reason})",
-    fontweight="bold", x=0.02, ha="left", fontsize=10.5,
+    f"mean |Pearson r| {ac_str}. Gap setting {chrono_gap} windows "
+    f"({gap_reason}{gap_note}). Not an independence test.",
+    fontweight="bold", x=0.02, ha="left", fontsize=10,
 )
 fig.tight_layout(rect=[0, 0, 1, 0.90])
 fig.savefig("reports/figures/fig1_phase1_leakage.png", bbox_inches="tight")
@@ -233,8 +236,8 @@ ax.set_xticklabels(["Within-subject\n(trial CV)",
 ax.set_ylim(0, 0.85)
 ax.set_ylabel("score")
 ax.legend(frameon=False, loc="upper right")
-ax.set_title("Phase 2  |  Motor imagery: modest within subject, chance across "
-             "subjects\nbars are subject means with 95% bootstrap CI, "
+ax.set_title("Phase 2  |  within-subject trial CV and leave-one-subject-out\n"
+             "bars are subject means with the documented 95% bootstrap interval, "
              "dots are individual subjects",
              fontweight="bold", fontsize=10.5, loc="left")
 
@@ -254,14 +257,11 @@ fig.savefig("reports/figures/fig2_phase2_generalization.png", bbox_inches="tight
 plt.close(fig)
 
 # ======================================================================
-# FIGURE 3: per-fold signed-coefficient attribution (Task 6)
+# FIGURE 3: signed coefficients saved with the evaluation JSON.
 #
-# Round 4 (Task 8): this figure now reads the coefficients that
-# evaluate_loso and evaluate_within_subject_shuffled_cv saved into the
-# phase1/phase2 result JSONs. Nothing is refit here. Both panels use
-# signed standardised logistic-regression coefficients from within real
-# evaluation folds; bars are the mean, white dots are per-fold values,
-# so the between-fold spread is visible.
+# Nothing is refit here. Phase 1 dots are the coefficients from each
+# merged-block training fold. Phase 2 dots are one value per subject:
+# the mean of that subject's training-fold coefficients, not a single fold.
 # ======================================================================
 def _load_phase1_coefs():
     merged = p1["leave_one_merged_block_out"]["primary_model"]
@@ -321,17 +321,15 @@ f2_means = [coef_mean_p2[i] for i in order2]
 f2_folds = [coef_folds_p2[:, i] for i in order2]
 
 
-def _plot_signed_attribution(ax, labels, means, per_fold, colour_map,
-                             xlabel, title, colour_title):
+def _plot_signed_attribution(ax, labels, means, dots, colour_map,
+                             xlabel, title):
     n = len(labels)
     positions = np.arange(n)[::-1]
     ax.axvline(0, color="black", lw=0.8)
-    for i, (m, folds) in enumerate(zip(means, per_fold)):
+    for i, (m, dot_vals) in enumerate(zip(means, dots)):
         col = colour_map(labels[i])
-        # Bar for mean
         ax.barh(positions[i], m, color=col, alpha=0.75, zorder=2)
-        # Per-fold segments (dots) so variability is visible
-        ax.scatter(folds, np.full(len(folds), positions[i]),
+        ax.scatter(dot_vals, np.full(len(dot_vals), positions[i]),
                    s=18, color="white", edgecolor="black",
                    linewidth=0.5, zorder=3)
     ax.set_yticks(positions)
@@ -348,22 +346,16 @@ def _p2_colour(name):
     return GOOD if name.split("_")[0] in CLINE else GREY
 
 
-fig, (a1, a2) = plt.subplots(1, 2, figsize=(12, 5.2))
+fig, (a1, a2) = plt.subplots(1, 2, figsize=(12.4, 5.4))
 _plot_signed_attribution(
     a1, f1_labels, f1_means, f1_folds, _p1_colour,
-    "signed standardized coefficient (mean across merged-LOBO folds)",
-    (f"Phase 1: coefficients from a model whose merged-LOBO balAcc "
-     f"({merged_ci['point']:.3f})\noverlaps the same-splits dummy prior "
-     f"(descriptive ranking only)"),
-    "channel group",
+    "signed standardized coefficient",
+    "Phase 1. White dots: one coefficient per merged-block fold.",
 )
 _plot_signed_attribution(
     a2, f2_labels, f2_means, f2_folds, _p2_colour,
-    "signed standardized coefficient (mean across per-subject fits)",
-    ("Phase 2: per-subject signed coefficients from the saved JSON.\n"
-     "Largest mean |coef| names are on the motor-montage channels used "
-     "as features."),
-    "channel group",
+    "signed standardized coefficient",
+    "Phase 2. White dots: subject means, not single folds.",
 )
 a1.legend(handles=[Patch(color=HOT, label="frontal"),
                    Patch(color=COOL, label="posterior/temporal")],
@@ -372,9 +364,8 @@ a2.legend(handles=[Patch(color=GOOD, label="central (motor)"),
                    Patch(color=GREY, label="other")],
           frameon=False, fontsize=8, loc="lower right")
 fig.suptitle(
-    "Same attribution method both sides: signed standardized coefficients "
-    "collected inside each evaluation fold. White dots = per-fold values "
-    "(spread you would otherwise not see).",
+    "Signed standardized logistic-regression coefficients from the saved JSON. "
+    "Phase 1 dots are fold coefficients. Phase 2 dots are subject means.",
     fontweight="bold", x=0.02, ha="left", fontsize=10,
 )
 fig.tight_layout(rect=[0, 0, 1, 0.94])

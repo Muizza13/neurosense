@@ -1,69 +1,128 @@
 """Temporal-dependence diagnostics and time-aware split generators.
 
-Added in the 2026-09 audit. Phase 1 windows are drawn from one continuous
-recording, so neighbouring windows are correlated and a chronological split
-without a buffer can still leak information at the boundary. These utilities
-let Phase 1 (a) inspect the strength of that correlation and (b) enforce a
-justified temporal gap in the leakage-safe protocols.
+Phase 1 can measure a lag correlation of its band-power features and drop
+windows between the chronological train and test segments when that value
+is above a preset threshold. A small correlation is not evidence that the
+windows are independent.
 
-Nothing here is Phase 1 specific in principle. Phase 2 uses discrete trials
-with subject-level grouping, so it does not need a temporal gap.
+Phase 2 uses discrete trials and subject-level grouping, so it does not
+apply this gap.
 """
 from __future__ import annotations
 
 import numpy as np
 
 
-def feature_lag_autocorr(features, lags=(1, 2, 3, 4, 5)):
-    """Mean absolute autocorrelation of features across neighbouring windows.
+def _pearson_abs_mean(earlier, later):
+    """Mean |Pearson r| across columns of two paired matrices.
 
-    Parameters
-    ----------
-    features : ndarray of shape (n_windows, n_features)
-        Time-ordered feature matrix. In Phase 1 this is the fold-safe band
-        power extracted after the training-fitted clipper.
-    lags : iterable of int
-        Positive integer lags to evaluate.
+    Each column is centered on the paired rows only. The denominator is the
+    product of the two paired residual norms, not the energy of the full
+    series. A column with zero variance on either side is omitted. Fewer
+    than three pairs returns None. The result is a correlation. It is not
+    a test of independence.
+    """
+    earlier = np.asarray(earlier, dtype=float)
+    later = np.asarray(later, dtype=float)
+    if earlier.shape != later.shape or earlier.ndim != 2:
+        raise ValueError("paired windows must share shape (n_pairs, n_features)")
+    if earlier.shape[0] < 3:
+        return None
+    a = earlier - earlier.mean(axis=0, keepdims=True)
+    b = later - later.mean(axis=0, keepdims=True)
+    num = (a * b).sum(axis=0)
+    den = np.sqrt((a ** 2).sum(axis=0) * (b ** 2).sum(axis=0))
+    with np.errstate(invalid="ignore", divide="ignore"):
+        corr = num / den
+    corr = corr[np.isfinite(corr)]
+    if corr.size == 0:
+        return None
+    return float(np.mean(np.abs(corr)))
 
-    Returns
-    -------
-    dict with keys "lags" (list[int]) and "mean_abs_autocorr" (list[float]).
-        `mean_abs_autocorr[i]` is the mean over features of
-        `|corr(x[t], x[t + lags[i]])|`, using the sample Pearson correlation
-        on the demeaned column.
 
-    Rationale
-    ---------
-    A value at lag 1 near zero means the chronological split does not need a
-    temporal gap, because adjacent windows are already independent under the
-    feature representation. A value near 1 means neighbouring windows are
-    near-duplicates and even a chronological split can leak short-range
-    memory across the boundary.
+def feature_lag_autocorr(features, lags=(1, 2, 3, 4, 5), starts=None,
+                         win_samples=None):
+    """Mean absolute Pearson correlation of features at a time lag.
+
+    Estimator. For lag k and feature column x, collect pairs (x_i, x_j),
+    center each side on those pairs, and compute the Pearson correlation.
+    The reported value is the mean of the absolute correlations over
+    features that have non-zero variance on both sides. Lags with fewer
+    than three pairs are null.
+
+    Pairing. If ``starts`` is omitted, row t is paired with row t+k. That
+    mode assumes the rows are equally spaced. If ``starts`` and
+    ``win_samples`` are given, row i is paired with row j only when
+    ``starts[j] - starts[i] == k * win_samples``. A kept window that follows
+    a discarded window is not a lag-1 neighbour of the previous kept window.
+
+    A value near zero does not show that the windows are independent.
     """
     features = np.asarray(features, dtype=float)
     if features.ndim != 2:
         raise ValueError("features must be 2-D (n_windows, n_features)")
-    lags = [int(l) for l in lags]
-    if any(l <= 0 for l in lags):
+    lags = [int(lag) for lag in lags]
+    if any(lag <= 0 for lag in lags):
         raise ValueError("lags must be positive integers")
     n_win = features.shape[0]
-    if n_win < max(lags) + 2:
-        raise ValueError(
-            f"need at least {max(lags) + 2} windows to compute lag "
-            f"{max(lags)} autocorrelation, got {n_win}"
-        )
+    if starts is None:
+        if n_win < max(lags) + 2:
+            raise ValueError(
+                f"need at least {max(lags) + 2} windows to compute lag "
+                f"{max(lags)} autocorrelation, got {n_win}"
+            )
+        pair_index = {
+            lag: (np.arange(0, n_win - lag), np.arange(lag, n_win))
+            for lag in lags
+        }
+        gap_count = None
+    else:
+        starts = np.asarray(starts)
+        if starts.shape != (n_win,):
+            raise ValueError("starts must have one entry per window")
+        if win_samples is None or int(win_samples) <= 0:
+            raise ValueError("win_samples must be a positive integer when starts is set")
+        win_samples = int(win_samples)
+        if np.any(np.diff(starts) <= 0):
+            raise ValueError("starts must be strictly increasing")
+        start_to_row = {int(s): i for i, s in enumerate(starts)}
+        pair_index = {}
+        for lag in lags:
+            left, right = [], []
+            step = lag * win_samples
+            for row, start in enumerate(starts):
+                other = start_to_row.get(int(start) + step)
+                if other is None:
+                    continue
+                left.append(row)
+                right.append(other)
+            pair_index[lag] = (np.asarray(left, dtype=int), np.asarray(right, dtype=int))
+        gaps = np.diff(starts.astype(int))
+        gap_count = int(np.sum(gaps != win_samples))
 
-    xs = features - features.mean(axis=0, keepdims=True)
-    denom = (xs ** 2).sum(axis=0)
-    denom = np.where(denom > 0, denom, np.nan)
-
-    out = []
+    values = []
+    n_pairs = []
     for lag in lags:
-        num = (xs[lag:] * xs[:-lag]).sum(axis=0)
-        # Column-wise Pearson correlation between x[t] and x[t + lag]
-        per_feature = num / denom
-        out.append(float(np.nanmean(np.abs(per_feature))))
-    return {"lags": lags, "mean_abs_autocorr": out}
+        left, right = pair_index[lag]
+        n_pairs.append(int(len(left)))
+        values.append(_pearson_abs_mean(features[left], features[right])
+                      if len(left) else None)
+
+    report = {
+        "estimator": (
+            "mean absolute Pearson correlation on paired windows; "
+            "each side centered on the pairs; lags with fewer than 3 pairs are null"
+        ),
+        "lags": lags,
+        "mean_abs_autocorr": values,
+        "n_pairs": n_pairs,
+        "not_an_independence_test": True,
+    }
+    if gap_count is not None:
+        report["win_samples"] = int(win_samples)
+        report["n_index_adjacent_pairs"] = int(n_win - 1)
+        report["n_index_adjacent_pairs_with_time_gap"] = gap_count
+    return report
 
 
 def choose_temporal_gap(autocorr_report, threshold=0.30):
@@ -86,6 +145,10 @@ def choose_temporal_gap(autocorr_report, threshold=0.30):
     lags = autocorr_report["lags"]
     ac = autocorr_report["mean_abs_autocorr"]
     for lag, value in zip(lags, ac):
+        if value is None:
+            return {"recommended_gap_windows": None,
+                    "threshold": float(threshold),
+                    "reason": f"undefined_at_lag_{lag}"}
         if value < threshold:
             if lag == lags[0]:
                 return {"recommended_gap_windows": 0,

@@ -46,12 +46,10 @@ entirely: 0.545, 0.471, 0.381, 0.600, 0.487, 0.353, 0.500, 0.496, 0.449, 0.461
    AUC is 0.511 with an interval of [0.447, 0.583]. The honest statement is
    chance, not below chance.
 
-2. **"Within-subject decoding is real."** After the round-2 re-extraction, the
-   per-subject balanced accuracy interval is [0.522, 0.700] on shuffled trial
-   CV and [0.529, 0.648] on leave-one-run-out; both narrowly exclude 0.5. The
-   defensible claim is: within-subject decoding is modestly above chance and
-   consistent across recording runs of the same session; it does not establish
-   transfer to a new recording session.
+2. **"Within-subject decoding is real."** The documented bootstrap interval
+   for shuffled-trial balanced accuracy is [0.522, 0.700]. The lower endpoint
+   is close to 0.5. Leave-one-run-out is [0.529, 0.648] and uses three runs
+   from the same recording.
 
 The overall conclusion is unchanged. Motor imagery decodes modestly within
 subject and not at all across subjects.

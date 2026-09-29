@@ -154,20 +154,28 @@ def _training_fitted_features(X, split, channels, n_times):
     return feats
 
 
-def temporal_diagnostic(X, split, channels, n_times):
-    """Return the autocorrelation report and the recommended gap."""
+def temporal_diagnostic(X, split, channels, n_times, starts):
+    """Return the lag-correlation report and the recommended gap.
+
+    Windows that straddle a label change are discarded before this matrix is
+    built. Lag k pairs kept windows whose start samples differ by exactly
+    k * n_times. A small correlation is not an independence result.
+    """
     feats = _training_fitted_features(X, split, channels, n_times)
-    report = feature_lag_autocorr(feats, lags=AUTOCORR_LAGS)
+    report = feature_lag_autocorr(
+        feats, lags=AUTOCORR_LAGS, starts=starts, win_samples=n_times,
+    )
     recommendation = choose_temporal_gap(report, threshold=AUTOCORR_THRESHOLD)
     return {
         "lag_report": report,
         "gap_choice": recommendation,
         "note": (
-            "Autocorrelation is measured on band-power features extracted with "
-            "a clipper fitted on the first "
-            f"{int(CHRONO_TRAIN_FRAC * 100)}% of windows (the chronological "
-            "training half), so the values reflect what the model actually "
-            "consumes rather than the raw voltages."
+            "Pearson correlation of band-power features, clipper fitted on the "
+            f"first {int(CHRONO_TRAIN_FRAC * 100)}% of kept windows. "
+            "Pairs are aligned by start sample, so a discarded mixed-label "
+            "window is a time gap and is not counted as lag 1. "
+            "A value below the threshold is not evidence that neighbouring "
+            "windows are independent."
         ),
     }
 
@@ -260,12 +268,23 @@ def main():
     # Temporal dependence diagnostic and gap choice
     # ------------------------------------------------------------------
     chrono_split = int(CHRONO_TRAIN_FRAC * len(y))
-    diagnostic = temporal_diagnostic(X, chrono_split, channels, n_times)
+    diagnostic = temporal_diagnostic(X, chrono_split, channels, n_times, starts)
     gap_windows = diagnostic["gap_choice"]["recommended_gap_windows"]
-    print("=== TEMPORAL DEPENDENCE (fold-safe band-power features) ===")
-    for lag, ac in zip(diagnostic["lag_report"]["lags"],
-                       diagnostic["lag_report"]["mean_abs_autocorr"]):
-        print(f"  lag {lag}: mean |autocorr| = {ac:.3f}")
+    if gap_windows is None:
+        raise RuntimeError(
+            "temporal gap is undefined because a lag had fewer than 3 pairs: "
+            + diagnostic["gap_choice"]["reason"]
+        )
+    print("=== TEMPORAL DEPENDENCE (Pearson |r| on time-aligned windows) ===")
+    lag_report = diagnostic["lag_report"]
+    print(f"  index-adjacent pairs with a discarded-window gap: "
+          f"{lag_report['n_index_adjacent_pairs_with_time_gap']} of "
+          f"{lag_report['n_index_adjacent_pairs']}")
+    for lag, ac, n_pairs in zip(lag_report["lags"],
+                                lag_report["mean_abs_autocorr"],
+                                lag_report["n_pairs"]):
+        shown = "undefined" if ac is None else f"{ac:.3f}"
+        print(f"  lag {lag}: mean |r| = {shown} ({n_pairs} pairs)")
     print(f"  chosen gap: {gap_windows} windows "
           f"({diagnostic['gap_choice']['reason']}, "
           f"threshold={diagnostic['gap_choice']['threshold']})\n")

@@ -33,6 +33,21 @@ def test_autocorr_detects_ar1_dependence():
     assert r["mean_abs_autocorr"][2] < 0.2
 
 
+def test_time_gap_from_a_discarded_window_is_not_lag_one():
+    rng = np.random.default_rng(2)
+    # Four kept windows. The third step skips one window of 128 samples.
+    starts = np.array([0, 128, 256, 512])
+    x = rng.standard_normal((4, 5))
+    report = feature_lag_autocorr(x, lags=(1, 2), starts=starts, win_samples=128)
+    # Lag 1 is only the two steps of 128 samples. The jump 256 -> 512 is lag 2.
+    assert report["n_pairs"][0] == 2
+    assert report["n_index_adjacent_pairs_with_time_gap"] == 1
+    assert report["mean_abs_autocorr"][0] is None  # only 2 lag-1 pairs
+    # The same rows treated as equally spaced would pair three lag-1 rows.
+    indexed = feature_lag_autocorr(x, lags=(1,))
+    assert indexed["n_pairs"] == [3]
+
+
 def test_choose_gap_already_below():
     ac = {"lags": [1, 2, 3], "mean_abs_autocorr": [0.1, 0.05, 0.02]}
     out = choose_temporal_gap(ac, threshold=0.3)

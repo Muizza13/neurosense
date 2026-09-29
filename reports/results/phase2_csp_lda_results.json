@@ -1,9 +1,9 @@
 {
   "_provenance": {
-    "git_commit": "e31ce6c",
+    "git_commit": "4ad45a9",
     "numpy": "2.0.2",
     "python": "3.9.6",
-    "written_utc": "2026-09-29T12:30:44Z"
+    "written_utc": "2026-09-29T13:04:06Z"
   },
   "cross_subject": {
     "folds": [
@@ -83,25 +83,31 @@
         "hi": 0.6180829417293233,
         "level": 0.95,
         "lo": 0.4784126984126985,
-        "method": "percentile bootstrap, resampling subjects",
+        "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+        "n_boot": 10000,
         "n_subjects": 10,
-        "point": 0.5411382623224729
+        "point": 0.5411382623224729,
+        "random_state": 42
       },
       "macro_f1": {
         "hi": 0.5688707260311129,
         "level": 0.95,
         "lo": 0.3845323666492427,
-        "method": "percentile bootstrap, resampling subjects",
+        "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+        "n_boot": 10000,
         "n_subjects": 10,
-        "point": 0.46917873378015534
+        "point": 0.46917873378015534,
+        "random_state": 42
       },
       "roc_auc": {
         "hi": 0.7665155721142625,
         "level": 0.95,
         "lo": 0.5562209214826282,
-        "method": "percentile bootstrap, resampling subjects",
+        "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+        "n_boot": 10000,
         "n_subjects": 10,
-        "point": 0.6540718178718856
+        "point": 0.6540718178718856,
+        "random_state": 42
       }
     },
     "subject_mean": {
@@ -167,25 +173,31 @@
         "hi": 0.70521875,
         "level": 0.95,
         "lo": 0.5772366071428572,
-        "method": "percentile bootstrap, resampling subjects",
+        "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+        "n_boot": 10000,
         "n_subjects": 30,
-        "point": 0.6402579365079365
+        "point": 0.6402579365079365,
+        "random_state": 42
       },
       "macro_f1": {
         "hi": 0.683374199163391,
         "level": 0.95,
         "lo": 0.5394216739166556,
-        "method": "percentile bootstrap, resampling subjects",
+        "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+        "n_boot": 10000,
         "n_subjects": 30,
-        "point": 0.6104522166598153
+        "point": 0.6104522166598153,
+        "random_state": 42
       },
       "roc_auc": {
         "hi": 0.8364295634920637,
         "level": 0.95,
         "lo": 0.6753120039682541,
-        "method": "percentile bootstrap, resampling subjects",
+        "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+        "n_boot": 10000,
         "n_subjects": 30,
-        "point": 0.7579563492063492
+        "point": 0.7579563492063492,
+        "random_state": 42
       }
     },
     "fold_mean": {
@@ -533,25 +545,31 @@
         "hi": 0.773438402992776,
         "level": 0.95,
         "lo": 0.542826106319721,
-        "method": "percentile bootstrap, resampling subjects",
+        "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+        "n_boot": 10000,
         "n_subjects": 10,
-        "point": 0.65484572337707
+        "point": 0.65484572337707,
+        "random_state": 42
       },
       "macro_f1": {
         "hi": 0.7731872299067372,
         "level": 0.95,
         "lo": 0.5413511002020908,
-        "method": "percentile bootstrap, resampling subjects",
+        "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+        "n_boot": 10000,
         "n_subjects": 10,
-        "point": 0.6542459252367767
+        "point": 0.6542459252367767,
+        "random_state": 42
       },
       "roc_auc": {
         "hi": 0.8190675487738956,
         "level": 0.95,
         "lo": 0.568607978279031,
-        "method": "percentile bootstrap, resampling subjects",
+        "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+        "n_boot": 10000,
         "n_subjects": 10,
-        "point": 0.6926502285124576
+        "point": 0.6926502285124576,
+        "random_state": 42
       }
     },
     "subject_mean": {

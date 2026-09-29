@@ -12,9 +12,9 @@ A full write-up is in [`reports/NeuroSense_Report.pdf`](reports/NeuroSense_Repor
 
 ## How to read the numbers
 
-Both phases run through a shared core (`src/core/`) with one band definition, preprocessing fitted inside each fold, and one prespecified model throughout: logistic regression, C = 1.0, `class_weight="balanced"`, `max_iter=5000`, `random_state=42`. Other models appear only in secondary tables.
+Both phases fit preprocessing inside each fold and use one prespecified model: logistic regression, C = 1.0, `class_weight="balanced"`, `max_iter=5000`, `random_state=42`. Other models appear only in secondary tables. The bands are not the same. Phase 1 uses delta (1 to 4 Hz), theta (4 to 8 Hz), alpha (8 to 13 Hz), and beta (13 to 30 Hz). Phase 2 uses mu (8 to 13 Hz) and beta (13 to 30 Hz).
 
-**The unit of inference is the subject, or in Phase 1 the label block, never the epoch.** Every interval below is a 95 percent percentile bootstrap resampling subjects or blocks. Pooled epoch-level figures are recorded in the results JSON as descriptive only, because pooling correlated epochs and treating them as independent both understates uncertainty and distorts threshold-free metrics.
+**The unit of inference is the subject, or in Phase 1 the label block, never the epoch.** Every interval below comes from `src.core.statistics.bootstrap_ci`: 10,000 resamples of those group scores with `numpy.random.Generator` seed 42, and the 2.5 and 97.5 percentiles of the resampled means (`numpy.percentile`, linear interpolation). Trials are not resampled. A different bootstrap can move a lower endpoint that sits near 0.5 across 0.5. Pooled epoch-level figures stay in the JSON as descriptive only.
 
 **Every leakage-safe split reports its own baselines.** Majority-class accuracy, a stratified dummy, and a uniform dummy are computed on that split's test set alone. Nothing is shared across protocols. Where a protocol produces single-class test folds by construction (leave-one-block-out and expanding-window on Phase 1), the meaningful baseline is chance (0.5) and the majority-class number is trivially 1.0.
 
@@ -49,7 +49,7 @@ The 2026-09 audit added (a) temporal-gap chronological holdout and expanding-win
 
 Every Phase 1 number rests on 100 observations from one person. That single fact drives the width of every interval below and is the main reason this phase is a cautionary tale rather than a result.
 
-**Temporal-dependence diagnostic.** Before choosing the temporal gap between train and test in the chronological and expanding-window protocols, mean absolute autocorrelation of the fold-safe band-power features is measured at lags 1 through 5. Values on this recording sit in [0.07, 0.10], well below the 0.30 threshold, so **the chosen gap is 0 windows** and the choice is recorded in the results JSON under `temporal_dependence`. The autocorrelation is measured on features extracted with a clipper fitted on the training half of the chronological split, so the values reflect what the model actually consumes.
+**Temporal-gap diagnostic.** The chronological and expanding-window splits can drop windows between train and test. The gap is the first lag, in kept windows, at which the mean absolute Pearson correlation of the band-power features falls below 0.30. Each side of a pair is centered on the paired rows only. Lag k pairs windows whose start samples differ by exactly k seconds. Mixed-label windows are discarded before this matrix is built: 16 of the 99 index-adjacent kept windows are two seconds apart, not one, and those pairs are not lag 1. On this recording the lag-1 through lag-5 values are 0.083 (83 pairs), 0.095 (86), 0.130 (82), 0.071 (83), and 0.072 (84). All are below 0.30, so the recorded gap is 0 windows. A value in that range is not evidence that neighbouring windows are independent. The clipper for this measurement is fit on the first 70% of kept windows. The report is in `temporal_dependence` in the Phase 1 JSON.
 
 **Five leakage-aware protocols, per-split baselines.**
 
@@ -71,7 +71,7 @@ The chronological logistic regression at 0.416 beats a stratified dummy by a sma
 
 Secondary models under leave-one-merged-block-out: SVM-RBF and RandomForest (300); see `reports/results/phase1_results.json` for per-fold rows.
 
-**The leakage trap.** Because the label runs in long blocks, neighboring samples are near-identical and share a label. A random shuffled split scatters those neighbors across train and test, so the model scores well by recognizing near-duplicates it has already seen. Holding everything else constant and changing only how the split is drawn produces the performance gap between the first row and the leakage-safe rows below.
+**Split comparison.** The random-split balanced accuracy is 0.533. The chronological holdout on the same features and the same model is 0.416. The two numbers differ. This comparison does not identify why.
 
 ![Phase 1 leakage](reports/figures/fig1_phase1_leakage.png)
 
@@ -85,7 +85,7 @@ Secondary models under leave-one-merged-block-out: SVM-RBF and RandomForest (300
 
 ## Phase 2: PhysioNet Motor Imagery (the honest result)
 
-**Dataset.** PhysioNet EEG Motor Movement/Imagery, imagined left versus right fist. 10 subjects, 383 trials across imagery runs R04, R08, and R12; features are mu (8 to 13 Hz) and beta (13 to 30 Hz) band power over a 13-channel sensorimotor strip at 160 Hz (26 features). The same band-power approach as Phase 1, applied to data with many independent trials and multiple subjects.
+**Dataset.** PhysioNet EEG Motor Movement/Imagery, imagined left versus right fist. 10 subjects, 383 trials across imagery runs R04, R08, and R12. Features are mu (8 to 13 Hz) and beta (13 to 30 Hz) band power on a 13-channel sensorimotor strip at 160 Hz (26 features). Phase 1 uses four bands, including delta and theta. Phase 2 does not.
 
 | Protocol                                    | Balanced accuracy    | Macro F1             | ROC AUC              |
 | ------------------------------------------- | -------------------- | -------------------- | -------------------- |
@@ -110,11 +110,11 @@ Leave-one-run-out balanced accuracy is 0.588 and shuffled-trial balanced accurac
 
 A spread from 0.353 to 0.600 that a single pooled figure hides completely. Standard deviation across subjects: 0.072. Secondary models cross-subject: LogisticRegression (C = 0.5) 0.472 [0.427, 0.514], RandomForest (300) 0.487 [0.444, 0.531].
 
-**Scores.** Within-subject AUC intervals exclude 0.5. The leave-one-subject-out intervals include 0.5. The cross-subject result is the score. This repository does not include a subject-identity classifier, so it does not identify what the cross-subject model failed to use.
+**Scores.** The documented within-subject balanced-accuracy interval is 0.522 to 0.700. The lower endpoint is close to 0.5. Leave-one-subject-out balanced accuracy is 0.474 [0.432, 0.516], which includes 0.5. This repository does not include a subject-identity classifier.
 
 ![Phase 2 generalization](reports/figures/fig2_phase2_generalization.png)
 
-**Coefficients, same estimator both sides.** Both panels of Figure 3 use signed standardized logistic-regression coefficients from the saved evaluation folds. Phase 1 uses the merged-LOBO folds. Phase 2 uses the per-subject shuffled-trial fits. White dots are the per-fold values. The five largest mean absolute coefficients in the Phase 2 JSON are `C6_beta`, `C1_mu`, `C3_beta`, `C5_mu`, and `C4_mu`. Those names are channels in the motor montage used to build the features. The plot does not test whether the weights match a physiological pattern, and an earlier sentence that said they confirm known physiology is removed.
+**Coefficients.** Both panels of Figure 3 use signed standardized logistic-regression coefficients from the saved JSON. Phase 1 white dots are one coefficient per merged-block training fold. Phase 2 white dots are subject-mean coefficients, one per subject. They are not individual training-fold coefficients. The five largest mean absolute coefficients in the Phase 2 JSON are `C6_beta`, `C1_mu`, `C3_beta`, `C5_mu`, and `C4_mu`.
 
 ![Interpretability contrast](reports/figures/fig3_interpretability_contrast.png)
 
@@ -149,7 +149,7 @@ CSP plus LDA is the usual motor-imagery baseline (Ramoser, Müller-Gerking, and 
 
 **1. Cross-subject AUC is chance, not below chance.** An earlier version reported 0.48 and called it below chance. That figure came from pooling every held-out subject's predicted probabilities into one array and scoring it once. Subjects' decision scores sit on different scales, so pooling manufactures apparent below-chance performance. The subject-level mean is 0.511 [0.447, 0.583]. The conclusion is unchanged, chance either way, but "below chance" was a reporting artifact rather than a finding. The pooled figures remain in `reports/results/phase2_results.json` under `pooled_descriptive_metrics`, tagged as descriptive.
 
-**2. Within-subject decoding is weaker than previously stated.** The per-subject balanced accuracy interval is [0.522, 0.700] and **narrowly excludes 0.5**. The AUC interval [0.534, 0.735] also excludes it, and 8 of 10 subjects sit above 0.5 on both. Leave-one-run-out gives balanced accuracy 0.588 [0.529, 0.648] and AUC 0.657 [0.598, 0.718] across 30 folds. The defensible claim is narrow: within-subject decoding is modestly above chance and consistent across runs of the same session; it is not evidence of transfer to a new recording session.
+**2. Within-subject interval.** The documented bootstrap gives balanced accuracy 0.522 to 0.700 and AUC 0.534 to 0.735 on shuffled-trial CV, and balanced accuracy 0.529 to 0.648 on leave-one-run-out. The balanced-accuracy lower endpoint is close to 0.5. Eight of 10 subjects sit above 0.5 on both shuffled-trial metrics. That count is not a test. Leave-one-run-out uses three runs from the same recording.
 
 An earlier version also paired a balanced accuracy from one model with an AUC from another. Every headline metric here comes from the single prespecified model.
 

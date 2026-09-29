@@ -219,6 +219,14 @@ truth for what the earlier version claimed.
     and "published high accuracies on this dataset are an evaluation
     artifact." What remains are the saved scores, the same-split dummy
     comparisons, and the coefficient names.
+37. The Phase 1 lag statistic is the mean absolute Pearson correlation of
+    time-aligned kept windows. Discarded mixed-label windows are gaps, not
+    lag 1. A small value is not described as independence.
+38. Figure 3 labels Phase 2 dots as subject-mean coefficients.
+39. Intervals are regenerated with bootstrap_ci only (Generator seed 42,
+    10,000 resamples, linear percentiles). The within-subject
+    balanced-accuracy lower endpoint is 0.522 and is described as close
+    to 0.5.
 
 ## What the audit does not change
 

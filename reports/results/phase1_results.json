@@ -1,9 +1,9 @@
 {
   "_provenance": {
-    "git_commit": "e31ce6c",
+    "git_commit": "4ad45a9",
     "numpy": "2.0.2",
     "python": "3.9.6",
-    "written_utc": "2026-09-29T12:33:08Z"
+    "written_utc": "2026-09-29T13:02:25Z"
   },
   "audit": {
     "notes": "Naive split retained as descriptive only. Chronological holdout and expanding-window run with a temporal gap chosen from a measured autocorrelation threshold. Every leakage-safe split reports its own baselines; no baseline is shared across protocols. Leave-one-merged-block-out (super-block size 4 native blocks, declared before evaluation) is now the primary group protocol; leave-one-native-block-out is retained only as a labelled diagnostic with a DummyClassifier(strategy='prior') comparison on the same splits.",
@@ -765,17 +765,21 @@
         "hi": 0.5453601953601953,
         "level": 0.95,
         "lo": 0.22984890109890108,
-        "method": "percentile bootstrap, resampling subjects",
+        "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+        "n_boot": 10000,
         "n_subjects": 13,
-        "point": 0.3804639804639804
+        "point": 0.3804639804639804,
+        "random_state": 42
       },
       "macro_f1": {
         "hi": 0.43233268334229874,
         "level": 0.95,
         "lo": 0.16527838895247804,
-        "method": "percentile bootstrap, resampling subjects",
+        "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+        "n_boot": 10000,
         "n_subjects": 13,
-        "point": 0.2833722395463287
+        "point": 0.2833722395463287,
+        "random_state": 42
       },
       "roc_auc": null
     },
@@ -2011,17 +2015,21 @@
           "hi": 0.7894736842105263,
           "level": 0.95,
           "lo": 0.3684210526315789,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 19,
-          "point": 0.5789473684210527
+          "point": 0.5789473684210527,
+          "random_state": 42
         },
         "macro_f1": {
           "hi": 0.7894736842105263,
           "level": 0.95,
           "lo": 0.3684210526315789,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 19,
-          "point": 0.5789473684210527
+          "point": 0.5789473684210527,
+          "random_state": 42
         },
         "roc_auc": null
       },
@@ -3408,17 +3416,21 @@
           "hi": 0.6302871762740184,
           "level": 0.95,
           "lo": 0.33358395989974937,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 19,
-          "point": 0.4821637426900585
+          "point": 0.4821637426900585,
+          "random_state": 42
         },
         "macro_f1": {
           "hi": 0.5145211988304093,
           "level": 0.95,
           "lo": 0.23865403999128257,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 19,
-          "point": 0.3685363771748211
+          "point": 0.3685363771748211,
+          "random_state": 42
         },
         "roc_auc": null
       },
@@ -4274,25 +4286,31 @@
           "hi": 0.5,
           "level": 0.95,
           "lo": 0.2,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 5,
-          "point": 0.4
+          "point": 0.4,
+          "random_state": 42
         },
         "macro_f1": {
           "hi": 0.3744875008032903,
           "level": 0.95,
           "lo": 0.12307692307692308,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 5,
-          "point": 0.2685664481717113
+          "point": 0.2685664481717113,
+          "random_state": 42
         },
         "roc_auc": {
           "hi": 0.5,
           "level": 0.95,
           "lo": 0.5,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 4,
-          "point": 0.5
+          "point": 0.5,
+          "random_state": 42
         }
       },
       "subject_mean": {
@@ -5573,25 +5591,31 @@
           "hi": 0.605280701754386,
           "level": 0.95,
           "lo": 0.27002130325814533,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 5,
-          "point": 0.4562117794486215
+          "point": 0.4562117794486215,
+          "random_state": 42
         },
         "macro_f1": {
           "hi": 0.5815151515151515,
           "level": 0.95,
           "lo": 0.2551282051282051,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 5,
-          "point": 0.4332245532245532
+          "point": 0.4332245532245532,
+          "random_state": 42
         },
         "roc_auc": {
           "hi": 0.6290789473684212,
           "level": 0.95,
           "lo": 0.3958333333333333,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 4,
-          "point": 0.5332456140350877
+          "point": 0.5332456140350877,
+          "random_state": 42
         }
       },
       "subject_mean": {
@@ -5658,25 +5682,31 @@
           "hi": 0.5700701754385964,
           "level": 0.95,
           "lo": 0.4342857142857143,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 5,
-          "point": 0.5131654135338345
+          "point": 0.5131654135338345,
+          "random_state": 42
         },
         "macro_f1": {
           "hi": 0.5300710751237067,
           "level": 0.95,
           "lo": 0.34960134116706143,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 5,
-          "point": 0.44842635241312534
+          "point": 0.44842635241312534,
+          "random_state": 42
         },
         "roc_auc": {
           "hi": 0.6145833333333333,
           "level": 0.95,
           "lo": 0.48854166666666665,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 4,
-          "point": 0.5521600877192983
+          "point": 0.5521600877192983,
+          "random_state": 42
         }
       },
       "subject_mean": {
@@ -5709,25 +5739,31 @@
           "hi": 0.6815,
           "level": 0.95,
           "lo": 0.4014285714285714,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 5,
-          "point": 0.5453095238095237
+          "point": 0.5453095238095237,
+          "random_state": 42
         },
         "macro_f1": {
           "hi": 0.6414826302729528,
           "level": 0.95,
           "lo": 0.3203749655362559,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 5,
-          "point": 0.4793794556697783
+          "point": 0.4793794556697783,
+          "random_state": 42
         },
         "roc_auc": {
           "hi": 0.65625,
           "level": 0.95,
           "lo": 0.38414473684210526,
-          "method": "percentile bootstrap, resampling subjects",
+          "method": "percentile bootstrap of the mean; numpy.random.Generator.choice with replacement; numpy.percentile linear interpolation; resamples the scores passed in, not trials",
+          "n_boot": 10000,
           "n_subjects": 4,
-          "point": 0.5153947368421052
+          "point": 0.5153947368421052,
+          "random_state": 42
         }
       },
       "subject_mean": {
@@ -5762,6 +5798,7 @@
       "threshold": 0.3
     },
     "lag_report": {
+      "estimator": "mean absolute Pearson correlation on paired windows; each side centered on the pairs; lags with fewer than 3 pairs are null",
       "lags": [
         1,
         2,
@@ -5770,14 +5807,25 @@
         5
       ],
       "mean_abs_autocorr": [
-        0.08556016716259383,
-        0.09234588336684145,
-        0.10195775061124104,
-        0.07266418687249922,
-        0.0808603497874447
-      ]
+        0.08344258380184792,
+        0.09485936703740669,
+        0.12993035217695886,
+        0.07109400361322046,
+        0.07186426485816899
+      ],
+      "n_index_adjacent_pairs": 99,
+      "n_index_adjacent_pairs_with_time_gap": 16,
+      "n_pairs": [
+        83,
+        86,
+        82,
+        83,
+        84
+      ],
+      "not_an_independence_test": true,
+      "win_samples": 128
     },
-    "note": "Autocorrelation is measured on band-power features extracted with a clipper fitted on the first 70% of windows (the chronological training half), so the values reflect what the model actually consumes rather than the raw voltages."
+    "note": "Pearson correlation of band-power features, clipper fitted on the first 70% of kept windows. Pairs are aligned by start sample, so a discarded mixed-label window is a time gap and is not counted as lag 1. A value below the threshold is not evidence that neighbouring windows are independent."
   },
   "temporal_gap_windows_used": 0
 }
