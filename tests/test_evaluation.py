@@ -4,7 +4,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from src.core.evaluation import evaluate_loso
+from src.core.evaluation import evaluate_loso, merged_block_groups
 from src.core.statistics import bootstrap_ci, paired_subject_delta
 
 
@@ -114,3 +114,51 @@ def test_paired_delta_is_computed_over_subjects():
 
 def test_bootstrap_needs_more_than_one_subject():
     assert bootstrap_ci(np.array([0.6])) is None
+
+
+def test_persist_predictions_stores_arrays_on_every_fold():
+    X, y, g = toy_data(n_subjects=4)
+    res = evaluate_loso(X, y, g, make_pipeline, n_boot=200,
+                        persist_predictions=True)
+    for fold in res["folds"]:
+        assert len(fold["y_true"]) == fold["n_test"]
+        assert len(fold["y_pred"]) == fold["n_test"]
+        assert len(fold["y_proba"]) == fold["n_test"]
+        assert all(v in (0, 1) for v in fold["y_true"])
+    assert res["config"]["predictions_persisted"] is True
+
+
+def test_dummy_strategy_bypasses_the_model_factory():
+    X, y, g = toy_data(n_subjects=5)
+
+    def would_fail():
+        raise AssertionError("factory should be unused when dummy_strategy is set")
+
+    res = evaluate_loso(
+        X, y, g, would_fail, n_boot=200, dummy_strategy="prior",
+        persist_predictions=True,
+    )
+    # DummyClassifier(strategy="prior") always predicts training majority.
+    for fold in res["folds"]:
+        assert len(set(fold["y_pred"])) == 1
+
+
+def test_merged_block_groups_partitions_contiguous_blocks():
+    block_ids = np.array([0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 4, 4])
+    # size 2 -> super-blocks {0: [0,1], 1: [2,3], 2: [4]}
+    supers = merged_block_groups(block_ids, blocks_per_superblock=2)
+    assert list(supers) == [0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
+
+
+def test_merged_block_groups_respects_first_seen_order():
+    # Block ids are not required to be sorted; the mapping tracks the order
+    # in which each new id first appears.
+    block_ids = np.array([5, 5, 3, 3, 3, 8, 8, 1, 1])
+    supers = merged_block_groups(block_ids, blocks_per_superblock=2)
+    # 5 -> 0, 3 -> 0, 8 -> 1, 1 -> 1
+    assert list(supers) == [0, 0, 0, 0, 0, 1, 1, 1, 1]
+
+
+def test_merged_block_groups_rejects_zero_size():
+    with pytest.raises(ValueError):
+        merged_block_groups(np.array([0, 1, 2]), blocks_per_superblock=0)

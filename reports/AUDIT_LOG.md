@@ -1,9 +1,16 @@
 # Audit log
 
-This audit began on 2026-09-29 and repairs the Phase 1 evaluation of the
-NeuroSense repository. The Phase 2 protocol is unchanged. All pre-audit
-research artifacts are preserved unmodified in the `archive/` subfolders so
-that a reviewer can diff the old and new numbers directly.
+The 2026-09 audit had two rounds. Round 1 (2026-09-29) added leakage-safe
+protocols, per-split baselines, a temporal-dependence diagnostic, an
+expanding-window evaluation, a regression guard, and fold provenance to
+Phase 1; Phase 2 was unchanged. Round 2 (later the same day) corrected the
+leave-one-block-out analysis, added leave-one-run-out to Phase 2, persisted
+per-fold labels and predictions in the Phase 2 JSON, and tightened
+reporting language around baselines, standard deviation vs. confidence
+interval, and "N of 10 above 0.5" as a descriptive count.
+
+All pre-audit research artifacts are preserved unmodified in the `archive/`
+subfolders so a reviewer can diff the old and new numbers directly.
 
 ## Provenance of the pre-audit state
 
@@ -23,14 +30,12 @@ that a reviewer can diff the old and new numbers directly.
 - scikit-learn: `1.6.1`
 - pandas: `2.3.3`
 - matplotlib: `3.9.4`
-- mne: not installed in the audit environment; Phase 2 loads the cached
-  `data/processed/physionet_features.npz`, so MNE is not on the reproduction
-  path for this audit
+- mne: `1.8.0` installed for round 2 to re-extract Phase 2 features with
+  run IDs preserved
 
 Note: `requirements.txt` currently pins `mne==2.4.1`, which does not exist on
-PyPI (MNE has no 2.x). This is an unrelated bug in the pinned deps and does not
-affect the audit runs, but it is flagged in `REFACTOR_NOTES.md` for a later
-follow-up.
+PyPI (MNE has no 2.x). The audit uses `mne==1.8.0` in the local Python 3.9
+environment. Pin should be corrected in a follow-up.
 
 ## Preserved as historical artifacts
 
@@ -47,6 +52,8 @@ against. If a rerun produces different numbers, the archive is the ground
 truth for what the earlier version claimed.
 
 ## What the audit changes
+
+### Round 1
 
 1. Adds a regression test that fabricates a held-out epoch with extreme
    values, refits the Phase 1 pipeline on the training epochs, and asserts
@@ -69,13 +76,46 @@ truth for what the earlier version claimed.
    independently for every Phase 1 split. No baseline is shared across
    protocols.
 
+### Round 2 (Tasks 4 and 5)
+
+7. Replaces leave-one-native-block-out as the primary Phase 1 group
+   protocol with a pre-specified leave-one-merged-block-out. Merged-block
+   size is declared in `src/phase1_eyestate.py` as
+   `MERGED_BLOCK_SIZE = 4` native blocks per super-block, chosen for
+   structural reasons before evaluation and not tuned on results. 4 of 5
+   super-blocks contain both classes; per-fold AUC is defined for those.
+8. Adds a `DummyClassifier(strategy="prior")` diagnostic that runs on the
+   same splits as the primary model for both merged-LOBO and native-LOBO.
+   Native-LOBO's pooled AUC of 0.437 (real model) vs 0.000 (dummy prior)
+   demonstrates that pooled AUC on separately-trained single-class folds
+   is a splitting artefact rather than electrode drift.
+9. Retains native leave-one-block-out only as a clearly labelled
+   diagnostic.
+10. Fixes `scripts/download_data.sh` (curl `--max-time` bumped from 30 s
+    to 300 s) after a prior download had produced truncated EDFs.
+11. Rewrites `src/physionet_features.py` to preserve run IDs (R04, R08,
+    R12) and cache them alongside `X, y, g` in
+    `data/processed/physionet_features.npz`.
+12. Adds `evaluate_loso(persist_predictions=True, dummy_strategy=...)` and
+    persists `y_true`, `y_pred`, `y_proba` per fold in the Phase 2 JSON.
+13. Adds a within-subject leave-one-run-out evaluation to Phase 2, labelled
+    as testing transfer across runs of the same session (not to a new
+    session).
+14. Reports `std_across_subjects` separately from the bootstrap CI of the
+    mean, and re-labels "N of 10 above 0.5" as a descriptive count rather
+    than a significance claim.
+15. Retains the shuffled trial CV within Phase 2 with an accurate
+    description of its limitation (trials from the same run appear in
+    both train and test).
+
 ## What the audit does not change
 
-- Phase 2 protocol (within-subject CV, leave-one-subject-out on 10 subjects).
 - The prespecified primary model, logistic regression with `C = 1.0`,
   `class_weight="balanced"`, `max_iter=5000`, `random_state=42`.
 - Feature bands, channel sets, window lengths, or the shared-core primitives
   in `src/core/features.py` and `src/core/evaluation.py`.
+- The Phase 2 cross-subject LOSO point estimates (byte-identical up to
+  provenance stamps after re-extraction from the newly downloaded EDFs).
 
 Where an audit rerun changes a headline number, the change is documented in
-`REFACTOR_NOTES.md` under a new "Audit 2026-09" section.
+`REFACTOR_NOTES.md` under the "Audit 2026-09" section.

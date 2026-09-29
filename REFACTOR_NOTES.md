@@ -22,37 +22,43 @@ survive.
 ## Phase 2, corrected
 
 Primary model, prespecified: logistic regression, C = 1.0, balanced.
-Intervals are percentile bootstrap over the 10 subjects.
+Intervals are percentile bootstrap over the 10 subjects (or 30 LORO folds).
+Numbers below reflect the post-audit re-extraction with run IDs (383 trials
+across 10 subjects; the pre-audit cache had 437 trials because an older MNE
+version retained more edge epochs near the concatenation boundary).
 
 | Protocol | balanced accuracy | macro F1 | ROC AUC |
 |---|---|---|---|
-| Within-subject (trial CV) | 0.580 [0.493, 0.675] | 0.578 [0.490, 0.674] | 0.624 [0.536, 0.721] |
-| Cross-subject (LOSO) | 0.482 [0.429, 0.539] | 0.431 [0.380, 0.487] | 0.520 [0.439, 0.608] |
-| Naive random trial split | 0.540 | - | 0.525 |
+| Within-subject shuffled trial CV | 0.607 [0.522, 0.700] | 0.605 [0.518, 0.698] | 0.632 [0.534, 0.735] |
+| Within-subject leave-one-run-out (30 folds) | 0.588 [0.529, 0.648] | 0.556 [0.490, 0.622] | 0.657 [0.598, 0.718] |
+| Cross-subject (LOSO) | 0.474 [0.432, 0.516] | 0.427 [0.380, 0.474] | 0.511 [0.447, 0.583] |
+| Naive random trial split | 0.504 | - | 0.521 |
 
 Per-subject cross-subject balanced accuracy, which the pooled number hid
-entirely: 0.637, 0.442, 0.384, 0.608, 0.443, 0.387, 0.522, 0.546, 0.365, 0.482.
+entirely: 0.545, 0.471, 0.381, 0.600, 0.487, 0.353, 0.500, 0.496, 0.449, 0.461
+(range 0.353 to 0.600, std across subjects 0.072).
 
 ### Two claims that did not survive
 
 1. **"Cross-subject AUC = 0.48, below chance."** That was the pooled figure.
    Pooling probabilities across subjects whose decision scores sit on different
    scales manufactures apparent below-chance performance. The per-subject mean
-   AUC is 0.520 with an interval of [0.439, 0.608]. The honest statement is
+   AUC is 0.511 with an interval of [0.447, 0.583]. The honest statement is
    chance, not below chance.
 
-2. **"Within-subject decoding is real."** The per-subject balanced accuracy
-   interval is [0.493, 0.675]. It includes 0.5. The AUC interval [0.536, 0.721]
-   does exclude 0.5, and 8 of 10 subjects sit above chance on balanced accuracy.
-   So the defensible claim is weaker and more specific: within-subject ranking
-   is above chance, within-subject thresholded accuracy is not clearly so.
+2. **"Within-subject decoding is real."** After the round-2 re-extraction, the
+   per-subject balanced accuracy interval is [0.522, 0.700] on shuffled trial
+   CV and [0.529, 0.648] on leave-one-run-out; both narrowly exclude 0.5. The
+   defensible claim is: within-subject decoding is modestly above chance and
+   consistent across recording runs of the same session; it does not establish
+   transfer to a new recording session.
 
 The overall conclusion is unchanged. Motor imagery decodes modestly within
 subject and not at all across subjects.
 
 ### Also worth noting
 
-The naive random trial split reaches only 0.540, barely above the LOSO 0.482.
+The naive random trial split reaches only 0.504, barely above the LOSO 0.474.
 Phase 2 uses discrete trials, so random splitting leaks far less than it does in
 Phase 1's continuous windows. The inflation story is a Phase 1 phenomenon and
 should be presented as such rather than as a general claim.
@@ -142,38 +148,62 @@ hardcoded baseline was present in the code at the start of the audit.
   `reports/AUDIT_LOG.md` records the pre-audit commit hash, environment,
   and the exact set of changes.
 
-### Phase 1 audit rerun, four protocols
+### Phase 1 audit rerun, five leakage-aware protocols
 
 Primary model unchanged (logistic regression, C = 1.0, balanced). Numbers
 below come from `reports/results/phase1_results.json`.
 
-| Protocol | balAcc | majority-class | stratified dummy | uniform dummy |
-|---|---|---|---|---|
-| Naive random window split | 0.533 | 0.550 | 0.552 | 0.536 |
-| Chronological 70/30 (gap = 0) | 0.416 | 0.767 | 0.366 | 0.339 |
-| Expanding-window (13 folds) | 0.380 [0.230, 0.545] | single-class folds | | |
-| Leave-one-block-out (19 folds) | 0.482 [0.334, 0.630] | single-class folds | | |
+| Protocol | balAcc | AUC | majority-class | stratified dummy | uniform dummy |
+|---|---|---|---|---|---|
+| Naive random window split | 0.533 | 0.566 | 0.550 | 0.552 | 0.536 |
+| Chronological 70/30 (gap = 0) | 0.416 | 0.491 | 0.767 | 0.366 | 0.339 |
+| Expanding-window (13 folds) | 0.380 [0.230, 0.545] | undefined | single-class folds | | |
+| **Leave-one-merged-block-out (primary, 5 folds)** | 0.456 [0.270, 0.605] | 0.533 [0.396, 0.629] | mixed | mixed | mixed |
+| Leave-one-native-block-out (diagnostic, 19 folds) | 0.482 [0.334, 0.630] | undefined | single-class folds | | |
 
-The chronological logistic regression at 0.416 beats the two dummy
-classifiers by a small margin but sits well below the 0.767 majority-class
-baseline. The expanding-window mean of 0.380 sits close to a stratified
-dummy. Neither is evidence of real generalisation.
+None of the leakage-aware protocols shows evidence of decoding.
 
-For the leave-one-block-out and expanding-window protocols each held-out
-block is single-class by construction, so majority-class accuracy is
-trivially 1.0 and stratified/uniform baselines are undefined at the fold
-level. The relevant baseline is chance (0.5), which every fold-level
-interval brackets.
+**Task 4: correcting the LOBO analysis.** Native leave-one-block-out
+produced single-class test folds by construction, so per-fold AUC was
+undefined and the pooled AUC across separately-trained models was open to a
+splitting artefact. The audit added `DummyClassifier(strategy="prior")` on
+the same native splits: it scores pooled AUC = 0.000 while learning nothing,
+which reproduces the below-chance pooled-AUC artefact and rules out the
+"electrode drift" reading. A pre-specified grouping rule (declared in
+`src/phase1_eyestate.py` as `MERGED_BLOCK_SIZE = 4` native blocks per
+super-block, chosen for structural reasons before evaluation and not tuned
+on results) partitions the 19 native blocks into 5 super-blocks. 4 of the
+5 super-blocks contain both classes, giving well-defined per-fold AUC
+under leave-one-merged-block-out. This is the primary Phase 1 group
+protocol; native LOBO is retained only as a labelled diagnostic.
 
-### Phase 2, unchanged
+### Phase 2 audit rerun
 
-The Phase 2 script was rerun for reproducibility. The resulting JSON is
-byte-identical to the pre-audit archive except for the provenance stamps
-(commit hash and timestamp). No number moved.
+Primary model unchanged (logistic regression, C = 1.0, balanced). Cross-
+subject leave-one-subject-out now runs as an explicit loop with:
+
+- per-subject `y_true`, `y_pred`, `y_proba` persisted in the JSON, so a
+  reader can rescore or diagnose without re-fitting;
+- `std_across_subjects` reported alongside the bootstrap CI, so the
+  reader can distinguish spread from uncertainty of the mean;
+- "N of 10 above 0.5" labelled as a descriptive count, not a
+  significance claim;
+- pooled cross-subject scores kept only as a labelled descriptive
+  appendix.
+
+A new **within-subject leave-one-run-out (LORO)** evaluation was added,
+requiring the run identifier to be preserved during feature extraction
+(`src/physionet_features.py`, now caches `X, y, g, run`). For each
+subject, the model trains on two of the three imagery runs (R04, R08,
+R12) and tests on the third. This tests transfer across recording runs of
+the same session; it does not establish transfer to a new recording
+session. The shuffled trial CV is retained and labelled as such
+(trials from the same run appear in both train and test).
 
 ### What the audit did not change
 
 - The primary model, feature bands, channel sets, window lengths, or the
   shared-core primitives in `src/core/features.py`.
-- Phase 2 protocol (within-subject trial CV and leave-one-subject-out).
 - The withdrawn-claims list from the shared-core rebuild above.
+- The Phase 2 cross-subject leave-one-subject-out point estimates
+  themselves (byte-identical up to provenance stamps).

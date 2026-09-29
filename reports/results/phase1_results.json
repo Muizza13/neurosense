@@ -1,12 +1,12 @@
 {
   "_provenance": {
-    "git_commit": "2619fc7",
+    "git_commit": "9e74d89",
     "numpy": "2.0.2",
     "python": "3.9.6",
-    "written_utc": "2026-09-29T08:37:03Z"
+    "written_utc": "2026-09-29T09:02:52Z"
   },
   "audit": {
-    "notes": "Naive split retained as descriptive only. Chronological holdout and expanding-window run with a temporal gap chosen from a measured autocorrelation threshold. Every leakage-safe split reports its own baselines; no baseline is shared across protocols.",
+    "notes": "Naive split retained as descriptive only. Chronological holdout and expanding-window run with a temporal gap chosen from a measured autocorrelation threshold. Every leakage-safe split reports its own baselines; no baseline is shared across protocols. Leave-one-merged-block-out (super-block size 4 native blocks, declared before evaluation) is now the primary group protocol; leave-one-native-block-out is retained only as a labelled diagnostic with a DummyClassifier(strategy='prior') comparison on the same splits.",
     "version": "2026-09"
   },
   "chronological_holdout": {
@@ -804,983 +804,4466 @@
     }
   },
   "grouping_unit": "contiguous label block (single subject, so no LOSO)",
-  "leave_one_block_out": {
-    "config": {
-      "n_boot": 10000,
-      "n_features": 1792,
-      "n_samples": 100,
-      "n_subjects": 19,
-      "param_grid": {},
-      "random_state": 42,
-      "tuned": false
-    },
-    "folds": [
-      {
-        "balanced_accuracy": 1.0,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 1.0,
-          "dummy_uniform_balanced_accuracy": 1.0,
-          "majority_class_accuracy": 1.0,
+  "leave_one_block_out_diagnostic": {
+    "dummy_prior_diagnostic": {
+      "config": {
+        "dummy_strategy": "prior",
+        "n_boot": 10000,
+        "n_features": 1792,
+        "n_samples": 100,
+        "n_subjects": 19,
+        "param_grid": {},
+        "predictions_persisted": true,
+        "random_state": 42,
+        "tuned": false
+      },
+      "folds": [
+        {
+          "balanced_accuracy": 1.0,
+          "confusion_matrix": [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 1.0,
+          "n_positive": 0,
           "n_test": 1,
-          "positive_rate_test": 0.0,
-          "positive_rate_train": 0.45454545454545453
-        },
-        "confusion_matrix": [
-          [
-            1,
+          "provenance": {
+            "n_train": 99,
+            "test_block_id": [
+              0
+            ],
+            "test_indices_hash": "05fe40575316",
+            "test_start_sample": [
+              0
+            ],
+            "train_indices_hash": "b6ed08e9dbdc"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 1.0,
+          "subject_id": "0",
+          "y_pred": [
             0
           ],
-          [
-            0,
+          "y_proba": [
+            0.45454545454545453
+          ],
+          "y_true": [
             0
           ]
-        ],
-        "macro_f1": 1.0,
-        "n_positive": 0,
-        "n_test": 1,
-        "provenance": {
-          "n_train": 99,
-          "test_block_id": [
-            0
-          ],
-          "test_indices_hash": "05fe40575316",
-          "test_start_sample": [
-            0
-          ],
-          "train_indices_hash": "b6ed08e9dbdc"
         },
-        "roc_auc": null,
-        "sensitivity": null,
-        "specificity": 1.0,
-        "subject_id": "0"
-      },
-      {
-        "balanced_accuracy": 0.75,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.75,
-          "dummy_uniform_balanced_accuracy": 0.25,
-          "majority_class_accuracy": 1.0,
+        {
+          "balanced_accuracy": 0.0,
+          "confusion_matrix": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ]
+          ],
+          "macro_f1": 0.0,
+          "n_positive": 4,
           "n_test": 4,
-          "positive_rate_test": 1.0,
-          "positive_rate_train": 0.4270833333333333
-        },
-        "confusion_matrix": [
-          [
+          "provenance": {
+            "n_train": 96,
+            "test_block_id": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "test_indices_hash": "1074bd0a31df",
+            "test_start_sample": [
+              256,
+              384,
+              512,
+              640
+            ],
+            "train_indices_hash": "76842bb48a86"
+          },
+          "roc_auc": null,
+          "sensitivity": 0.0,
+          "specificity": null,
+          "subject_id": "1",
+          "y_pred": [
+            0,
+            0,
             0,
             0
           ],
-          [
-            1,
-            3
-          ]
-        ],
-        "macro_f1": 0.42857142857142855,
-        "n_positive": 4,
-        "n_test": 4,
-        "provenance": {
-          "n_train": 96,
-          "test_block_id": [
+          "y_proba": [
+            0.4270833333333333,
+            0.4270833333333333,
+            0.4270833333333333,
+            0.4270833333333333
+          ],
+          "y_true": [
             1,
             1,
             1,
             1
-          ],
-          "test_indices_hash": "1074bd0a31df",
-          "test_start_sample": [
-            256,
-            384,
-            512,
-            640
-          ],
-          "train_indices_hash": "76842bb48a86"
+          ]
         },
-        "roc_auc": null,
-        "sensitivity": 0.75,
-        "specificity": null,
-        "subject_id": "1"
-      },
-      {
-        "balanced_accuracy": 0.6666666666666666,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.3333333333333333,
-          "dummy_uniform_balanced_accuracy": 0.6666666666666666,
-          "majority_class_accuracy": 1.0,
+        {
+          "balanced_accuracy": 1.0,
+          "confusion_matrix": [
+            [
+              3,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 1.0,
+          "n_positive": 0,
           "n_test": 3,
-          "positive_rate_test": 0.0,
-          "positive_rate_train": 0.4639175257731959
-        },
-        "confusion_matrix": [
-          [
-            2,
-            1
+          "provenance": {
+            "n_train": 97,
+            "test_block_id": [
+              2,
+              2,
+              2
+            ],
+            "test_indices_hash": "bbaee4ffd23c",
+            "test_start_sample": [
+              896,
+              1024,
+              1152
+            ],
+            "train_indices_hash": "24d5d854b532"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 1.0,
+          "subject_id": "2",
+          "y_pred": [
+            0,
+            0,
+            0
           ],
-          [
+          "y_proba": [
+            0.4639175257731959,
+            0.4639175257731959,
+            0.4639175257731959
+          ],
+          "y_true": [
+            0,
             0,
             0
           ]
-        ],
-        "macro_f1": 0.4,
-        "n_positive": 0,
-        "n_test": 3,
-        "provenance": {
-          "n_train": 97,
-          "test_block_id": [
-            2,
-            2,
-            2
-          ],
-          "test_indices_hash": "bbaee4ffd23c",
-          "test_start_sample": [
-            896,
-            1024,
-            1152
-          ],
-          "train_indices_hash": "24d5d854b532"
         },
-        "roc_auc": null,
-        "sensitivity": null,
-        "specificity": 0.6666666666666666,
-        "subject_id": "2"
-      },
-      {
-        "balanced_accuracy": 0.0,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.0,
-          "dummy_uniform_balanced_accuracy": 0.0,
-          "majority_class_accuracy": 1.0,
+        {
+          "balanced_accuracy": 0.0,
+          "confusion_matrix": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ]
+          ],
+          "macro_f1": 0.0,
+          "n_positive": 1,
           "n_test": 1,
-          "positive_rate_test": 1.0,
-          "positive_rate_train": 0.4444444444444444
-        },
-        "confusion_matrix": [
-          [
-            0,
+          "provenance": {
+            "n_train": 99,
+            "test_block_id": [
+              3
+            ],
+            "test_indices_hash": "29e24643a632",
+            "test_start_sample": [
+              1408
+            ],
+            "train_indices_hash": "5f0cd4f25711"
+          },
+          "roc_auc": null,
+          "sensitivity": 0.0,
+          "specificity": null,
+          "subject_id": "3",
+          "y_pred": [
             0
           ],
-          [
-            1,
-            0
+          "y_proba": [
+            0.4444444444444444
+          ],
+          "y_true": [
+            1
           ]
-        ],
-        "macro_f1": 0.0,
-        "n_positive": 1,
-        "n_test": 1,
-        "provenance": {
-          "n_train": 99,
-          "test_block_id": [
-            3
-          ],
-          "test_indices_hash": "29e24643a632",
-          "test_start_sample": [
-            1408
-          ],
-          "train_indices_hash": "5f0cd4f25711"
         },
-        "roc_auc": null,
-        "sensitivity": 0.0,
-        "specificity": null,
-        "subject_id": "3"
-      },
-      {
-        "balanced_accuracy": 0.0,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.25,
-          "dummy_uniform_balanced_accuracy": 0.75,
-          "majority_class_accuracy": 1.0,
+        {
+          "balanced_accuracy": 1.0,
+          "confusion_matrix": [
+            [
+              4,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 1.0,
+          "n_positive": 0,
           "n_test": 4,
-          "positive_rate_test": 0.0,
-          "positive_rate_train": 0.46875
-        },
-        "confusion_matrix": [
-          [
+          "provenance": {
+            "n_train": 96,
+            "test_block_id": [
+              4,
+              4,
+              4,
+              4
+            ],
+            "test_indices_hash": "48c1a4b0e34b",
+            "test_start_sample": [
+              1664,
+              1792,
+              1920,
+              2048
+            ],
+            "train_indices_hash": "cffc0427f6d8"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 1.0,
+          "subject_id": "4",
+          "y_pred": [
             0,
-            4
+            0,
+            0,
+            0
           ],
-          [
+          "y_proba": [
+            0.46875,
+            0.46875,
+            0.46875,
+            0.46875
+          ],
+          "y_true": [
+            0,
+            0,
             0,
             0
           ]
-        ],
-        "macro_f1": 0.0,
-        "n_positive": 0,
-        "n_test": 4,
-        "provenance": {
-          "n_train": 96,
-          "test_block_id": [
-            4,
-            4,
-            4,
-            4
-          ],
-          "test_indices_hash": "48c1a4b0e34b",
-          "test_start_sample": [
-            1664,
-            1792,
-            1920,
-            2048
-          ],
-          "train_indices_hash": "cffc0427f6d8"
         },
-        "roc_auc": null,
-        "sensitivity": null,
-        "specificity": 0.0,
-        "subject_id": "4"
-      },
-      {
-        "balanced_accuracy": 0.3333333333333333,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.6666666666666666,
-          "dummy_uniform_balanced_accuracy": 0.3333333333333333,
-          "majority_class_accuracy": 1.0,
+        {
+          "balanced_accuracy": 0.0,
+          "confusion_matrix": [
+            [
+              0,
+              0
+            ],
+            [
+              3,
+              0
+            ]
+          ],
+          "macro_f1": 0.0,
+          "n_positive": 3,
           "n_test": 3,
-          "positive_rate_test": 1.0,
-          "positive_rate_train": 0.4329896907216495
-        },
-        "confusion_matrix": [
-          [
+          "provenance": {
+            "n_train": 97,
+            "test_block_id": [
+              5,
+              5,
+              5
+            ],
+            "test_indices_hash": "c72bcc9583e5",
+            "test_start_sample": [
+              2176,
+              2304,
+              2432
+            ],
+            "train_indices_hash": "72567381c1b0"
+          },
+          "roc_auc": null,
+          "sensitivity": 0.0,
+          "specificity": null,
+          "subject_id": "5",
+          "y_pred": [
+            0,
             0,
             0
           ],
-          [
-            2,
+          "y_proba": [
+            0.4329896907216495,
+            0.4329896907216495,
+            0.4329896907216495
+          ],
+          "y_true": [
+            1,
+            1,
             1
           ]
-        ],
-        "macro_f1": 0.25,
-        "n_positive": 3,
-        "n_test": 3,
-        "provenance": {
-          "n_train": 97,
-          "test_block_id": [
-            5,
-            5,
-            5
-          ],
-          "test_indices_hash": "c72bcc9583e5",
-          "test_start_sample": [
-            2176,
-            2304,
-            2432
-          ],
-          "train_indices_hash": "72567381c1b0"
         },
-        "roc_auc": null,
-        "sensitivity": 0.3333333333333333,
-        "specificity": null,
-        "subject_id": "5"
-      },
-      {
-        "balanced_accuracy": 1.0,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 1.0,
-          "dummy_uniform_balanced_accuracy": 1.0,
-          "majority_class_accuracy": 1.0,
+        {
+          "balanced_accuracy": 1.0,
+          "confusion_matrix": [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 1.0,
+          "n_positive": 0,
           "n_test": 1,
-          "positive_rate_test": 0.0,
-          "positive_rate_train": 0.45454545454545453
-        },
-        "confusion_matrix": [
-          [
-            1,
+          "provenance": {
+            "n_train": 99,
+            "test_block_id": [
+              6
+            ],
+            "test_indices_hash": "b2e53df9ea15",
+            "test_start_sample": [
+              2688
+            ],
+            "train_indices_hash": "fb3726c5e4c2"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 1.0,
+          "subject_id": "6",
+          "y_pred": [
             0
           ],
-          [
-            0,
+          "y_proba": [
+            0.45454545454545453
+          ],
+          "y_true": [
             0
           ]
-        ],
-        "macro_f1": 1.0,
-        "n_positive": 0,
-        "n_test": 1,
-        "provenance": {
-          "n_train": 99,
-          "test_block_id": [
-            6
-          ],
-          "test_indices_hash": "b2e53df9ea15",
-          "test_start_sample": [
-            2688
-          ],
-          "train_indices_hash": "fb3726c5e4c2"
         },
-        "roc_auc": null,
-        "sensitivity": null,
-        "specificity": 1.0,
-        "subject_id": "6"
-      },
-      {
-        "balanced_accuracy": 1.0,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.3333333333333333,
-          "dummy_uniform_balanced_accuracy": 0.6666666666666666,
-          "majority_class_accuracy": 1.0,
+        {
+          "balanced_accuracy": 1.0,
+          "confusion_matrix": [
+            [
+              3,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 1.0,
+          "n_positive": 0,
           "n_test": 3,
-          "positive_rate_test": 0.0,
-          "positive_rate_train": 0.4639175257731959
-        },
-        "confusion_matrix": [
-          [
-            3,
+          "provenance": {
+            "n_train": 97,
+            "test_block_id": [
+              8,
+              8,
+              8
+            ],
+            "test_indices_hash": "b3d3733047f1",
+            "test_start_sample": [
+              2944,
+              3072,
+              3200
+            ],
+            "train_indices_hash": "ef6012de0170"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 1.0,
+          "subject_id": "8",
+          "y_pred": [
+            0,
+            0,
             0
           ],
-          [
+          "y_proba": [
+            0.4639175257731959,
+            0.4639175257731959,
+            0.4639175257731959
+          ],
+          "y_true": [
+            0,
             0,
             0
           ]
-        ],
-        "macro_f1": 1.0,
-        "n_positive": 0,
-        "n_test": 3,
-        "provenance": {
-          "n_train": 97,
-          "test_block_id": [
-            8,
-            8,
-            8
-          ],
-          "test_indices_hash": "b3d3733047f1",
-          "test_start_sample": [
-            2944,
-            3072,
-            3200
-          ],
-          "train_indices_hash": "ef6012de0170"
         },
-        "roc_auc": null,
-        "sensitivity": null,
-        "specificity": 1.0,
-        "subject_id": "8"
-      },
-      {
-        "balanced_accuracy": 0.7142857142857143,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.42857142857142855,
-          "dummy_uniform_balanced_accuracy": 0.2857142857142857,
-          "majority_class_accuracy": 1.0,
+        {
+          "balanced_accuracy": 0.0,
+          "confusion_matrix": [
+            [
+              0,
+              0
+            ],
+            [
+              7,
+              0
+            ]
+          ],
+          "macro_f1": 0.0,
+          "n_positive": 7,
           "n_test": 7,
-          "positive_rate_test": 1.0,
-          "positive_rate_train": 0.40860215053763443
-        },
-        "confusion_matrix": [
-          [
+          "provenance": {
+            "n_train": 93,
+            "test_block_id": [
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9
+            ],
+            "test_indices_hash": "8068efa5c9df",
+            "test_start_sample": [
+              3456,
+              3584,
+              3712,
+              3840,
+              3968,
+              4096,
+              4224
+            ],
+            "train_indices_hash": "c3d73a90dd1e"
+          },
+          "roc_auc": null,
+          "sensitivity": 0.0,
+          "specificity": null,
+          "subject_id": "9",
+          "y_pred": [
+            0,
+            0,
+            0,
+            0,
+            0,
             0,
             0
           ],
-          [
-            2,
-            5
+          "y_proba": [
+            0.40860215053763443,
+            0.40860215053763443,
+            0.40860215053763443,
+            0.40860215053763443,
+            0.40860215053763443,
+            0.40860215053763443,
+            0.40860215053763443
+          ],
+          "y_true": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
           ]
-        ],
-        "macro_f1": 0.4166666666666667,
-        "n_positive": 7,
-        "n_test": 7,
-        "provenance": {
-          "n_train": 93,
-          "test_block_id": [
-            9,
-            9,
-            9,
-            9,
-            9,
-            9,
-            9
-          ],
-          "test_indices_hash": "8068efa5c9df",
-          "test_start_sample": [
-            3456,
-            3584,
-            3712,
-            3840,
-            3968,
-            4096,
-            4224
-          ],
-          "train_indices_hash": "c3d73a90dd1e"
         },
-        "roc_auc": null,
-        "sensitivity": 0.7142857142857143,
-        "specificity": null,
-        "subject_id": "9"
-      },
-      {
-        "balanced_accuracy": 0.3333333333333333,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.5,
-          "dummy_uniform_balanced_accuracy": 0.6666666666666666,
-          "majority_class_accuracy": 1.0,
+        {
+          "balanced_accuracy": 1.0,
+          "confusion_matrix": [
+            [
+              6,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 1.0,
+          "n_positive": 0,
           "n_test": 6,
-          "positive_rate_test": 0.0,
-          "positive_rate_train": 0.4787234042553192
-        },
-        "confusion_matrix": [
-          [
-            2,
-            4
+          "provenance": {
+            "n_train": 94,
+            "test_block_id": [
+              10,
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            "test_indices_hash": "e14449631a34",
+            "test_start_sample": [
+              4352,
+              4480,
+              4608,
+              4736,
+              4864,
+              4992
+            ],
+            "train_indices_hash": "4a7a08298e10"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 1.0,
+          "subject_id": "10",
+          "y_pred": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
           ],
-          [
+          "y_proba": [
+            0.4787234042553192,
+            0.4787234042553192,
+            0.4787234042553192,
+            0.4787234042553192,
+            0.4787234042553192,
+            0.4787234042553192
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0,
             0,
             0
           ]
-        ],
-        "macro_f1": 0.25,
-        "n_positive": 0,
-        "n_test": 6,
-        "provenance": {
-          "n_train": 94,
-          "test_block_id": [
-            10,
-            10,
-            10,
-            10,
-            10,
-            10
-          ],
-          "test_indices_hash": "e14449631a34",
-          "test_start_sample": [
-            4352,
-            4480,
-            4608,
-            4736,
-            4864,
-            4992
-          ],
-          "train_indices_hash": "4a7a08298e10"
         },
-        "roc_auc": null,
-        "sensitivity": null,
-        "specificity": 0.3333333333333333,
-        "subject_id": "10"
-      },
-      {
-        "balanced_accuracy": 0.6,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.6,
-          "dummy_uniform_balanced_accuracy": 0.2,
-          "majority_class_accuracy": 1.0,
+        {
+          "balanced_accuracy": 0.0,
+          "confusion_matrix": [
+            [
+              0,
+              0
+            ],
+            [
+              5,
+              0
+            ]
+          ],
+          "macro_f1": 0.0,
+          "n_positive": 5,
           "n_test": 5,
-          "positive_rate_test": 1.0,
-          "positive_rate_train": 0.42105263157894735
-        },
-        "confusion_matrix": [
-          [
+          "provenance": {
+            "n_train": 95,
+            "test_block_id": [
+              11,
+              11,
+              11,
+              11,
+              11
+            ],
+            "test_indices_hash": "7f9c29355f1f",
+            "test_start_sample": [
+              5248,
+              5376,
+              5504,
+              5632,
+              5760
+            ],
+            "train_indices_hash": "7565d7965a32"
+          },
+          "roc_auc": null,
+          "sensitivity": 0.0,
+          "specificity": null,
+          "subject_id": "11",
+          "y_pred": [
+            0,
+            0,
+            0,
             0,
             0
           ],
-          [
-            2,
-            3
+          "y_proba": [
+            0.42105263157894735,
+            0.42105263157894735,
+            0.42105263157894735,
+            0.42105263157894735,
+            0.42105263157894735
+          ],
+          "y_true": [
+            1,
+            1,
+            1,
+            1,
+            1
           ]
-        ],
-        "macro_f1": 0.375,
-        "n_positive": 5,
-        "n_test": 5,
-        "provenance": {
-          "n_train": 95,
-          "test_block_id": [
-            11,
-            11,
-            11,
-            11,
-            11
-          ],
-          "test_indices_hash": "7f9c29355f1f",
-          "test_start_sample": [
-            5248,
-            5376,
-            5504,
-            5632,
-            5760
-          ],
-          "train_indices_hash": "7565d7965a32"
         },
-        "roc_auc": null,
-        "sensitivity": 0.6,
-        "specificity": null,
-        "subject_id": "11"
-      },
-      {
-        "balanced_accuracy": 0.75,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.25,
-          "dummy_uniform_balanced_accuracy": 0.75,
-          "majority_class_accuracy": 1.0,
+        {
+          "balanced_accuracy": 1.0,
+          "confusion_matrix": [
+            [
+              4,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 1.0,
+          "n_positive": 0,
           "n_test": 4,
-          "positive_rate_test": 0.0,
-          "positive_rate_train": 0.46875
+          "provenance": {
+            "n_train": 96,
+            "test_block_id": [
+              12,
+              12,
+              12,
+              12
+            ],
+            "test_indices_hash": "9272332c2de5",
+            "test_start_sample": [
+              6016,
+              6144,
+              6272,
+              6400
+            ],
+            "train_indices_hash": "3b0fbce33aae"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 1.0,
+          "subject_id": "12",
+          "y_pred": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "y_proba": [
+            0.46875,
+            0.46875,
+            0.46875,
+            0.46875
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0
+          ]
         },
-        "confusion_matrix": [
-          [
-            3,
+        {
+          "balanced_accuracy": 0.0,
+          "confusion_matrix": [
+            [
+              0,
+              0
+            ],
+            [
+              18,
+              0
+            ]
+          ],
+          "macro_f1": 0.0,
+          "n_positive": 18,
+          "n_test": 18,
+          "provenance": {
+            "n_train": 82,
+            "test_block_id": [
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13
+            ],
+            "test_indices_hash": "213194b781e1",
+            "test_start_sample": [
+              6656,
+              6784,
+              6912,
+              7040,
+              7168,
+              7296,
+              7424,
+              7552,
+              7680,
+              7808,
+              7936,
+              8064,
+              8192,
+              8320,
+              8448,
+              8576,
+              8704,
+              8832
+            ],
+            "train_indices_hash": "906ea1c387d4"
+          },
+          "roc_auc": null,
+          "sensitivity": 0.0,
+          "specificity": null,
+          "subject_id": "13",
+          "y_pred": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "y_proba": [
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684,
+            0.32926829268292684
+          ],
+          "y_true": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "balanced_accuracy": 0.0,
+          "confusion_matrix": [
+            [
+              0,
+              15
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 0.0,
+          "n_positive": 0,
+          "n_test": 15,
+          "provenance": {
+            "n_train": 85,
+            "test_block_id": [
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14
+            ],
+            "test_indices_hash": "b81f76145c69",
+            "test_start_sample": [
+              9088,
+              9216,
+              9344,
+              9472,
+              9600,
+              9728,
+              9856,
+              9984,
+              10112,
+              10240,
+              10368,
+              10496,
+              10624,
+              10752,
+              10880
+            ],
+            "train_indices_hash": "638e1eb77057"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 0.0,
+          "subject_id": "14",
+          "y_pred": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
             1
           ],
-          [
+          "y_proba": [
+            0.5294117647058824,
+            0.5294117647058824,
+            0.5294117647058824,
+            0.5294117647058824,
+            0.5294117647058824,
+            0.5294117647058824,
+            0.5294117647058824,
+            0.5294117647058824,
+            0.5294117647058824,
+            0.5294117647058824,
+            0.5294117647058824,
+            0.5294117647058824,
+            0.5294117647058824,
+            0.5294117647058824,
+            0.5294117647058824
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             0,
             0
           ]
-        ],
-        "macro_f1": 0.42857142857142855,
-        "n_positive": 0,
-        "n_test": 4,
-        "provenance": {
-          "n_train": 96,
-          "test_block_id": [
-            12,
-            12,
-            12,
-            12
-          ],
-          "test_indices_hash": "9272332c2de5",
-          "test_start_sample": [
-            6016,
-            6144,
-            6272,
-            6400
-          ],
-          "train_indices_hash": "3b0fbce33aae"
         },
-        "roc_auc": null,
-        "sensitivity": null,
-        "specificity": 0.75,
-        "subject_id": "12"
-      },
-      {
-        "balanced_accuracy": 0.3333333333333333,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.3333333333333333,
-          "dummy_uniform_balanced_accuracy": 0.3333333333333333,
-          "majority_class_accuracy": 1.0,
-          "n_test": 18,
-          "positive_rate_test": 1.0,
-          "positive_rate_train": 0.32926829268292684
-        },
-        "confusion_matrix": [
-          [
-            0,
-            0
+        {
+          "balanced_accuracy": 0.0,
+          "confusion_matrix": [
+            [
+              0,
+              0
+            ],
+            [
+              7,
+              0
+            ]
           ],
-          [
-            12,
-            6
-          ]
-        ],
-        "macro_f1": 0.25,
-        "n_positive": 18,
-        "n_test": 18,
-        "provenance": {
-          "n_train": 82,
-          "test_block_id": [
-            13,
-            13,
-            13,
-            13,
-            13,
-            13,
-            13,
-            13,
-            13,
-            13,
-            13,
-            13,
-            13,
-            13,
-            13,
-            13,
-            13,
-            13
-          ],
-          "test_indices_hash": "213194b781e1",
-          "test_start_sample": [
-            6656,
-            6784,
-            6912,
-            7040,
-            7168,
-            7296,
-            7424,
-            7552,
-            7680,
-            7808,
-            7936,
-            8064,
-            8192,
-            8320,
-            8448,
-            8576,
-            8704,
-            8832
-          ],
-          "train_indices_hash": "906ea1c387d4"
-        },
-        "roc_auc": null,
-        "sensitivity": 0.3333333333333333,
-        "specificity": null,
-        "subject_id": "13"
-      },
-      {
-        "balanced_accuracy": 0.5333333333333333,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.5333333333333333,
-          "dummy_uniform_balanced_accuracy": 0.7333333333333333,
-          "majority_class_accuracy": 1.0,
-          "n_test": 15,
-          "positive_rate_test": 0.0,
-          "positive_rate_train": 0.5294117647058824
-        },
-        "confusion_matrix": [
-          [
-            8,
-            7
-          ],
-          [
-            0,
-            0
-          ]
-        ],
-        "macro_f1": 0.34782608695652173,
-        "n_positive": 0,
-        "n_test": 15,
-        "provenance": {
-          "n_train": 85,
-          "test_block_id": [
-            14,
-            14,
-            14,
-            14,
-            14,
-            14,
-            14,
-            14,
-            14,
-            14,
-            14,
-            14,
-            14,
-            14,
-            14
-          ],
-          "test_indices_hash": "b81f76145c69",
-          "test_start_sample": [
-            9088,
-            9216,
-            9344,
-            9472,
-            9600,
-            9728,
-            9856,
-            9984,
-            10112,
-            10240,
-            10368,
-            10496,
-            10624,
-            10752,
-            10880
-          ],
-          "train_indices_hash": "638e1eb77057"
-        },
-        "roc_auc": null,
-        "sensitivity": null,
-        "specificity": 0.5333333333333333,
-        "subject_id": "14"
-      },
-      {
-        "balanced_accuracy": 0.2857142857142857,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.42857142857142855,
-          "dummy_uniform_balanced_accuracy": 0.2857142857142857,
-          "majority_class_accuracy": 1.0,
+          "macro_f1": 0.0,
+          "n_positive": 7,
           "n_test": 7,
-          "positive_rate_test": 1.0,
-          "positive_rate_train": 0.40860215053763443
-        },
-        "confusion_matrix": [
-          [
+          "provenance": {
+            "n_train": 93,
+            "test_block_id": [
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              15
+            ],
+            "test_indices_hash": "af100b192813",
+            "test_start_sample": [
+              11136,
+              11264,
+              11392,
+              11520,
+              11648,
+              11776,
+              11904
+            ],
+            "train_indices_hash": "d9ec09dd968e"
+          },
+          "roc_auc": null,
+          "sensitivity": 0.0,
+          "specificity": null,
+          "subject_id": "15",
+          "y_pred": [
+            0,
+            0,
+            0,
+            0,
+            0,
             0,
             0
           ],
-          [
-            5,
-            2
+          "y_proba": [
+            0.40860215053763443,
+            0.40860215053763443,
+            0.40860215053763443,
+            0.40860215053763443,
+            0.40860215053763443,
+            0.40860215053763443,
+            0.40860215053763443
+          ],
+          "y_true": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
           ]
-        ],
-        "macro_f1": 0.2222222222222222,
-        "n_positive": 7,
-        "n_test": 7,
-        "provenance": {
-          "n_train": 93,
-          "test_block_id": [
-            15,
-            15,
-            15,
-            15,
-            15,
-            15,
+        },
+        {
+          "balanced_accuracy": 1.0,
+          "confusion_matrix": [
+            [
+              4,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 1.0,
+          "n_positive": 0,
+          "n_test": 4,
+          "provenance": {
+            "n_train": 96,
+            "test_block_id": [
+              16,
+              16,
+              16,
+              16
+            ],
+            "test_indices_hash": "4e0938824f3e",
+            "test_start_sample": [
+              12160,
+              12288,
+              12416,
+              12544
+            ],
+            "train_indices_hash": "670e4ac1dd83"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 1.0,
+          "subject_id": "16",
+          "y_pred": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "y_proba": [
+            0.46875,
+            0.46875,
+            0.46875,
+            0.46875
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 1.0,
+          "confusion_matrix": [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 1.0,
+          "n_positive": 0,
+          "n_test": 1,
+          "provenance": {
+            "n_train": 99,
+            "test_block_id": [
+              18
+            ],
+            "test_indices_hash": "ddcf639579ed",
+            "test_start_sample": [
+              12800
+            ],
+            "train_indices_hash": "6b90f62a5784"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 1.0,
+          "subject_id": "18",
+          "y_pred": [
+            0
+          ],
+          "y_proba": [
+            0.45454545454545453
+          ],
+          "y_true": [
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 1.0,
+          "confusion_matrix": [
+            [
+              9,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 1.0,
+          "n_positive": 0,
+          "n_test": 9,
+          "provenance": {
+            "n_train": 91,
+            "test_block_id": [
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20
+            ],
+            "test_indices_hash": "c164532733b8",
+            "test_start_sample": [
+              13056,
+              13184,
+              13312,
+              13440,
+              13568,
+              13696,
+              13824,
+              13952,
+              14080
+            ],
+            "train_indices_hash": "6aa12ba0e32f"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 1.0,
+          "subject_id": "20",
+          "y_pred": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "y_proba": [
+            0.4945054945054945,
+            0.4945054945054945,
+            0.4945054945054945,
+            0.4945054945054945,
+            0.4945054945054945,
+            0.4945054945054945,
+            0.4945054945054945,
+            0.4945054945054945,
+            0.4945054945054945
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 1.0,
+          "confusion_matrix": [
+            [
+              4,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 1.0,
+          "n_positive": 0,
+          "n_test": 4,
+          "provenance": {
+            "n_train": 96,
+            "test_block_id": [
+              22,
+              22,
+              22,
+              22
+            ],
+            "test_indices_hash": "2da521ef63f8",
+            "test_start_sample": [
+              14336,
+              14464,
+              14592,
+              14720
+            ],
+            "train_indices_hash": "00fc7bf5f940"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 1.0,
+          "subject_id": "22",
+          "y_pred": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "y_proba": [
+            0.46875,
+            0.46875,
+            0.46875,
+            0.46875
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "pooled_descriptive_metrics": {
+        "_warning": "Descriptive only. Pools correlated epochs across subjects and treats them as independent. Not the inferential result.",
+        "balanced_accuracy": 0.36363636363636365,
+        "confusion_matrix": [
+          [
+            40,
             15
           ],
-          "test_indices_hash": "af100b192813",
-          "test_start_sample": [
-            11136,
-            11264,
-            11392,
-            11520,
-            11648,
-            11776,
-            11904
-          ],
-          "train_indices_hash": "d9ec09dd968e"
-        },
-        "roc_auc": null,
-        "sensitivity": 0.2857142857142857,
-        "specificity": null,
-        "subject_id": "15"
-      },
-      {
-        "balanced_accuracy": 0.5,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.25,
-          "dummy_uniform_balanced_accuracy": 0.75,
-          "majority_class_accuracy": 1.0,
-          "n_test": 4,
-          "positive_rate_test": 0.0,
-          "positive_rate_train": 0.46875
-        },
-        "confusion_matrix": [
           [
-            2,
-            2
-          ],
-          [
-            0,
+            45,
             0
           ]
         ],
-        "macro_f1": 0.3333333333333333,
-        "n_positive": 0,
-        "n_test": 4,
-        "provenance": {
-          "n_train": 96,
-          "test_block_id": [
-            16,
-            16,
-            16,
-            16
-          ],
-          "test_indices_hash": "4e0938824f3e",
-          "test_start_sample": [
-            12160,
-            12288,
-            12416,
-            12544
-          ],
-          "train_indices_hash": "670e4ac1dd83"
-        },
-        "roc_auc": null,
-        "sensitivity": null,
-        "specificity": 0.5,
-        "subject_id": "16"
+        "macro_f1": 0.2857142857142857,
+        "n_positive": 45,
+        "n_test": 100,
+        "roc_auc": 0.0,
+        "sensitivity": 0.0,
+        "specificity": 0.7272727272727273
       },
-      {
-        "balanced_accuracy": 0.0,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 1.0,
-          "dummy_uniform_balanced_accuracy": 1.0,
-          "majority_class_accuracy": 1.0,
-          "n_test": 1,
-          "positive_rate_test": 0.0,
-          "positive_rate_train": 0.45454545454545453
+      "subject_bootstrap_ci": {
+        "balanced_accuracy": {
+          "hi": 0.7894736842105263,
+          "level": 0.95,
+          "lo": 0.3684210526315789,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 19,
+          "point": 0.5789473684210527
         },
-        "confusion_matrix": [
-          [
+        "macro_f1": {
+          "hi": 0.7894736842105263,
+          "level": 0.95,
+          "lo": 0.3684210526315789,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 19,
+          "point": 0.5789473684210527
+        },
+        "roc_auc": null
+      },
+      "subject_mean": {
+        "balanced_accuracy": {
+          "mean": 0.5789473684210527,
+          "median": 1.0,
+          "n_above_chance": 11,
+          "n_subjects": 19,
+          "std": 0.5072572735017881
+        },
+        "macro_f1": {
+          "mean": 0.5789473684210527,
+          "median": 1.0,
+          "n_above_chance": 11,
+          "n_subjects": 19,
+          "std": 0.5072572735017881
+        },
+        "roc_auc": {
+          "mean": null,
+          "median": null,
+          "n_above_chance": 0,
+          "n_subjects": 0,
+          "std": null
+        }
+      }
+    },
+    "note": "Retained only as a diagnostic. Each native block is single-class, so per-fold AUC is undefined and pooled AUC from separately-trained folds is a splitting artefact, not electrode drift. The paired dummy_prior_diagnostic reproduces the artefact with a classifier that learns nothing.",
+    "primary_model": {
+      "config": {
+        "dummy_strategy": null,
+        "n_boot": 10000,
+        "n_features": 1792,
+        "n_samples": 100,
+        "n_subjects": 19,
+        "param_grid": {},
+        "predictions_persisted": true,
+        "random_state": 42,
+        "tuned": false
+      },
+      "folds": [
+        {
+          "balanced_accuracy": 1.0,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 1.0,
+            "dummy_uniform_balanced_accuracy": 1.0,
+            "majority_class_accuracy": 1.0,
+            "n_test": 1,
+            "positive_rate_test": 0.0,
+            "positive_rate_train": 0.45454545454545453
+          },
+          "confusion_matrix": [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 1.0,
+          "n_positive": 0,
+          "n_test": 1,
+          "provenance": {
+            "n_train": 99,
+            "test_block_id": [
+              0
+            ],
+            "test_indices_hash": "05fe40575316",
+            "test_start_sample": [
+              0
+            ],
+            "train_indices_hash": "b6ed08e9dbdc"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 1.0,
+          "subject_id": "0",
+          "y_pred": [
+            0
+          ],
+          "y_proba": [
+            0.062055108543544464
+          ],
+          "y_true": [
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 0.75,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.75,
+            "dummy_uniform_balanced_accuracy": 0.25,
+            "majority_class_accuracy": 1.0,
+            "n_test": 4,
+            "positive_rate_test": 1.0,
+            "positive_rate_train": 0.4270833333333333
+          },
+          "confusion_matrix": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              3
+            ]
+          ],
+          "macro_f1": 0.42857142857142855,
+          "n_positive": 4,
+          "n_test": 4,
+          "provenance": {
+            "n_train": 96,
+            "test_block_id": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "test_indices_hash": "1074bd0a31df",
+            "test_start_sample": [
+              256,
+              384,
+              512,
+              640
+            ],
+            "train_indices_hash": "76842bb48a86"
+          },
+          "roc_auc": null,
+          "sensitivity": 0.75,
+          "specificity": null,
+          "subject_id": "1",
+          "y_pred": [
+            0,
+            1,
+            1,
+            1
+          ],
+          "y_proba": [
+            0.15320981626966554,
+            0.9486776529955472,
+            0.7521155625407515,
+            0.630210044698913
+          ],
+          "y_true": [
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "balanced_accuracy": 0.6666666666666666,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.3333333333333333,
+            "dummy_uniform_balanced_accuracy": 0.6666666666666666,
+            "majority_class_accuracy": 1.0,
+            "n_test": 3,
+            "positive_rate_test": 0.0,
+            "positive_rate_train": 0.4639175257731959
+          },
+          "confusion_matrix": [
+            [
+              2,
+              1
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 0.4,
+          "n_positive": 0,
+          "n_test": 3,
+          "provenance": {
+            "n_train": 97,
+            "test_block_id": [
+              2,
+              2,
+              2
+            ],
+            "test_indices_hash": "bbaee4ffd23c",
+            "test_start_sample": [
+              896,
+              1024,
+              1152
+            ],
+            "train_indices_hash": "24d5d854b532"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 0.6666666666666666,
+          "subject_id": "2",
+          "y_pred": [
+            1,
+            0,
+            0
+          ],
+          "y_proba": [
+            0.7798861017357932,
+            0.054417866411381244,
+            0.1147322566818317
+          ],
+          "y_true": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 0.0,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.0,
+            "dummy_uniform_balanced_accuracy": 0.0,
+            "majority_class_accuracy": 1.0,
+            "n_test": 1,
+            "positive_rate_test": 1.0,
+            "positive_rate_train": 0.4444444444444444
+          },
+          "confusion_matrix": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ]
+          ],
+          "macro_f1": 0.0,
+          "n_positive": 1,
+          "n_test": 1,
+          "provenance": {
+            "n_train": 99,
+            "test_block_id": [
+              3
+            ],
+            "test_indices_hash": "29e24643a632",
+            "test_start_sample": [
+              1408
+            ],
+            "train_indices_hash": "5f0cd4f25711"
+          },
+          "roc_auc": null,
+          "sensitivity": 0.0,
+          "specificity": null,
+          "subject_id": "3",
+          "y_pred": [
+            0
+          ],
+          "y_proba": [
+            0.2124341745008078
+          ],
+          "y_true": [
+            1
+          ]
+        },
+        {
+          "balanced_accuracy": 0.0,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.25,
+            "dummy_uniform_balanced_accuracy": 0.75,
+            "majority_class_accuracy": 1.0,
+            "n_test": 4,
+            "positive_rate_test": 0.0,
+            "positive_rate_train": 0.46875
+          },
+          "confusion_matrix": [
+            [
+              0,
+              4
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 0.0,
+          "n_positive": 0,
+          "n_test": 4,
+          "provenance": {
+            "n_train": 96,
+            "test_block_id": [
+              4,
+              4,
+              4,
+              4
+            ],
+            "test_indices_hash": "48c1a4b0e34b",
+            "test_start_sample": [
+              1664,
+              1792,
+              1920,
+              2048
+            ],
+            "train_indices_hash": "cffc0427f6d8"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 0.0,
+          "subject_id": "4",
+          "y_pred": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "y_proba": [
+            0.5432725612721434,
+            0.9975908697163715,
+            0.9804084602000334,
+            0.9999941012759433
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 0.3333333333333333,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.6666666666666666,
+            "dummy_uniform_balanced_accuracy": 0.3333333333333333,
+            "majority_class_accuracy": 1.0,
+            "n_test": 3,
+            "positive_rate_test": 1.0,
+            "positive_rate_train": 0.4329896907216495
+          },
+          "confusion_matrix": [
+            [
+              0,
+              0
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "macro_f1": 0.25,
+          "n_positive": 3,
+          "n_test": 3,
+          "provenance": {
+            "n_train": 97,
+            "test_block_id": [
+              5,
+              5,
+              5
+            ],
+            "test_indices_hash": "c72bcc9583e5",
+            "test_start_sample": [
+              2176,
+              2304,
+              2432
+            ],
+            "train_indices_hash": "72567381c1b0"
+          },
+          "roc_auc": null,
+          "sensitivity": 0.3333333333333333,
+          "specificity": null,
+          "subject_id": "5",
+          "y_pred": [
+            0,
             0,
             1
           ],
-          [
-            0,
-            0
-          ]
-        ],
-        "macro_f1": 0.0,
-        "n_positive": 0,
-        "n_test": 1,
-        "provenance": {
-          "n_train": 99,
-          "test_block_id": [
-            18
+          "y_proba": [
+            0.06064871495072848,
+            0.1092829765872291,
+            0.574302044974242
           ],
-          "test_indices_hash": "ddcf639579ed",
-          "test_start_sample": [
-            12800
-          ],
-          "train_indices_hash": "6b90f62a5784"
-        },
-        "roc_auc": null,
-        "sensitivity": null,
-        "specificity": 0.0,
-        "subject_id": "18"
-      },
-      {
-        "balanced_accuracy": 0.1111111111111111,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.4444444444444444,
-          "dummy_uniform_balanced_accuracy": 0.7777777777777778,
-          "majority_class_accuracy": 1.0,
-          "n_test": 9,
-          "positive_rate_test": 0.0,
-          "positive_rate_train": 0.4945054945054945
-        },
-        "confusion_matrix": [
-          [
+          "y_true": [
             1,
-            8
+            1,
+            1
+          ]
+        },
+        {
+          "balanced_accuracy": 1.0,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 1.0,
+            "dummy_uniform_balanced_accuracy": 1.0,
+            "majority_class_accuracy": 1.0,
+            "n_test": 1,
+            "positive_rate_test": 0.0,
+            "positive_rate_train": 0.45454545454545453
+          },
+          "confusion_matrix": [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              0
+            ]
           ],
-          [
+          "macro_f1": 1.0,
+          "n_positive": 0,
+          "n_test": 1,
+          "provenance": {
+            "n_train": 99,
+            "test_block_id": [
+              6
+            ],
+            "test_indices_hash": "b2e53df9ea15",
+            "test_start_sample": [
+              2688
+            ],
+            "train_indices_hash": "fb3726c5e4c2"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 1.0,
+          "subject_id": "6",
+          "y_pred": [
+            0
+          ],
+          "y_proba": [
+            0.21706252071050616
+          ],
+          "y_true": [
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 1.0,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.3333333333333333,
+            "dummy_uniform_balanced_accuracy": 0.6666666666666666,
+            "majority_class_accuracy": 1.0,
+            "n_test": 3,
+            "positive_rate_test": 0.0,
+            "positive_rate_train": 0.4639175257731959
+          },
+          "confusion_matrix": [
+            [
+              3,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 1.0,
+          "n_positive": 0,
+          "n_test": 3,
+          "provenance": {
+            "n_train": 97,
+            "test_block_id": [
+              8,
+              8,
+              8
+            ],
+            "test_indices_hash": "b3d3733047f1",
+            "test_start_sample": [
+              2944,
+              3072,
+              3200
+            ],
+            "train_indices_hash": "ef6012de0170"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 1.0,
+          "subject_id": "8",
+          "y_pred": [
+            0,
+            0,
+            0
+          ],
+          "y_proba": [
+            0.33139043003870805,
+            0.24734140491603004,
+            0.15991446472065812
+          ],
+          "y_true": [
+            0,
             0,
             0
           ]
-        ],
-        "macro_f1": 0.1,
-        "n_positive": 0,
-        "n_test": 9,
-        "provenance": {
-          "n_train": 91,
-          "test_block_id": [
-            20,
-            20,
-            20,
-            20,
-            20,
-            20,
-            20,
-            20,
-            20
-          ],
-          "test_indices_hash": "c164532733b8",
-          "test_start_sample": [
-            13056,
-            13184,
-            13312,
-            13440,
-            13568,
-            13696,
-            13824,
-            13952,
-            14080
-          ],
-          "train_indices_hash": "6aa12ba0e32f"
         },
-        "roc_auc": null,
-        "sensitivity": null,
-        "specificity": 0.1111111111111111,
-        "subject_id": "20"
-      },
-      {
-        "balanced_accuracy": 0.25,
-        "baselines": {
-          "dummy_stratified_balanced_accuracy": 0.25,
-          "dummy_uniform_balanced_accuracy": 0.75,
-          "majority_class_accuracy": 1.0,
+        {
+          "balanced_accuracy": 0.7142857142857143,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.42857142857142855,
+            "dummy_uniform_balanced_accuracy": 0.2857142857142857,
+            "majority_class_accuracy": 1.0,
+            "n_test": 7,
+            "positive_rate_test": 1.0,
+            "positive_rate_train": 0.40860215053763443
+          },
+          "confusion_matrix": [
+            [
+              0,
+              0
+            ],
+            [
+              2,
+              5
+            ]
+          ],
+          "macro_f1": 0.4166666666666667,
+          "n_positive": 7,
+          "n_test": 7,
+          "provenance": {
+            "n_train": 93,
+            "test_block_id": [
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9
+            ],
+            "test_indices_hash": "8068efa5c9df",
+            "test_start_sample": [
+              3456,
+              3584,
+              3712,
+              3840,
+              3968,
+              4096,
+              4224
+            ],
+            "train_indices_hash": "c3d73a90dd1e"
+          },
+          "roc_auc": null,
+          "sensitivity": 0.7142857142857143,
+          "specificity": null,
+          "subject_id": "9",
+          "y_pred": [
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "y_proba": [
+            0.2904473059851791,
+            0.6505324783107489,
+            0.7997858362344878,
+            0.6887094785722591,
+            0.9723074859637518,
+            0.9617625437661023,
+            0.038548686004010374
+          ],
+          "y_true": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "balanced_accuracy": 0.3333333333333333,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.5,
+            "dummy_uniform_balanced_accuracy": 0.6666666666666666,
+            "majority_class_accuracy": 1.0,
+            "n_test": 6,
+            "positive_rate_test": 0.0,
+            "positive_rate_train": 0.4787234042553192
+          },
+          "confusion_matrix": [
+            [
+              2,
+              4
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 0.25,
+          "n_positive": 0,
+          "n_test": 6,
+          "provenance": {
+            "n_train": 94,
+            "test_block_id": [
+              10,
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            "test_indices_hash": "e14449631a34",
+            "test_start_sample": [
+              4352,
+              4480,
+              4608,
+              4736,
+              4864,
+              4992
+            ],
+            "train_indices_hash": "4a7a08298e10"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 0.3333333333333333,
+          "subject_id": "10",
+          "y_pred": [
+            1,
+            1,
+            0,
+            1,
+            0,
+            1
+          ],
+          "y_proba": [
+            0.5432162513492754,
+            0.5322332475428712,
+            0.25384396461525943,
+            0.9867289471796873,
+            0.3856528770591637,
+            0.689499380373608
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 0.6,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.6,
+            "dummy_uniform_balanced_accuracy": 0.2,
+            "majority_class_accuracy": 1.0,
+            "n_test": 5,
+            "positive_rate_test": 1.0,
+            "positive_rate_train": 0.42105263157894735
+          },
+          "confusion_matrix": [
+            [
+              0,
+              0
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "macro_f1": 0.375,
+          "n_positive": 5,
+          "n_test": 5,
+          "provenance": {
+            "n_train": 95,
+            "test_block_id": [
+              11,
+              11,
+              11,
+              11,
+              11
+            ],
+            "test_indices_hash": "7f9c29355f1f",
+            "test_start_sample": [
+              5248,
+              5376,
+              5504,
+              5632,
+              5760
+            ],
+            "train_indices_hash": "7565d7965a32"
+          },
+          "roc_auc": null,
+          "sensitivity": 0.6,
+          "specificity": null,
+          "subject_id": "11",
+          "y_pred": [
+            1,
+            0,
+            0,
+            1,
+            1
+          ],
+          "y_proba": [
+            0.683874879546158,
+            0.302107535552216,
+            0.07806447669505857,
+            0.8053143853854426,
+            0.5608098316998701
+          ],
+          "y_true": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "balanced_accuracy": 0.75,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.25,
+            "dummy_uniform_balanced_accuracy": 0.75,
+            "majority_class_accuracy": 1.0,
+            "n_test": 4,
+            "positive_rate_test": 0.0,
+            "positive_rate_train": 0.46875
+          },
+          "confusion_matrix": [
+            [
+              3,
+              1
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 0.42857142857142855,
+          "n_positive": 0,
           "n_test": 4,
-          "positive_rate_test": 0.0,
-          "positive_rate_train": 0.46875
-        },
-        "confusion_matrix": [
-          [
+          "provenance": {
+            "n_train": 96,
+            "test_block_id": [
+              12,
+              12,
+              12,
+              12
+            ],
+            "test_indices_hash": "9272332c2de5",
+            "test_start_sample": [
+              6016,
+              6144,
+              6272,
+              6400
+            ],
+            "train_indices_hash": "3b0fbce33aae"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 0.75,
+          "subject_id": "12",
+          "y_pred": [
+            0,
+            0,
             1,
-            3
+            0
           ],
-          [
+          "y_proba": [
+            0.02683399547871738,
+            0.13150565410670775,
+            0.6743523050827133,
+            0.2458221404695067
+          ],
+          "y_true": [
+            0,
+            0,
             0,
             0
           ]
-        ],
-        "macro_f1": 0.2,
-        "n_positive": 0,
-        "n_test": 4,
-        "provenance": {
-          "n_train": 96,
-          "test_block_id": [
-            22,
-            22,
-            22,
-            22
-          ],
-          "test_indices_hash": "2da521ef63f8",
-          "test_start_sample": [
-            14336,
-            14464,
-            14592,
-            14720
-          ],
-          "train_indices_hash": "00fc7bf5f940"
         },
-        "roc_auc": null,
-        "sensitivity": null,
-        "specificity": 0.25,
-        "subject_id": "22"
-      }
-    ],
-    "pooled_descriptive_metrics": {
-      "_warning": "Descriptive only. Pools correlated epochs across subjects and treats them as independent. Not the inferential result.",
-      "balanced_accuracy": 0.44040404040404035,
-      "confusion_matrix": [
-        [
-          24,
-          31
-        ],
-        [
-          25,
-          20
-        ]
+        {
+          "balanced_accuracy": 0.3333333333333333,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.3333333333333333,
+            "dummy_uniform_balanced_accuracy": 0.3333333333333333,
+            "majority_class_accuracy": 1.0,
+            "n_test": 18,
+            "positive_rate_test": 1.0,
+            "positive_rate_train": 0.32926829268292684
+          },
+          "confusion_matrix": [
+            [
+              0,
+              0
+            ],
+            [
+              12,
+              6
+            ]
+          ],
+          "macro_f1": 0.25,
+          "n_positive": 18,
+          "n_test": 18,
+          "provenance": {
+            "n_train": 82,
+            "test_block_id": [
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13
+            ],
+            "test_indices_hash": "213194b781e1",
+            "test_start_sample": [
+              6656,
+              6784,
+              6912,
+              7040,
+              7168,
+              7296,
+              7424,
+              7552,
+              7680,
+              7808,
+              7936,
+              8064,
+              8192,
+              8320,
+              8448,
+              8576,
+              8704,
+              8832
+            ],
+            "train_indices_hash": "906ea1c387d4"
+          },
+          "roc_auc": null,
+          "sensitivity": 0.3333333333333333,
+          "specificity": null,
+          "subject_id": "13",
+          "y_pred": [
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ],
+          "y_proba": [
+            0.00034030799059731363,
+            0.3249980784670647,
+            0.5770846177753548,
+            0.024129404556831636,
+            0.6490886988602936,
+            0.37545866018841545,
+            0.8431886022436842,
+            0.3641602880819248,
+            0.38135824496159265,
+            0.7050569789424009,
+            0.22466505215780325,
+            0.8080396323097412,
+            0.06430498019502627,
+            0.27053466678255883,
+            0.788384603169045,
+            0.014282048671673759,
+            0.2851371356523056,
+            0.24122295049059067
+          ],
+          "y_true": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "balanced_accuracy": 0.5333333333333333,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.5333333333333333,
+            "dummy_uniform_balanced_accuracy": 0.7333333333333333,
+            "majority_class_accuracy": 1.0,
+            "n_test": 15,
+            "positive_rate_test": 0.0,
+            "positive_rate_train": 0.5294117647058824
+          },
+          "confusion_matrix": [
+            [
+              8,
+              7
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 0.34782608695652173,
+          "n_positive": 0,
+          "n_test": 15,
+          "provenance": {
+            "n_train": 85,
+            "test_block_id": [
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14
+            ],
+            "test_indices_hash": "b81f76145c69",
+            "test_start_sample": [
+              9088,
+              9216,
+              9344,
+              9472,
+              9600,
+              9728,
+              9856,
+              9984,
+              10112,
+              10240,
+              10368,
+              10496,
+              10624,
+              10752,
+              10880
+            ],
+            "train_indices_hash": "638e1eb77057"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 0.5333333333333333,
+          "subject_id": "14",
+          "y_pred": [
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0
+          ],
+          "y_proba": [
+            0.44172257401581494,
+            0.05691378412521321,
+            0.9222585196559345,
+            0.22474986512631376,
+            0.6463525856383942,
+            0.34365913624558325,
+            0.05907395962085117,
+            0.7021544554498618,
+            0.6994718641903083,
+            0.058265678342373554,
+            0.24097980336307068,
+            0.6637091364445077,
+            0.9999999734298768,
+            0.9933972347498531,
+            0.4883876751715115
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 0.2857142857142857,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.42857142857142855,
+            "dummy_uniform_balanced_accuracy": 0.2857142857142857,
+            "majority_class_accuracy": 1.0,
+            "n_test": 7,
+            "positive_rate_test": 1.0,
+            "positive_rate_train": 0.40860215053763443
+          },
+          "confusion_matrix": [
+            [
+              0,
+              0
+            ],
+            [
+              5,
+              2
+            ]
+          ],
+          "macro_f1": 0.2222222222222222,
+          "n_positive": 7,
+          "n_test": 7,
+          "provenance": {
+            "n_train": 93,
+            "test_block_id": [
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              15
+            ],
+            "test_indices_hash": "af100b192813",
+            "test_start_sample": [
+              11136,
+              11264,
+              11392,
+              11520,
+              11648,
+              11776,
+              11904
+            ],
+            "train_indices_hash": "d9ec09dd968e"
+          },
+          "roc_auc": null,
+          "sensitivity": 0.2857142857142857,
+          "specificity": null,
+          "subject_id": "15",
+          "y_pred": [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "y_proba": [
+            0.4378532458422304,
+            0.9322229021796342,
+            0.34465404285014095,
+            0.18497555038106284,
+            0.004662902158238926,
+            0.16290841369582396,
+            0.6941389105135678
+          ],
+          "y_true": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "balanced_accuracy": 0.5,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.25,
+            "dummy_uniform_balanced_accuracy": 0.75,
+            "majority_class_accuracy": 1.0,
+            "n_test": 4,
+            "positive_rate_test": 0.0,
+            "positive_rate_train": 0.46875
+          },
+          "confusion_matrix": [
+            [
+              2,
+              2
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 0.3333333333333333,
+          "n_positive": 0,
+          "n_test": 4,
+          "provenance": {
+            "n_train": 96,
+            "test_block_id": [
+              16,
+              16,
+              16,
+              16
+            ],
+            "test_indices_hash": "4e0938824f3e",
+            "test_start_sample": [
+              12160,
+              12288,
+              12416,
+              12544
+            ],
+            "train_indices_hash": "670e4ac1dd83"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 0.5,
+          "subject_id": "16",
+          "y_pred": [
+            1,
+            0,
+            1,
+            0
+          ],
+          "y_proba": [
+            0.5811477282229467,
+            0.39474316260914794,
+            0.6296014191125,
+            0.30857443991021705
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 0.0,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 1.0,
+            "dummy_uniform_balanced_accuracy": 1.0,
+            "majority_class_accuracy": 1.0,
+            "n_test": 1,
+            "positive_rate_test": 0.0,
+            "positive_rate_train": 0.45454545454545453
+          },
+          "confusion_matrix": [
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 0.0,
+          "n_positive": 0,
+          "n_test": 1,
+          "provenance": {
+            "n_train": 99,
+            "test_block_id": [
+              18
+            ],
+            "test_indices_hash": "ddcf639579ed",
+            "test_start_sample": [
+              12800
+            ],
+            "train_indices_hash": "6b90f62a5784"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 0.0,
+          "subject_id": "18",
+          "y_pred": [
+            1
+          ],
+          "y_proba": [
+            0.6528856085050191
+          ],
+          "y_true": [
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 0.1111111111111111,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.4444444444444444,
+            "dummy_uniform_balanced_accuracy": 0.7777777777777778,
+            "majority_class_accuracy": 1.0,
+            "n_test": 9,
+            "positive_rate_test": 0.0,
+            "positive_rate_train": 0.4945054945054945
+          },
+          "confusion_matrix": [
+            [
+              1,
+              8
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 0.1,
+          "n_positive": 0,
+          "n_test": 9,
+          "provenance": {
+            "n_train": 91,
+            "test_block_id": [
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20
+            ],
+            "test_indices_hash": "c164532733b8",
+            "test_start_sample": [
+              13056,
+              13184,
+              13312,
+              13440,
+              13568,
+              13696,
+              13824,
+              13952,
+              14080
+            ],
+            "train_indices_hash": "6aa12ba0e32f"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 0.1111111111111111,
+          "subject_id": "20",
+          "y_pred": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            1
+          ],
+          "y_proba": [
+            0.7062215158280164,
+            0.9816567871284895,
+            0.660894556614308,
+            0.5117704200754318,
+            0.13147156797444134,
+            0.9313302992413318,
+            0.5237888702766685,
+            0.5297973307737525,
+            0.6377099024072561
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 0.25,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.25,
+            "dummy_uniform_balanced_accuracy": 0.75,
+            "majority_class_accuracy": 1.0,
+            "n_test": 4,
+            "positive_rate_test": 0.0,
+            "positive_rate_train": 0.46875
+          },
+          "confusion_matrix": [
+            [
+              1,
+              3
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 0.2,
+          "n_positive": 0,
+          "n_test": 4,
+          "provenance": {
+            "n_train": 96,
+            "test_block_id": [
+              22,
+              22,
+              22,
+              22
+            ],
+            "test_indices_hash": "2da521ef63f8",
+            "test_start_sample": [
+              14336,
+              14464,
+              14592,
+              14720
+            ],
+            "train_indices_hash": "00fc7bf5f940"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 0.25,
+          "subject_id": "22",
+          "y_pred": [
+            1,
+            1,
+            1,
+            0
+          ],
+          "y_proba": [
+            0.9128687121586414,
+            0.7800362437804634,
+            0.7429348309523995,
+            0.2547122305638082
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
       ],
-      "macro_f1": 0.4391025641025641,
-      "n_positive": 45,
-      "n_test": 100,
-      "roc_auc": 0.43676767676767675,
-      "sensitivity": 0.4444444444444444,
-      "specificity": 0.43636363636363634
-    },
-    "subject_bootstrap_ci": {
-      "balanced_accuracy": {
-        "hi": 0.6302871762740184,
-        "level": 0.95,
-        "lo": 0.33358395989974937,
-        "method": "percentile bootstrap, resampling subjects",
-        "n_subjects": 19,
-        "point": 0.4821637426900585
+      "pooled_descriptive_metrics": {
+        "_warning": "Descriptive only. Pools correlated epochs across subjects and treats them as independent. Not the inferential result.",
+        "balanced_accuracy": 0.44040404040404035,
+        "confusion_matrix": [
+          [
+            24,
+            31
+          ],
+          [
+            25,
+            20
+          ]
+        ],
+        "macro_f1": 0.4391025641025641,
+        "n_positive": 45,
+        "n_test": 100,
+        "roc_auc": 0.43676767676767675,
+        "sensitivity": 0.4444444444444444,
+        "specificity": 0.43636363636363634
       },
-      "macro_f1": {
-        "hi": 0.5145211988304093,
-        "level": 0.95,
-        "lo": 0.23865403999128257,
-        "method": "percentile bootstrap, resampling subjects",
-        "n_subjects": 19,
-        "point": 0.3685363771748211
+      "subject_bootstrap_ci": {
+        "balanced_accuracy": {
+          "hi": 0.6302871762740184,
+          "level": 0.95,
+          "lo": 0.33358395989974937,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 19,
+          "point": 0.4821637426900585
+        },
+        "macro_f1": {
+          "hi": 0.5145211988304093,
+          "level": 0.95,
+          "lo": 0.23865403999128257,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 19,
+          "point": 0.3685363771748211
+        },
+        "roc_auc": null
       },
-      "roc_auc": null
-    },
-    "subject_mean": {
-      "balanced_accuracy": {
-        "mean": 0.4821637426900585,
-        "median": 0.5,
-        "n_above_chance": 9,
-        "n_subjects": 19,
-        "std": 0.33720658153881083
-      },
-      "macro_f1": {
-        "mean": 0.3685363771748211,
-        "median": 0.3333333333333333,
-        "n_above_chance": 3,
-        "n_subjects": 19,
-        "std": 0.31446583448876736
-      },
-      "roc_auc": {
-        "mean": null,
-        "median": null,
-        "n_above_chance": 0,
-        "n_subjects": 0,
-        "std": null
+      "subject_mean": {
+        "balanced_accuracy": {
+          "mean": 0.4821637426900585,
+          "median": 0.5,
+          "n_above_chance": 9,
+          "n_subjects": 19,
+          "std": 0.33720658153881083
+        },
+        "macro_f1": {
+          "mean": 0.3685363771748211,
+          "median": 0.3333333333333333,
+          "n_above_chance": 3,
+          "n_subjects": 19,
+          "std": 0.31446583448876736
+        },
+        "roc_auc": {
+          "mean": null,
+          "median": null,
+          "n_above_chance": 0,
+          "n_subjects": 0,
+          "std": null
+        }
       }
     }
+  },
+  "leave_one_merged_block_out": {
+    "dummy_prior_diagnostic": {
+      "config": {
+        "dummy_strategy": "prior",
+        "n_boot": 10000,
+        "n_features": 1792,
+        "n_samples": 100,
+        "n_subjects": 5,
+        "param_grid": {},
+        "predictions_persisted": true,
+        "random_state": 42,
+        "tuned": false
+      },
+      "folds": [
+        {
+          "balanced_accuracy": 0.5,
+          "confusion_matrix": [
+            [
+              4,
+              0
+            ],
+            [
+              5,
+              0
+            ]
+          ],
+          "macro_f1": 0.3076923076923077,
+          "n_positive": 5,
+          "n_test": 9,
+          "provenance": {
+            "n_train": 91,
+            "test_indices_hash": "2c20f0b4a4a0",
+            "test_native_block_id": [
+              0,
+              1,
+              1,
+              1,
+              1,
+              2,
+              2,
+              2,
+              3
+            ],
+            "test_start_sample": [
+              0,
+              256,
+              384,
+              512,
+              640,
+              896,
+              1024,
+              1152,
+              1408
+            ],
+            "test_super_block_id": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "train_indices_hash": "b8062a74858c"
+          },
+          "roc_auc": 0.5,
+          "sensitivity": 0.0,
+          "specificity": 1.0,
+          "subject_id": "0",
+          "y_pred": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "y_proba": [
+            0.43956043956043955,
+            0.43956043956043955,
+            0.43956043956043955,
+            0.43956043956043955,
+            0.43956043956043955,
+            0.43956043956043955,
+            0.43956043956043955,
+            0.43956043956043955,
+            0.43956043956043955
+          ],
+          "y_true": [
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "balanced_accuracy": 0.5,
+          "confusion_matrix": [
+            [
+              8,
+              0
+            ],
+            [
+              3,
+              0
+            ]
+          ],
+          "macro_f1": 0.42105263157894735,
+          "n_positive": 3,
+          "n_test": 11,
+          "provenance": {
+            "n_train": 89,
+            "test_indices_hash": "9a20c959627e",
+            "test_native_block_id": [
+              4,
+              4,
+              4,
+              4,
+              5,
+              5,
+              5,
+              6,
+              8,
+              8,
+              8
+            ],
+            "test_start_sample": [
+              1664,
+              1792,
+              1920,
+              2048,
+              2176,
+              2304,
+              2432,
+              2688,
+              2944,
+              3072,
+              3200
+            ],
+            "test_super_block_id": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "train_indices_hash": "69e48720d358"
+          },
+          "roc_auc": 0.5,
+          "sensitivity": 0.0,
+          "specificity": 1.0,
+          "subject_id": "1",
+          "y_pred": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "y_proba": [
+            0.47191011235955055,
+            0.47191011235955055,
+            0.47191011235955055,
+            0.47191011235955055,
+            0.47191011235955055,
+            0.47191011235955055,
+            0.47191011235955055,
+            0.47191011235955055,
+            0.47191011235955055,
+            0.47191011235955055,
+            0.47191011235955055
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 0.5,
+          "confusion_matrix": [
+            [
+              10,
+              0
+            ],
+            [
+              12,
+              0
+            ]
+          ],
+          "macro_f1": 0.3125,
+          "n_positive": 12,
+          "n_test": 22,
+          "provenance": {
+            "n_train": 78,
+            "test_indices_hash": "185be15f3da7",
+            "test_native_block_id": [
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              10,
+              10,
+              10,
+              10,
+              10,
+              10,
+              11,
+              11,
+              11,
+              11,
+              11,
+              12,
+              12,
+              12,
+              12
+            ],
+            "test_start_sample": [
+              3456,
+              3584,
+              3712,
+              3840,
+              3968,
+              4096,
+              4224,
+              4352,
+              4480,
+              4608,
+              4736,
+              4864,
+              4992,
+              5248,
+              5376,
+              5504,
+              5632,
+              5760,
+              6016,
+              6144,
+              6272,
+              6400
+            ],
+            "test_super_block_id": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "train_indices_hash": "3f0740f4c7ec"
+          },
+          "roc_auc": 0.5,
+          "sensitivity": 0.0,
+          "specificity": 1.0,
+          "subject_id": "2",
+          "y_pred": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "y_proba": [
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231,
+            0.4230769230769231
+          ],
+          "y_true": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 0.5,
+          "confusion_matrix": [
+            [
+              19,
+              0
+            ],
+            [
+              25,
+              0
+            ]
+          ],
+          "macro_f1": 0.30158730158730157,
+          "n_positive": 25,
+          "n_test": 44,
+          "provenance": {
+            "n_train": 56,
+            "test_indices_hash": "187168a64755",
+            "test_native_block_id": [
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              16,
+              16,
+              16,
+              16
+            ],
+            "test_start_sample": [
+              6656,
+              6784,
+              6912,
+              7040,
+              7168,
+              7296,
+              7424,
+              7552,
+              7680,
+              7808,
+              7936,
+              8064,
+              8192,
+              8320,
+              8448,
+              8576,
+              8704,
+              8832,
+              9088,
+              9216,
+              9344,
+              9472,
+              9600,
+              9728,
+              9856,
+              9984,
+              10112,
+              10240,
+              10368,
+              10496,
+              10624,
+              10752,
+              10880,
+              11136,
+              11264,
+              11392,
+              11520,
+              11648,
+              11776,
+              11904,
+              12160,
+              12288,
+              12416,
+              12544
+            ],
+            "test_super_block_id": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            "train_indices_hash": "b8c84a49fff4"
+          },
+          "roc_auc": 0.5,
+          "sensitivity": 0.0,
+          "specificity": 1.0,
+          "subject_id": "3",
+          "y_pred": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "y_proba": [
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715,
+            0.35714285714285715
+          ],
+          "y_true": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 0.0,
+          "confusion_matrix": [
+            [
+              0,
+              14
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 0.0,
+          "n_positive": 0,
+          "n_test": 14,
+          "provenance": {
+            "n_train": 86,
+            "test_indices_hash": "f2b19c776e1e",
+            "test_native_block_id": [
+              18,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              22,
+              22,
+              22,
+              22
+            ],
+            "test_start_sample": [
+              12800,
+              13056,
+              13184,
+              13312,
+              13440,
+              13568,
+              13696,
+              13824,
+              13952,
+              14080,
+              14336,
+              14464,
+              14592,
+              14720
+            ],
+            "test_super_block_id": [
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            "train_indices_hash": "de38531c1914"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 0.0,
+          "subject_id": "4",
+          "y_pred": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "y_proba": [
+            0.5232558139534884,
+            0.5232558139534884,
+            0.5232558139534884,
+            0.5232558139534884,
+            0.5232558139534884,
+            0.5232558139534884,
+            0.5232558139534884,
+            0.5232558139534884,
+            0.5232558139534884,
+            0.5232558139534884,
+            0.5232558139534884,
+            0.5232558139534884,
+            0.5232558139534884,
+            0.5232558139534884
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "pooled_descriptive_metrics": {
+        "_warning": "Descriptive only. Pools correlated epochs across subjects and treats them as independent. Not the inferential result.",
+        "balanced_accuracy": 0.37272727272727274,
+        "confusion_matrix": [
+          [
+            41,
+            14
+          ],
+          [
+            45,
+            0
+          ]
+        ],
+        "macro_f1": 0.2907801418439716,
+        "n_positive": 45,
+        "n_test": 100,
+        "roc_auc": 0.3197979797979798,
+        "sensitivity": 0.0,
+        "specificity": 0.7454545454545455
+      },
+      "subject_bootstrap_ci": {
+        "balanced_accuracy": {
+          "hi": 0.5,
+          "level": 0.95,
+          "lo": 0.2,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 5,
+          "point": 0.4
+        },
+        "macro_f1": {
+          "hi": 0.3744875008032903,
+          "level": 0.95,
+          "lo": 0.12307692307692308,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 5,
+          "point": 0.2685664481717113
+        },
+        "roc_auc": {
+          "hi": 0.5,
+          "level": 0.95,
+          "lo": 0.5,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 4,
+          "point": 0.5
+        }
+      },
+      "subject_mean": {
+        "balanced_accuracy": {
+          "mean": 0.4,
+          "median": 0.5,
+          "n_above_chance": 0,
+          "n_subjects": 5,
+          "std": 0.22360679774997896
+        },
+        "macro_f1": {
+          "mean": 0.2685664481717113,
+          "median": 0.3076923076923077,
+          "n_above_chance": 0,
+          "n_subjects": 5,
+          "std": 0.15805959306021414
+        },
+        "roc_auc": {
+          "mean": 0.5,
+          "median": 0.5,
+          "n_above_chance": 0,
+          "n_subjects": 4,
+          "std": 0.0
+        }
+      }
+    },
+    "fold_class_summary": [
+      {
+        "is_both_classes": true,
+        "n_closed": 5,
+        "n_open": 4,
+        "n_test": 9,
+        "super_block_id": 0
+      },
+      {
+        "is_both_classes": true,
+        "n_closed": 3,
+        "n_open": 8,
+        "n_test": 11,
+        "super_block_id": 1
+      },
+      {
+        "is_both_classes": true,
+        "n_closed": 12,
+        "n_open": 10,
+        "n_test": 22,
+        "super_block_id": 2
+      },
+      {
+        "is_both_classes": true,
+        "n_closed": 25,
+        "n_open": 19,
+        "n_test": 44,
+        "super_block_id": 3
+      },
+      {
+        "is_both_classes": false,
+        "n_closed": 0,
+        "n_open": 14,
+        "n_test": 14,
+        "super_block_id": 4
+      }
+    ],
+    "grouping_rule_description": "Contiguous native blocks partitioned into fixed-size super-blocks of MERGED_BLOCK_SIZE = 4. Rule declared in source before evaluation; not tuned on results.",
+    "grouping_rule_prespecified": true,
+    "n_folds_total": 5,
+    "n_folds_with_both_classes": 4,
+    "primary_model": {
+      "config": {
+        "dummy_strategy": null,
+        "n_boot": 10000,
+        "n_features": 1792,
+        "n_samples": 100,
+        "n_subjects": 5,
+        "param_grid": {},
+        "predictions_persisted": true,
+        "random_state": 42,
+        "tuned": false
+      },
+      "folds": [
+        {
+          "balanced_accuracy": 0.675,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.775,
+            "dummy_uniform_balanced_accuracy": 0.475,
+            "majority_class_accuracy": 0.5555555555555556,
+            "n_test": 9,
+            "positive_rate_test": 0.5555555555555556,
+            "positive_rate_train": 0.43956043956043955
+          },
+          "confusion_matrix": [
+            [
+              3,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "macro_f1": 0.6666666666666666,
+          "n_positive": 5,
+          "n_test": 9,
+          "provenance": {
+            "n_train": 91,
+            "test_indices_hash": "2c20f0b4a4a0",
+            "test_native_block_id": [
+              0,
+              1,
+              1,
+              1,
+              1,
+              2,
+              2,
+              2,
+              3
+            ],
+            "test_start_sample": [
+              0,
+              256,
+              384,
+              512,
+              640,
+              896,
+              1024,
+              1152,
+              1408
+            ],
+            "test_super_block_id": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "train_indices_hash": "b8062a74858c"
+          },
+          "roc_auc": 0.6500000000000001,
+          "sensitivity": 0.6,
+          "specificity": 0.75,
+          "subject_id": "0",
+          "y_pred": [
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "y_proba": [
+            0.13890825599250053,
+            0.0635502544433266,
+            0.9498109642662567,
+            0.8088569731879092,
+            0.5659412389011279,
+            0.9033234567835863,
+            0.10056481664255348,
+            0.133798330958548,
+            0.21986006363828184
+          ],
+          "y_true": [
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "balanced_accuracy": 0.35416666666666663,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.125,
+            "dummy_uniform_balanced_accuracy": 0.5416666666666666,
+            "majority_class_accuracy": 0.7272727272727273,
+            "n_test": 11,
+            "positive_rate_test": 0.2727272727272727,
+            "positive_rate_train": 0.47191011235955055
+          },
+          "confusion_matrix": [
+            [
+              3,
+              5
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "macro_f1": 0.3418803418803419,
+          "n_positive": 3,
+          "n_test": 11,
+          "provenance": {
+            "n_train": 89,
+            "test_indices_hash": "9a20c959627e",
+            "test_native_block_id": [
+              4,
+              4,
+              4,
+              4,
+              5,
+              5,
+              5,
+              6,
+              8,
+              8,
+              8
+            ],
+            "test_start_sample": [
+              1664,
+              1792,
+              1920,
+              2048,
+              2176,
+              2304,
+              2432,
+              2688,
+              2944,
+              3072,
+              3200
+            ],
+            "test_super_block_id": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "train_indices_hash": "69e48720d358"
+          },
+          "roc_auc": 0.3333333333333333,
+          "sensitivity": 0.3333333333333333,
+          "specificity": 0.375,
+          "subject_id": "1",
+          "y_pred": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0
+          ],
+          "y_proba": [
+            0.552121384571715,
+            0.9975112381503771,
+            0.9747899932398689,
+            0.9999476034463126,
+            0.20849535869163702,
+            0.1411154717878665,
+            0.6624550167565388,
+            0.19908304154843476,
+            0.2793683136214753,
+            0.6527666303405119,
+            0.03621215134990618
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 0.5416666666666667,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.325,
+            "dummy_uniform_balanced_accuracy": 0.5583333333333333,
+            "majority_class_accuracy": 0.5454545454545454,
+            "n_test": 22,
+            "positive_rate_test": 0.5454545454545454,
+            "positive_rate_train": 0.4230769230769231
+          },
+          "confusion_matrix": [
+            [
+              5,
+              5
+            ],
+            [
+              5,
+              7
+            ]
+          ],
+          "macro_f1": 0.5416666666666667,
+          "n_positive": 12,
+          "n_test": 22,
+          "provenance": {
+            "n_train": 78,
+            "test_indices_hash": "185be15f3da7",
+            "test_native_block_id": [
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              10,
+              10,
+              10,
+              10,
+              10,
+              10,
+              11,
+              11,
+              11,
+              11,
+              11,
+              12,
+              12,
+              12,
+              12
+            ],
+            "test_start_sample": [
+              3456,
+              3584,
+              3712,
+              3840,
+              3968,
+              4096,
+              4224,
+              4352,
+              4480,
+              4608,
+              4736,
+              4864,
+              4992,
+              5248,
+              5376,
+              5504,
+              5632,
+              5760,
+              6016,
+              6144,
+              6272,
+              6400
+            ],
+            "test_super_block_id": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "train_indices_hash": "3f0740f4c7ec"
+          },
+          "roc_auc": 0.5833333333333334,
+          "sensitivity": 0.5833333333333334,
+          "specificity": 0.5,
+          "subject_id": "2",
+          "y_pred": [
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "y_proba": [
+            0.06274003689507493,
+            0.6916584866686157,
+            0.5385578228305122,
+            0.6193537869318462,
+            0.8588183343498047,
+            0.7617707076687527,
+            0.00010150197895387603,
+            0.6029517553282521,
+            0.5534297145779334,
+            0.011186026868647501,
+            0.9996322956575538,
+            0.5325486116866681,
+            0.5693520348111917,
+            0.7216280317064606,
+            0.2899715762269972,
+            0.014181103374185537,
+            0.9035794877576833,
+            0.1728985835035766,
+            0.04551112012542759,
+            0.29166664482051113,
+            0.020030177459124186,
+            0.30866623090667716
+          ],
+          "y_true": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 0.5673684210526315,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.6473684210526316,
+            "dummy_uniform_balanced_accuracy": 0.33789473684210525,
+            "majority_class_accuracy": 0.5681818181818182,
+            "n_test": 44,
+            "positive_rate_test": 0.5681818181818182,
+            "positive_rate_train": 0.35714285714285715
+          },
+          "confusion_matrix": [
+            [
+              17,
+              2
+            ],
+            [
+              19,
+              6
+            ]
+          ],
+          "macro_f1": 0.4909090909090909,
+          "n_positive": 25,
+          "n_test": 44,
+          "provenance": {
+            "n_train": 56,
+            "test_indices_hash": "187168a64755",
+            "test_native_block_id": [
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              14,
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              15,
+              16,
+              16,
+              16,
+              16
+            ],
+            "test_start_sample": [
+              6656,
+              6784,
+              6912,
+              7040,
+              7168,
+              7296,
+              7424,
+              7552,
+              7680,
+              7808,
+              7936,
+              8064,
+              8192,
+              8320,
+              8448,
+              8576,
+              8704,
+              8832,
+              9088,
+              9216,
+              9344,
+              9472,
+              9600,
+              9728,
+              9856,
+              9984,
+              10112,
+              10240,
+              10368,
+              10496,
+              10624,
+              10752,
+              10880,
+              11136,
+              11264,
+              11392,
+              11520,
+              11648,
+              11776,
+              11904,
+              12160,
+              12288,
+              12416,
+              12544
+            ],
+            "test_super_block_id": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            "train_indices_hash": "b8c84a49fff4"
+          },
+          "roc_auc": 0.5663157894736842,
+          "sensitivity": 0.24,
+          "specificity": 0.8947368421052632,
+          "subject_id": "3",
+          "y_pred": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "y_proba": [
+            0.00020931207239482342,
+            0.009866797958090404,
+            0.27623804023025583,
+            0.06846518321438018,
+            0.39379739000541397,
+            0.12246344404939248,
+            0.8633257545296579,
+            0.9827827737822403,
+            0.6349930112122864,
+            0.6800878519261011,
+            0.1535281643073226,
+            0.8134794948260186,
+            0.07069269848000848,
+            0.5564445295898472,
+            0.3793735020822484,
+            0.018662126692423796,
+            0.03196107863773076,
+            0.4315298268762766,
+            0.14855029182577234,
+            0.2319369373587967,
+            0.8757500647800315,
+            0.09545354980406413,
+            0.8792383503793411,
+            0.26495903138243315,
+            0.02059939785387576,
+            0.35602081571140687,
+            0.3138583340977527,
+            0.027035211577066426,
+            0.10562372527906543,
+            0.4644520558347632,
+            0.00017017252963369498,
+            0.06840211110320835,
+            0.04966621385158571,
+            0.2083971500138012,
+            0.4187583592268643,
+            0.029224503920797496,
+            0.165550108821879,
+            0.3982226755955189,
+            0.01840815585886221,
+            0.2918769801535825,
+            0.04189226125824859,
+            0.4053382832856273,
+            0.40635465489470535,
+            0.012486162568459807
+          ],
+          "y_true": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "balanced_accuracy": 0.14285714285714285,
+          "baselines": {
+            "dummy_stratified_balanced_accuracy": 0.5714285714285714,
+            "dummy_uniform_balanced_accuracy": 0.7857142857142857,
+            "majority_class_accuracy": 1.0,
+            "n_test": 14,
+            "positive_rate_test": 0.0,
+            "positive_rate_train": 0.5232558139534884
+          },
+          "confusion_matrix": [
+            [
+              2,
+              12
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 0.125,
+          "n_positive": 0,
+          "n_test": 14,
+          "provenance": {
+            "n_train": 86,
+            "test_indices_hash": "f2b19c776e1e",
+            "test_native_block_id": [
+              18,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              22,
+              22,
+              22,
+              22
+            ],
+            "test_start_sample": [
+              12800,
+              13056,
+              13184,
+              13312,
+              13440,
+              13568,
+              13696,
+              13824,
+              13952,
+              14080,
+              14336,
+              14464,
+              14592,
+              14720
+            ],
+            "test_super_block_id": [
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            "train_indices_hash": "de38531c1914"
+          },
+          "roc_auc": null,
+          "sensitivity": null,
+          "specificity": 0.14285714285714285,
+          "subject_id": "4",
+          "y_pred": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "y_proba": [
+            0.8215249278901414,
+            0.7628364863764628,
+            0.9885862019607415,
+            0.5432847898745375,
+            0.7250743886604252,
+            0.16697195011750962,
+            0.94585317440393,
+            0.6129801149460959,
+            0.6759910941782661,
+            0.6428669063719252,
+            0.5454217321428259,
+            0.7568354942229927,
+            0.8358080059840434,
+            0.45658386322953187
+          ],
+          "y_true": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "pooled_descriptive_metrics": {
+        "_warning": "Descriptive only. Pools correlated epochs across subjects and treats them as independent. Not the inferential result.",
+        "balanced_accuracy": 0.4616161616161616,
+        "confusion_matrix": [
+          [
+            30,
+            25
+          ],
+          [
+            28,
+            17
+          ]
+        ],
+        "macro_f1": 0.4608890245142916,
+        "n_positive": 45,
+        "n_test": 100,
+        "roc_auc": 0.4513131313131313,
+        "sensitivity": 0.37777777777777777,
+        "specificity": 0.5454545454545454
+      },
+      "subject_bootstrap_ci": {
+        "balanced_accuracy": {
+          "hi": 0.605280701754386,
+          "level": 0.95,
+          "lo": 0.27002130325814533,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 5,
+          "point": 0.4562117794486215
+        },
+        "macro_f1": {
+          "hi": 0.5815151515151515,
+          "level": 0.95,
+          "lo": 0.2551282051282051,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 5,
+          "point": 0.4332245532245532
+        },
+        "roc_auc": {
+          "hi": 0.6290789473684212,
+          "level": 0.95,
+          "lo": 0.3958333333333333,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 4,
+          "point": 0.5332456140350877
+        }
+      },
+      "subject_mean": {
+        "balanced_accuracy": {
+          "mean": 0.4562117794486215,
+          "median": 0.5416666666666667,
+          "n_above_chance": 3,
+          "n_subjects": 5,
+          "std": 0.2098397933485385
+        },
+        "macro_f1": {
+          "mean": 0.4332245532245532,
+          "median": 0.4909090909090909,
+          "n_above_chance": 2,
+          "n_subjects": 5,
+          "std": 0.20792339835896476
+        },
+        "roc_auc": {
+          "mean": 0.5332456140350877,
+          "median": 0.5748245614035088,
+          "n_above_chance": 3,
+          "n_subjects": 4,
+          "std": 0.1380808009167823
+        }
+      }
+    },
+    "super_block_size_native_blocks": 4
   },
   "naive_random_split": {
     "_warning": "Leaky by construction: epochs from the same subject appear in both train and test. Included to quantify inflation.",
@@ -1817,88 +5300,102 @@
     "RandomForest(300)": {
       "subject_bootstrap_ci": {
         "balanced_accuracy": {
-          "hi": 0.6482456140350877,
+          "hi": 0.5700701754385964,
           "level": 0.95,
-          "lo": 0.3281119465329992,
+          "lo": 0.4342857142857143,
           "method": "percentile bootstrap, resampling subjects",
-          "n_subjects": 19,
-          "point": 0.48734335839598997
+          "n_subjects": 5,
+          "point": 0.5131654135338345
         },
         "macro_f1": {
-          "hi": 0.553447966507177,
+          "hi": 0.5300710751237067,
           "level": 0.95,
-          "lo": 0.2453007518796993,
+          "lo": 0.34960134116706143,
           "method": "percentile bootstrap, resampling subjects",
-          "n_subjects": 19,
-          "point": 0.3921679197994987
+          "n_subjects": 5,
+          "point": 0.44842635241312534
         },
-        "roc_auc": null
+        "roc_auc": {
+          "hi": 0.6145833333333333,
+          "level": 0.95,
+          "lo": 0.48854166666666665,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 4,
+          "point": 0.5521600877192983
+        }
       },
       "subject_mean": {
         "balanced_accuracy": {
-          "mean": 0.48734335839598997,
-          "median": 0.4666666666666667,
-          "n_above_chance": 8,
-          "n_subjects": 19,
-          "std": 0.3639938114266236
+          "mean": 0.5131654135338345,
+          "median": 0.5336842105263158,
+          "n_above_chance": 4,
+          "n_subjects": 5,
+          "std": 0.09154694281996137
         },
         "macro_f1": {
-          "mean": 0.3921679197994987,
-          "median": 0.3181818181818182,
-          "n_above_chance": 4,
-          "n_subjects": 19,
-          "std": 0.3512197281958615
+          "mean": 0.44842635241312534,
+          "median": 0.4905263157894737,
+          "n_above_chance": 2,
+          "n_subjects": 5,
+          "std": 0.11688222183466349
         },
         "roc_auc": {
-          "mean": null,
-          "median": null,
-          "n_above_chance": 0,
-          "n_subjects": 0,
-          "std": null
+          "mean": 0.5521600877192983,
+          "median": 0.5668201754385964,
+          "n_above_chance": 3,
+          "n_subjects": 4,
+          "std": 0.07950197796668691
         }
       }
     },
     "SVM-RBF": {
       "subject_bootstrap_ci": {
         "balanced_accuracy": {
-          "hi": 0.685970133667502,
+          "hi": 0.6815,
           "level": 0.95,
-          "lo": 0.37593984962406013,
+          "lo": 0.4014285714285714,
           "method": "percentile bootstrap, resampling subjects",
-          "n_subjects": 19,
-          "point": 0.5341269841269841
+          "n_subjects": 5,
+          "point": 0.5453095238095237
         },
         "macro_f1": {
-          "hi": 0.570830292643373,
+          "hi": 0.6414826302729528,
           "level": 0.95,
-          "lo": 0.27213622291021666,
+          "lo": 0.3203749655362559,
           "method": "percentile bootstrap, resampling subjects",
-          "n_subjects": 19,
-          "point": 0.4161838419578357
+          "n_subjects": 5,
+          "point": 0.4793794556697783
         },
-        "roc_auc": null
+        "roc_auc": {
+          "hi": 0.65625,
+          "level": 0.95,
+          "lo": 0.38414473684210526,
+          "method": "percentile bootstrap, resampling subjects",
+          "n_subjects": 4,
+          "point": 0.5153947368421052
+        }
       },
       "subject_mean": {
         "balanced_accuracy": {
-          "mean": 0.5341269841269841,
-          "median": 0.5,
-          "n_above_chance": 8,
-          "n_subjects": 19,
-          "std": 0.35296289951213683
+          "mean": 0.5453095238095237,
+          "median": 0.575,
+          "n_above_chance": 4,
+          "n_subjects": 5,
+          "std": 0.17367663706739184
         },
         "macro_f1": {
-          "mean": 0.4161838419578357,
-          "median": 0.3333333333333333,
-          "n_above_chance": 4,
-          "n_subjects": 19,
-          "std": 0.34120816993030717
+          "mean": 0.4793794556697783,
+          "median": 0.5089285714285714,
+          "n_above_chance": 3,
+          "n_subjects": 5,
+          "std": 0.2091750487251021
         },
         "roc_auc": {
-          "mean": null,
-          "median": null,
-          "n_above_chance": 0,
-          "n_subjects": 0,
-          "std": null
+          "mean": 0.5153947368421052,
+          "median": 0.5057894736842106,
+          "n_above_chance": 2,
+          "n_subjects": 4,
+          "std": 0.15017578872178672
         }
       }
     }

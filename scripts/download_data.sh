@@ -12,7 +12,9 @@ base="https://physionet.org/files/eegmmidb/1.0.0"
 for s in $(seq -w 1 10); do
   mkdir -p "data/physionet/S0$s"
   for r in 04 08 12; do
-    curl -sfL --max-time 30 -o "data/physionet/S0$s/S0${s}R$r.edf" "$base/S0$s/S0${s}R$r.edf" || echo "skip S0${s}R$r"
+    # 30s was too aggressive for links throttled by PhysioNet; a 2 min imagery
+    # run at 160 Hz is ~2 MB and needs longer than 30 s from many networks.
+    curl -sfL --max-time 300 -o "data/physionet/S0$s/S0${s}R$r.edf" "$base/S0$s/S0${s}R$r.edf" || echo "skip S0${s}R$r"
   done
 done
 echo "done."

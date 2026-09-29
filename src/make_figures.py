@@ -68,24 +68,42 @@ expand = p1["expanding_window"]
 expand_ci = expand["subject_bootstrap_ci"]["balanced_accuracy"]
 expand_folds = expand["folds"]
 
-lobo = p1["leave_one_block_out"]
+merged = p1["leave_one_merged_block_out"]["primary_model"]
+merged_ci = merged["subject_bootstrap_ci"]["balanced_accuracy"]
+merged_scores = [f["balanced_accuracy"] for f in merged["folds"]]
+merged_dummy = (
+    p1["leave_one_merged_block_out"]["dummy_prior_diagnostic"]
+    ["subject_bootstrap_ci"]["balanced_accuracy"]
+)
+
+# Retained diagnostic; not the primary group protocol.
+lobo = p1["leave_one_block_out_diagnostic"]["primary_model"]
 lobo_ci = lobo["subject_bootstrap_ci"]["balanced_accuracy"]
 block_scores = [f["balanced_accuracy"] for f in lobo["folds"]]
 
 fig, (a1, a2) = plt.subplots(1, 2, figsize=(12, 4.6))
 
-# Left: four protocols with per-split majority baseline overlaid.
+# Left: five leakage-aware protocols with per-split majority baseline where
+# meaningful. Merged-LOBO is the primary group protocol; native-LOBO is
+# retained only as a diagnostic (single-class folds).
 protocol_labels = [
     "Naive random\nsplit (leaky)",
     f"Chronological\nholdout\n(gap = {chrono_gap})",
     "Expanding-\nwindow",
-    "Leave-one-\nblock-out",
+    "Leave-one-\nmerged-block-out\n(primary)",
+    "Leave-one-\nnative-block-out\n(diagnostic)",
 ]
 protocol_scores = [naive_score, chrono_score,
-                   expand_ci["point"], lobo_ci["point"]]
+                   expand_ci["point"], merged_ci["point"], lobo_ci["point"]]
 protocol_errs = np.array([
-    [0, 0, expand_ci["point"] - expand_ci["lo"], lobo_ci["point"] - lobo_ci["lo"]],
-    [0, 0, expand_ci["hi"] - expand_ci["point"], lobo_ci["hi"] - lobo_ci["point"]],
+    [0, 0,
+     expand_ci["point"] - expand_ci["lo"],
+     merged_ci["point"] - merged_ci["lo"],
+     lobo_ci["point"] - lobo_ci["lo"]],
+    [0, 0,
+     expand_ci["hi"] - expand_ci["point"],
+     merged_ci["hi"] - merged_ci["point"],
+     lobo_ci["hi"] - lobo_ci["point"]],
 ])
 # Majority baseline is only meaningful for splits with more than one class in
 # the test set. Naive and chronological have both classes; LOBO and
@@ -93,22 +111,24 @@ protocol_errs = np.array([
 # baseline is trivially 1.0 and is omitted rather than plotted misleadingly.
 majority_naive = naive_baselines["majority_class_accuracy"]
 majority_chrono = chrono_baselines["majority_class_accuracy"]
-bar_colors = [HOT, INK, INK, INK]
+bar_colors = [HOT, INK, INK, INK, GREY]
 
 bars = a1.bar(protocol_labels, protocol_scores, yerr=protocol_errs,
               capsize=5, color=bar_colors, zorder=2)
-a1.scatter([0, 1], [majority_naive, majority_chrono],
+a1.scatter([0, 1, 3], [majority_naive, majority_chrono, merged_dummy["point"]],
            marker="_", s=1600, color=GREY, linewidths=2.5, zorder=3,
-           label="majority-class baseline")
+           label="baseline (majority or dummy prior)")
 a1.text(1, majority_chrono + 0.02, f"{majority_chrono:.2f}", ha="center",
         fontsize=8.5, color=GREY)
 a1.text(0, majority_naive + 0.02, f"{majority_naive:.2f}", ha="center",
         fontsize=8.5, color=GREY)
-# For the single-class-fold protocols, note that AUC and majority are
-# uninformative rather than plotting a trivial 1.0.
+a1.text(3, merged_dummy["point"] + 0.02, f"{merged_dummy['point']:.2f}",
+        ha="center", fontsize=8.5, color=GREY)
+# Expanding-window and native-LOBO: single-class fold structure makes the
+# majority baseline trivially 1.0, so we annotate rather than plot it.
 a1.text(2, 0.94, "single-class\nfolds", ha="center",
         fontsize=7.5, style="italic", color=GREY)
-a1.text(3, 0.94, "single-class\nfolds", ha="center",
+a1.text(4, 0.94, "single-class\nfolds", ha="center",
         fontsize=7.5, style="italic", color=GREY)
 
 a1.axhline(0.5, ls="--", color=HOT, lw=1.3, zorder=1)
@@ -125,24 +145,40 @@ a1.text(0, naive_score / 2, "LEAKED", ha="center", color="white",
         fontweight="bold", rotation=90, fontsize=9)
 a1.legend(frameon=False, fontsize=8, loc="upper left")
 
-# Right panel: the per-block spread that LOBO's mean averages over.
-jitter = rng.uniform(-0.09, 0.09, len(block_scores))
-a2.fill_between([-0.16, 0.16], lobo_ci["lo"], lobo_ci["hi"],
-                color=HOT, alpha=0.12, zorder=1)
-a2.hlines(lobo_ci["point"], -0.16, 0.16, color=HOT, lw=2.2, zorder=4)
-a2.scatter(jitter, block_scores, s=45, color=INK, alpha=0.75, zorder=3)
+# Right panel: per-merged-block spread with the dummy-prior comparison so
+# the reader can see that any pooled-metric anomaly reproduces under a
+# classifier that learns nothing.
+jitter = rng.uniform(-0.09, 0.09, len(merged_scores))
+a2.fill_between([-0.16, 0.16], merged_ci["lo"], merged_ci["hi"],
+                color=INK, alpha=0.12, zorder=1)
+a2.hlines(merged_ci["point"], -0.16, 0.16, color=INK, lw=2.2, zorder=4)
+a2.scatter(jitter, merged_scores, s=55, color=INK, alpha=0.85, zorder=3,
+           label="primary model")
+dummy_jitter = rng.uniform(-0.09, 0.09,
+                           len([f["balanced_accuracy"]
+                                for f in p1["leave_one_merged_block_out"]
+                                ["dummy_prior_diagnostic"]["folds"]]))
+dummy_scores = [f["balanced_accuracy"]
+                for f in p1["leave_one_merged_block_out"]
+                ["dummy_prior_diagnostic"]["folds"]]
+a2.scatter(dummy_jitter + 0.02, dummy_scores, s=35, color=GREY,
+           marker="s", alpha=0.9, zorder=3, label="DummyClassifier(prior)")
 a2.axhline(0.5, ls="--", color=HOT, lw=1.3)
 a2.text(0.33, 0.515, "chance", color=HOT, fontsize=8.5, ha="right")
 a2.set_xlim(-0.35, 0.35)
 a2.set_xticks([])
 a2.set_ylim(-0.08, 1.08)
 a2.set_ylabel("balanced accuracy")
-a2.set_title(f"Per-block LOBO scores (n = {len(block_scores)})\n"
-             f"mean {lobo_ci['point']:.3f}, 95% CI "
-             f"[{lobo_ci['lo']:.3f}, {lobo_ci['hi']:.3f}]",
-             fontsize=10.5, loc="left")
-a2.text(0, -0.03, "each block is single-class, so AUC is undefined",
+a2.set_title(
+    f"Per-fold merged-LOBO scores (n = {len(merged_scores)})\n"
+    f"mean {merged_ci['point']:.3f}, 95% CI "
+    f"[{merged_ci['lo']:.3f}, {merged_ci['hi']:.3f}]",
+    fontsize=10.5, loc="left",
+)
+a2.text(0, -0.03,
+        "super-block size = 4 native blocks (pre-specified)",
         ha="center", fontsize=8.5, style="italic", color=GREY)
+a2.legend(frameon=False, fontsize=8, loc="upper right")
 
 # Autocorrelation subtitle: makes explicit that gap=0 was measured, not chosen.
 ac = p1["temporal_dependence"]["lag_report"]
@@ -163,10 +199,11 @@ plt.close(fig)
 # ======================================================================
 # FIGURE 2: Phase 2, within versus cross subject, with per-subject points
 # ======================================================================
-w_ci = p2["within_subject"]["subject_bootstrap_ci"]
+w_ci = p2["within_subject_shuffled"]["subject_bootstrap_ci"]
 c_ci = p2["cross_subject"]["subject_bootstrap_ci"]
-w_folds = p2["within_subject"]["folds"]
+w_folds = p2["within_subject_shuffled"]["folds"]
 c_folds = p2["cross_subject"]["folds"]
+loro = p2.get("within_subject_leave_one_run_out")
 
 fig, ax = plt.subplots(figsize=(7.8, 4.8))
 x = np.arange(2)
@@ -211,8 +248,9 @@ for xi, ci in zip(x, [w_ci, c_ci]):
     ax.text(xi + w / 2, 0.03, f"{ci['roc_auc']['point']:.3f}",
             ha="center", fontweight="bold", fontsize=9, color="white")
 
-n_above = p2["within_subject"]["subject_mean"]["balanced_accuracy"]["n_above_chance"]
-ax.text(0, 0.795, f"{n_above}/10 subjects above chance",
+n_above = p2["within_subject_shuffled"]["subject_mean"][
+    "balanced_accuracy"]["n_above_half_descriptive_count"]
+ax.text(0, 0.795, f"{n_above}/10 subjects above 0.5 (descriptive count)",
         ha="center", fontsize=8.5, style="italic", color=INK)
 
 fig.tight_layout()
@@ -278,9 +316,12 @@ a1.barh(range(len(f1names))[::-1], f1vals, color=f1cols)
 a1.set_yticks(range(len(f1names))[::-1])
 a1.set_yticklabels(f1names, fontsize=9)
 a1.set_xlabel("permutation importance (balanced accuracy)")
-a1.set_title(f"Phase 1: attribution on a model scoring {chrono_score:.3f}\n"
-             f"below chance, so this is not evidence about physiology",
-             fontsize=10.5, loc="left", color=HOT)
+a1.set_title(
+    f"Phase 1: attribution on a model scoring "
+    f"{merged_ci['point']:.3f} on merged-LOBO\n"
+    "no signal to attribute, so this is not evidence about physiology",
+    fontsize=10.5, loc="left", color=HOT,
+)
 a2.barh(range(len(f2names))[::-1], f2vals, color=f2cols)
 a2.set_yticks(range(len(f2names))[::-1])
 a2.set_yticklabels(f2names, fontsize=9)
@@ -305,7 +346,9 @@ plt.close(fig)
 print("figures written to reports/figures/")
 print(f"  fig1 from phase1_results.json: naive={naive_score:.3f} "
       f"chrono={chrono_score:.3f} expand={expand_ci['point']:.3f} "
-      f"lobo={lobo_ci['point']:.3f} [{lobo_ci['lo']:.3f}, {lobo_ci['hi']:.3f}]")
+      f"merged-LOBO={merged_ci['point']:.3f} "
+      f"[{merged_ci['lo']:.3f}, {merged_ci['hi']:.3f}]  "
+      f"native-LOBO={lobo_ci['point']:.3f} (diagnostic)")
 print(f"  fig2 from phase2_results.json: within balAcc="
       f"{w_ci['balanced_accuracy']['point']:.3f} | cross balAcc="
       f"{c_ci['balanced_accuracy']['point']:.3f}")

@@ -53,6 +53,7 @@ from src.core.evaluation import (
     evaluate_expanding_window,
     evaluate_loso,
     evaluate_naive_split,
+    merged_block_groups,
     per_split_baselines,
 )
 from src.core.features import (
@@ -79,6 +80,34 @@ PRIMARY_NAME = "LogisticRegression(C=1.0, balanced)"
 CHRONO_TRAIN_FRAC = 0.70
 AUTOCORR_LAGS = (1, 2, 3, 4, 5)
 AUTOCORR_THRESHOLD = 0.30            # gap chosen at first lag with |ac| < 0.30
+
+# ---------------------------------------------------------------------------
+# Prespecified merged-block grouping rule (2026-09 audit, Task 4)
+#
+# The single continuous recording alternates eyes-open and eyes-closed
+# stretches, so every native contiguous-label block is single-class. Per-fold
+# AUC is undefined and pooled AUC from separately-trained folds is a known
+# splitting artefact (each fold model sees a different class prior).
+#
+# To produce a leakage-safe temporal fold whose held-out set can contain both
+# classes we merge consecutive native blocks into super-blocks of a fixed
+# size. Rule (declared before any evaluation):
+#
+#     MERGED_BLOCK_SIZE = 4  native blocks per super-block.
+#
+# Chosen for two structural reasons:
+#   (a) with N = 19 native blocks we get ceil(19 / 4) = 5 super-blocks,
+#       enough folds for a percentile bootstrap over folds;
+#   (b) 4 blocks span at least one full open/closed transition regardless of
+#       where the block boundaries fall, so each super-block covers both
+#       classes.
+#
+# The size is not tuned on results. We report merged-LOBO scores at this
+# fixed size and separately show DummyClassifier(strategy="prior") on the
+# same splits so the reader can see how much of any pooled artefact
+# survives when nothing is being learned.
+# ---------------------------------------------------------------------------
+MERGED_BLOCK_SIZE = 4
 
 
 def make_primary(channels, n_times):
@@ -285,23 +314,104 @@ def main():
     print(f"  gap_groups           {expanding['config']['gap_groups']}")
 
     # ------------------------------------------------------------------
-    # Leave-one-block-out (retained supporting check)
+    # Leave-one-merged-block-out (Task 4 primary group protocol)
     # ------------------------------------------------------------------
-    print("\n=== LEAVE-ONE-BLOCK-OUT (retained supporting check) ===")
+    print(f"\n=== LEAVE-ONE-MERGED-BLOCK-OUT "
+          f"(super-block size = {MERGED_BLOCK_SIZE} native blocks, "
+          f"pre-specified) ===")
+    super_blocks = merged_block_groups(blocks, MERGED_BLOCK_SIZE)
+    unique_super = np.unique(super_blocks)
+    class_summary = []
+    for s in unique_super:
+        mask = super_blocks == s
+        n0 = int((y[mask] == 0).sum())
+        n1 = int((y[mask] == 1).sum())
+        class_summary.append({
+            "super_block_id": int(s),
+            "n_test": int(mask.sum()),
+            "n_open": n0,
+            "n_closed": n1,
+            "is_both_classes": bool(n0 > 0 and n1 > 0),
+        })
+        print(f"  super-block {int(s)}: n={int(mask.sum())}  "
+              f"open={n0} closed={n1}  both_classes="
+              f"{'yes' if n0 > 0 and n1 > 0 else 'NO'}")
+    n_both = sum(1 for c in class_summary if c["is_both_classes"])
+    print(f"  {n_both}/{len(class_summary)} folds contain both classes")
+
+    merged_lobo = evaluate_loso(
+        X, y, super_blocks, factory,
+        random_state=RANDOM_STATE,
+        sample_metadata={"start_sample": starts,
+                         "native_block_id": blocks,
+                         "super_block_id": super_blocks},
+        include_baselines=True,
+        persist_predictions=True,
+    )
+    _log_lobo_or_expanding("merged-LOBO", merged_lobo)
+
+    # DummyClassifier(strategy="prior") on the same splits: reproduces the
+    # pooled-metric artefact so it is not read as electrode drift.
+    dummy_merged = evaluate_loso(
+        X, y, super_blocks,
+        # factory unused when dummy_strategy is set; supply anything valid.
+        factory,
+        random_state=RANDOM_STATE,
+        sample_metadata={"start_sample": starts,
+                         "native_block_id": blocks,
+                         "super_block_id": super_blocks},
+        include_baselines=False,
+        persist_predictions=True,
+        dummy_strategy="prior",
+    )
+    print("  DummyClassifier(strategy='prior') on same merged splits:")
+    for m in ("balanced_accuracy", "macro_f1", "roc_auc"):
+        ci = dummy_merged["subject_bootstrap_ci"].get(m)
+        if ci is None:
+            print(f"    {m:20s} n/a")
+        else:
+            print(f"    {m:20s} {format_ci(ci)}")
+
+    # ------------------------------------------------------------------
+    # Leave-one-native-block-out (retained diagnostic; single-class folds)
+    # ------------------------------------------------------------------
+    print("\n=== LEAVE-ONE-NATIVE-BLOCK-OUT (diagnostic only, single-class "
+          "folds; do not read pooled AUC as signal) ===")
     lobo = evaluate_loso(
         X, y, blocks, factory,
         random_state=RANDOM_STATE,
         sample_metadata={"start_sample": starts, "block_id": blocks},
         include_baselines=True,
+        persist_predictions=True,
     )
-    _log_lobo_or_expanding("LOBO", lobo)
-    print("  note: each held-out block is single-class, so per-block AUC is "
-          "undefined and balanced accuracy collapses to that block's recall.")
+    _log_lobo_or_expanding("native-LOBO", lobo)
+    dummy_lobo = evaluate_loso(
+        X, y, blocks, factory,
+        random_state=RANDOM_STATE,
+        sample_metadata={"start_sample": starts, "block_id": blocks},
+        include_baselines=False,
+        persist_predictions=True,
+        dummy_strategy="prior",
+    )
+    print("  DummyClassifier(strategy='prior') on the same native splits:")
+    pooled_dummy_auc = dummy_lobo["pooled_descriptive_metrics"].get("roc_auc")
+    pooled_real_auc = lobo["pooled_descriptive_metrics"].get("roc_auc")
+    print(f"    pooled AUC (real primary model): "
+          f"{pooled_real_auc:.3f}" if pooled_real_auc is not None else
+          "    pooled AUC (real primary model): n/a")
+    print(f"    pooled AUC (dummy prior):        "
+          f"{pooled_dummy_auc:.3f}" if pooled_dummy_auc is not None else
+          "    pooled AUC (dummy prior):        n/a")
+    print("  Interpretation: the dummy is learning nothing, so any non-0.5 "
+          "pooled AUC here is a splitting artefact rather than electrode "
+          "drift.")
 
     # ------------------------------------------------------------------
-    # Secondary models under leave-one-block-out (unchanged from pre-audit)
+    # Secondary models under leave-one-merged-block-out (Task 4 primary
+    # group protocol; single-class native-LOBO retained above only as a
+    # labelled diagnostic).
     # ------------------------------------------------------------------
-    print("\n=== SECONDARY MODELS (leave-one-block-out, retained) ===")
+    print("\n=== SECONDARY MODELS (leave-one-merged-block-out) ===")
     secondary = {}
     for sname, model in [
         ("SVM-RBF", lambda: SVC(kernel="rbf", probability=True,
@@ -315,7 +425,7 @@ def main():
             ("scaler", StandardScaler()),
             ("model", m()),
         ])
-        res = evaluate_loso(X, y, blocks, f, random_state=RANDOM_STATE)
+        res = evaluate_loso(X, y, super_blocks, f, random_state=RANDOM_STATE)
         secondary[sname] = {
             "subject_mean": res["subject_mean"],
             "subject_bootstrap_ci": res["subject_bootstrap_ci"],
@@ -342,7 +452,32 @@ def main():
         "naive_random_split": naive,
         "chronological_holdout": chrono,
         "expanding_window": expanding,
-        "leave_one_block_out": lobo,
+        "leave_one_merged_block_out": {
+            "super_block_size_native_blocks": MERGED_BLOCK_SIZE,
+            "grouping_rule_prespecified": True,
+            "grouping_rule_description": (
+                "Contiguous native blocks partitioned into fixed-size "
+                "super-blocks of MERGED_BLOCK_SIZE = 4. Rule declared in "
+                "source before evaluation; not tuned on results."
+            ),
+            "fold_class_summary": class_summary,
+            "n_folds_with_both_classes": int(n_both),
+            "n_folds_total": int(len(class_summary)),
+            "primary_model": merged_lobo,
+            "dummy_prior_diagnostic": dummy_merged,
+        },
+        "leave_one_block_out_diagnostic": {
+            "note": (
+                "Retained only as a diagnostic. Each native block is single-"
+                "class, so per-fold AUC is undefined and pooled AUC from "
+                "separately-trained folds is a splitting artefact, not "
+                "electrode drift. The paired dummy_prior_diagnostic "
+                "reproduces the artefact with a classifier that learns "
+                "nothing."
+            ),
+            "primary_model": lobo,
+            "dummy_prior_diagnostic": dummy_lobo,
+        },
         "secondary_models": secondary,
         "audit": {
             "version": "2026-09",
@@ -351,7 +486,12 @@ def main():
                 "holdout and expanding-window run with a temporal gap "
                 "chosen from a measured autocorrelation threshold. Every "
                 "leakage-safe split reports its own baselines; no baseline "
-                "is shared across protocols."
+                "is shared across protocols. Leave-one-merged-block-out "
+                "(super-block size 4 native blocks, declared before "
+                "evaluation) is now the primary group protocol; "
+                "leave-one-native-block-out is retained only as a labelled "
+                "diagnostic with a DummyClassifier(strategy='prior') "
+                "comparison on the same splits."
             ),
         },
     })

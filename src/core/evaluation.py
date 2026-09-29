@@ -100,6 +100,32 @@ def _fold_metrics(y_true, y_pred, proba):
     }
 
 
+def merged_block_groups(block_ids, blocks_per_superblock):
+    """Partition an ordered sequence of block ids into contiguous super-blocks.
+
+    Pre-specify ``blocks_per_superblock`` before evaluating. The mapping is
+    deterministic: the k-th distinct block (in the order it first appears in
+    ``block_ids``) is assigned to super-block ``k // blocks_per_superblock``.
+
+    Returns an array of super-block ids the same length as ``block_ids``.
+    Choosing folds by trying different values of ``blocks_per_superblock`` and
+    picking the one with best scores would be cheating; pick it once, up
+    front, on a structural criterion.
+    """
+    if blocks_per_superblock < 1:
+        raise ValueError("blocks_per_superblock must be >= 1")
+    block_ids = np.asarray(block_ids)
+    order = []
+    seen = set()
+    for b in block_ids:
+        b_int = int(b)
+        if b_int not in seen:
+            seen.add(b_int)
+            order.append(b_int)
+    to_super = {b: i // blocks_per_superblock for i, b in enumerate(order)}
+    return np.array([to_super[int(b)] for b in block_ids], dtype=int)
+
+
 def evaluate_loso(
     X,
     y,
@@ -114,6 +140,8 @@ def evaluate_loso(
     n_boot=10000,
     sample_metadata=None,
     include_baselines=False,
+    persist_predictions=False,
+    dummy_strategy=None,
 ):
     """Leave-one-subject-out evaluation with subject-level inference.
 
@@ -141,6 +169,15 @@ def evaluate_loso(
         If True, attach a "baselines" dict to each fold with majority-class,
         stratified-dummy, and uniform-dummy scores computed on that fold's
         test set alone. No baseline is shared across protocols.
+    persist_predictions : bool
+        If True, attach ``y_true``, ``y_pred``, ``y_proba`` lists to each fold
+        row. Useful for downstream diagnostics and for reproducing the pooled
+        result from disk without re-fitting.
+    dummy_strategy : str, optional
+        If provided (e.g. ``"prior"``, ``"stratified"``), replaces the real
+        model with a ``DummyClassifier(strategy=...)`` at each fold. Used to
+        expose whether pooled-metric anomalies (e.g. below-chance pooled AUC
+        on single-class folds) are artefacts of the split rather than signal.
 
     Returns
     -------
@@ -155,9 +192,10 @@ def evaluate_loso(
     if tune and not param_grid:
         raise ValueError("param_grid is required when tune=True")
 
-    probe = model_factory()
-    if hasattr(probe, "classes_"):
-        raise ValueError("model_factory must return an unfitted estimator")
+    if dummy_strategy is None:
+        probe = model_factory()
+        if hasattr(probe, "classes_"):
+            raise ValueError("model_factory must return an unfitted estimator")
 
     logo = LeaveOneGroupOut()
     folds, pooled_true, pooled_pred, pooled_proba = [], [], [], []
@@ -165,8 +203,13 @@ def evaluate_loso(
     for train_idx, test_idx in logo.split(X, y, groups):
         held_out = groups[test_idx][0]
 
-        model = model_factory()
-        if tune:
+        if dummy_strategy is not None:
+            model = DummyClassifier(strategy=dummy_strategy,
+                                    random_state=random_state)
+            model.fit(X[train_idx], y[train_idx])
+            chosen = None
+        elif tune:
+            model = model_factory()
             inner = GridSearchCV(
                 model,
                 param_grid,
@@ -178,11 +221,23 @@ def evaluate_loso(
             model = inner.best_estimator_
             chosen = inner.best_params_
         else:
+            model = model_factory()
             model.fit(X[train_idx], y[train_idx])
             chosen = None
 
         y_pred = model.predict(X[test_idx])
-        proba = model.predict_proba(X[test_idx])[:, 1]
+        if hasattr(model, "predict_proba"):
+            proba = model.predict_proba(X[test_idx])
+            # DummyClassifier may drop a column if training was single-class.
+            if proba.shape[1] == 2:
+                proba = proba[:, 1]
+            else:
+                # Only one class was in training; positive-class prob is 0 or 1
+                # depending on which class the classifier learned.
+                only_cls = int(model.classes_[0])
+                proba = np.full(len(test_idx), float(only_cls))
+        else:
+            proba = y_pred.astype(float)
 
         row = _fold_metrics(y[test_idx], y_pred, proba)
         row["subject_id"] = (
@@ -208,6 +263,10 @@ def evaluate_loso(
             row["baselines"] = per_split_baselines(
                 y[train_idx], y[test_idx], random_state=random_state
             )
+        if persist_predictions:
+            row["y_true"] = [int(v) for v in y[test_idx].tolist()]
+            row["y_pred"] = [int(v) for v in np.asarray(y_pred).tolist()]
+            row["y_proba"] = [float(v) for v in np.asarray(proba).tolist()]
         folds.append(row)
 
         pooled_true.append(y[test_idx])
@@ -254,6 +313,8 @@ def evaluate_loso(
             "param_grid": {k: [str(v) for v in vs] for k, vs in (param_grid or {}).items()},
             "random_state": random_state,
             "n_boot": n_boot,
+            "dummy_strategy": dummy_strategy,
+            "predictions_persisted": bool(persist_predictions),
         },
     }
 
