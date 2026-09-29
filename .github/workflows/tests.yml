@@ -1,0 +1,55 @@
+name: tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Documented supported Python for this repo (see requirements.txt).
+        python-version: ["3.9"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install runtime dependencies
+        # Skip the mne pin because it is only needed for the raw-EDF
+        # reproduction path (Path B), which CI does not exercise. The
+        # tests in tests/ use synthetic fixtures and read committed
+        # results; they do not require raw data downloads.
+        run: |
+          python -m pip install --upgrade pip
+          grep -v '^mne' requirements.txt > /tmp/req.txt
+          pip install -r /tmp/req.txt
+          pip install pytest
+
+      - name: Run pytest
+        run: pytest tests/ -q
+
+      - name: Verify figures rebuild from JSON
+        # Task 8 guarantee: make_figures.py never fits models. This step
+        # runs the script and checks the three PNGs land where expected.
+        run: |
+          python src/make_figures.py
+          test -f reports/figures/fig1_phase1_leakage.png
+          test -f reports/figures/fig2_phase2_generalization.png
+          test -f reports/figures/fig3_interpretability_contrast.png
+
+      - name: Verify tables rebuild from JSON
+        run: |
+          python src/make_tables.py
+          test -f reports/results/tables/phase1.md
+          test -f reports/results/tables/phase2.md

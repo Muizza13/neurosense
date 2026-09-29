@@ -1,8 +1,19 @@
-numpy
-pandas
-scipy
-scikit-learn
-xgboost
-mne
-matplotlib
-joblib
+# Pinned so bootstrap intervals reproduce exactly. RandomForest tie-breaking
+# in tree construction varies across scikit-learn releases and shifts
+# secondary intervals in the third decimal.
+#
+# Supported Python: 3.9 (audit runs used 3.9.6). numpy 2.x pin means Python
+# 3.8 is out. Newer Python versions should work but have not been verified.
+
+numpy==2.0.2
+scipy==1.13.1
+scikit-learn==1.6.1
+pandas==2.3.3
+matplotlib==3.9.4
+joblib==1.5.3
+pytest==8.4.2
+
+# Only required for the raw-data reproduction path (bash scripts/download_data.sh
+# && python -m src.physionet_features). The cached-features path
+# (data/processed/physionet_features.npz already present) does not need MNE.
+mne==1.8.0
