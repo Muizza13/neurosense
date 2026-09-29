@@ -1,21 +1,808 @@
 {
   "_provenance": {
-    "git_commit": "62ca90a",
+    "git_commit": "2619fc7",
     "numpy": "2.0.2",
     "python": "3.9.6",
-    "written_utc": "2026-07-31T05:59:52Z"
+    "written_utc": "2026-09-29T08:37:03Z"
+  },
+  "audit": {
+    "notes": "Naive split retained as descriptive only. Chronological holdout and expanding-window run with a temporal gap chosen from a measured autocorrelation threshold. Every leakage-safe split reports its own baselines; no baseline is shared across protocols.",
+    "version": "2026-09"
   },
   "chronological_holdout": {
     "balanced_accuracy": 0.4161490683229814,
+    "baselines": {
+      "dummy_stratified_balanced_accuracy": 0.36645962732919257,
+      "dummy_uniform_balanced_accuracy": 0.33850931677018636,
+      "majority_class_accuracy": 0.7666666666666666,
+      "n_test": 30,
+      "positive_rate_test": 0.23333333333333334,
+      "positive_rate_train": 0.5428571428571428
+    },
+    "gap_windows": 0,
     "macro_f1": 0.33035714285714285,
-    "majority_baseline_accuracy": 0.7666666666666666,
     "n_test": 30,
     "n_train": 70,
-    "roc_auc": 0.49068322981366463
+    "provenance": {
+      "test_block_ids": [
+        14,
+        14,
+        14,
+        14,
+        14,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        16,
+        16,
+        16,
+        16,
+        18,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        22,
+        22,
+        22,
+        22
+      ],
+      "test_end_sample_exclusive": 14848,
+      "test_start_sample": 10368,
+      "train_end_sample_exclusive": 10368,
+      "train_start_sample": 0
+    },
+    "roc_auc": 0.49068322981366463,
+    "train_fraction": 0.7
   },
   "cross_subject": null,
   "cross_subject_note": "Not available. The dataset contains one subject.",
   "dataset": "UCI EEG Eye State, single continuous recording, 1 subject",
+  "expanding_window": {
+    "config": {
+      "gap_groups": 0,
+      "n_features": 1792,
+      "n_folds": 13,
+      "n_init_groups": 6,
+      "random_state": 42,
+      "step_groups": 1
+    },
+    "folds": [
+      {
+        "balanced_accuracy": 0.0,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.0,
+          "dummy_uniform_balanced_accuracy": 1.0,
+          "majority_class_accuracy": 1.0,
+          "n_test": 1,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.5
+        },
+        "confusion_matrix": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.0,
+        "n_positive": 0,
+        "n_test": 1,
+        "provenance": {
+          "gap_groups": 0,
+          "n_train": 16,
+          "test_block_id": [
+            6
+          ],
+          "test_indices_hash": "b2e53df9ea15",
+          "test_start_sample": [
+            2688
+          ],
+          "train_indices_hash": "6fcc91057bcc"
+        },
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.0,
+        "subject_id": "6"
+      },
+      {
+        "balanced_accuracy": 1.0,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.3333333333333333,
+          "dummy_uniform_balanced_accuracy": 0.6666666666666666,
+          "majority_class_accuracy": 1.0,
+          "n_test": 3,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.47058823529411764
+        },
+        "confusion_matrix": [
+          [
+            3,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 1.0,
+        "n_positive": 0,
+        "n_test": 3,
+        "provenance": {
+          "gap_groups": 0,
+          "n_train": 17,
+          "test_block_id": [
+            8,
+            8,
+            8
+          ],
+          "test_indices_hash": "b3d3733047f1",
+          "test_start_sample": [
+            2944,
+            3072,
+            3200
+          ],
+          "train_indices_hash": "e2702921f946"
+        },
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 1.0,
+        "subject_id": "8"
+      },
+      {
+        "balanced_accuracy": 0.2857142857142857,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.2857142857142857,
+          "dummy_uniform_balanced_accuracy": 0.2857142857142857,
+          "majority_class_accuracy": 1.0,
+          "n_test": 7,
+          "positive_rate_test": 1.0,
+          "positive_rate_train": 0.4
+        },
+        "confusion_matrix": [
+          [
+            0,
+            0
+          ],
+          [
+            5,
+            2
+          ]
+        ],
+        "macro_f1": 0.2222222222222222,
+        "n_positive": 7,
+        "n_test": 7,
+        "provenance": {
+          "gap_groups": 0,
+          "n_train": 20,
+          "test_block_id": [
+            9,
+            9,
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
+          "test_indices_hash": "8068efa5c9df",
+          "test_start_sample": [
+            3456,
+            3584,
+            3712,
+            3840,
+            3968,
+            4096,
+            4224
+          ],
+          "train_indices_hash": "f632a09fe28b"
+        },
+        "roc_auc": null,
+        "sensitivity": 0.2857142857142857,
+        "specificity": null,
+        "subject_id": "9"
+      },
+      {
+        "balanced_accuracy": 0.16666666666666666,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.5,
+          "dummy_uniform_balanced_accuracy": 0.6666666666666666,
+          "majority_class_accuracy": 1.0,
+          "n_test": 6,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.5555555555555556
+        },
+        "confusion_matrix": [
+          [
+            1,
+            5
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.14285714285714285,
+        "n_positive": 0,
+        "n_test": 6,
+        "provenance": {
+          "gap_groups": 0,
+          "n_train": 27,
+          "test_block_id": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "test_indices_hash": "e14449631a34",
+          "test_start_sample": [
+            4352,
+            4480,
+            4608,
+            4736,
+            4864,
+            4992
+          ],
+          "train_indices_hash": "498f43fdba2e"
+        },
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.16666666666666666,
+        "subject_id": "10"
+      },
+      {
+        "balanced_accuracy": 0.6,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.6,
+          "dummy_uniform_balanced_accuracy": 0.2,
+          "majority_class_accuracy": 1.0,
+          "n_test": 5,
+          "positive_rate_test": 1.0,
+          "positive_rate_train": 0.45454545454545453
+        },
+        "confusion_matrix": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "macro_f1": 0.375,
+        "n_positive": 5,
+        "n_test": 5,
+        "provenance": {
+          "gap_groups": 0,
+          "n_train": 33,
+          "test_block_id": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "test_indices_hash": "7f9c29355f1f",
+          "test_start_sample": [
+            5248,
+            5376,
+            5504,
+            5632,
+            5760
+          ],
+          "train_indices_hash": "b9ebc9de7b0c"
+        },
+        "roc_auc": null,
+        "sensitivity": 0.6,
+        "specificity": null,
+        "subject_id": "11"
+      },
+      {
+        "balanced_accuracy": 0.75,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.75,
+          "dummy_uniform_balanced_accuracy": 0.75,
+          "majority_class_accuracy": 1.0,
+          "n_test": 4,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.5263157894736842
+        },
+        "confusion_matrix": [
+          [
+            3,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.42857142857142855,
+        "n_positive": 0,
+        "n_test": 4,
+        "provenance": {
+          "gap_groups": 0,
+          "n_train": 38,
+          "test_block_id": [
+            12,
+            12,
+            12,
+            12
+          ],
+          "test_indices_hash": "9272332c2de5",
+          "test_start_sample": [
+            6016,
+            6144,
+            6272,
+            6400
+          ],
+          "train_indices_hash": "07909fbfaa72"
+        },
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.75,
+        "subject_id": "12"
+      },
+      {
+        "balanced_accuracy": 0.4444444444444444,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.5,
+          "dummy_uniform_balanced_accuracy": 0.3333333333333333,
+          "majority_class_accuracy": 1.0,
+          "n_test": 18,
+          "positive_rate_test": 1.0,
+          "positive_rate_train": 0.47619047619047616
+        },
+        "confusion_matrix": [
+          [
+            0,
+            0
+          ],
+          [
+            10,
+            8
+          ]
+        ],
+        "macro_f1": 0.3076923076923077,
+        "n_positive": 18,
+        "n_test": 18,
+        "provenance": {
+          "gap_groups": 0,
+          "n_train": 42,
+          "test_block_id": [
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13
+          ],
+          "test_indices_hash": "213194b781e1",
+          "test_start_sample": [
+            6656,
+            6784,
+            6912,
+            7040,
+            7168,
+            7296,
+            7424,
+            7552,
+            7680,
+            7808,
+            7936,
+            8064,
+            8192,
+            8320,
+            8448,
+            8576,
+            8704,
+            8832
+          ],
+          "train_indices_hash": "12934f3ed473"
+        },
+        "roc_auc": null,
+        "sensitivity": 0.4444444444444444,
+        "specificity": null,
+        "subject_id": "13"
+      },
+      {
+        "balanced_accuracy": 0.26666666666666666,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.4,
+          "dummy_uniform_balanced_accuracy": 0.7333333333333333,
+          "majority_class_accuracy": 1.0,
+          "n_test": 15,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.6333333333333333
+        },
+        "confusion_matrix": [
+          [
+            4,
+            11
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.21052631578947367,
+        "n_positive": 0,
+        "n_test": 15,
+        "provenance": {
+          "gap_groups": 0,
+          "n_train": 60,
+          "test_block_id": [
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
+          "test_indices_hash": "b81f76145c69",
+          "test_start_sample": [
+            9088,
+            9216,
+            9344,
+            9472,
+            9600,
+            9728,
+            9856,
+            9984,
+            10112,
+            10240,
+            10368,
+            10496,
+            10624,
+            10752,
+            10880
+          ],
+          "train_indices_hash": "04d84347e3b5"
+        },
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.26666666666666666,
+        "subject_id": "14"
+      },
+      {
+        "balanced_accuracy": 0.5714285714285714,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.5714285714285714,
+          "dummy_uniform_balanced_accuracy": 0.2857142857142857,
+          "majority_class_accuracy": 1.0,
+          "n_test": 7,
+          "positive_rate_test": 1.0,
+          "positive_rate_train": 0.5066666666666667
+        },
+        "confusion_matrix": [
+          [
+            0,
+            0
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "macro_f1": 0.36363636363636365,
+        "n_positive": 7,
+        "n_test": 7,
+        "provenance": {
+          "gap_groups": 0,
+          "n_train": 75,
+          "test_block_id": [
+            15,
+            15,
+            15,
+            15,
+            15,
+            15,
+            15
+          ],
+          "test_indices_hash": "af100b192813",
+          "test_start_sample": [
+            11136,
+            11264,
+            11392,
+            11520,
+            11648,
+            11776,
+            11904
+          ],
+          "train_indices_hash": "eec80aa52d05"
+        },
+        "roc_auc": null,
+        "sensitivity": 0.5714285714285714,
+        "specificity": null,
+        "subject_id": "15"
+      },
+      {
+        "balanced_accuracy": 0.5,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.75,
+          "dummy_uniform_balanced_accuracy": 0.75,
+          "majority_class_accuracy": 1.0,
+          "n_test": 4,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.5487804878048781
+        },
+        "confusion_matrix": [
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.3333333333333333,
+        "n_positive": 0,
+        "n_test": 4,
+        "provenance": {
+          "gap_groups": 0,
+          "n_train": 82,
+          "test_block_id": [
+            16,
+            16,
+            16,
+            16
+          ],
+          "test_indices_hash": "4e0938824f3e",
+          "test_start_sample": [
+            12160,
+            12288,
+            12416,
+            12544
+          ],
+          "train_indices_hash": "4d86bdc36b5a"
+        },
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.5,
+        "subject_id": "16"
+      },
+      {
+        "balanced_accuracy": 0.0,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.0,
+          "dummy_uniform_balanced_accuracy": 1.0,
+          "majority_class_accuracy": 1.0,
+          "n_test": 1,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.5232558139534884
+        },
+        "confusion_matrix": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.0,
+        "n_positive": 0,
+        "n_test": 1,
+        "provenance": {
+          "gap_groups": 0,
+          "n_train": 86,
+          "test_block_id": [
+            18
+          ],
+          "test_indices_hash": "ddcf639579ed",
+          "test_start_sample": [
+            12800
+          ],
+          "train_indices_hash": "de38531c1914"
+        },
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.0,
+        "subject_id": "18"
+      },
+      {
+        "balanced_accuracy": 0.1111111111111111,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.5555555555555556,
+          "dummy_uniform_balanced_accuracy": 0.7777777777777778,
+          "majority_class_accuracy": 1.0,
+          "n_test": 9,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.5172413793103449
+        },
+        "confusion_matrix": [
+          [
+            1,
+            8
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.1,
+        "n_positive": 0,
+        "n_test": 9,
+        "provenance": {
+          "gap_groups": 0,
+          "n_train": 87,
+          "test_block_id": [
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "test_indices_hash": "c164532733b8",
+          "test_start_sample": [
+            13056,
+            13184,
+            13312,
+            13440,
+            13568,
+            13696,
+            13824,
+            13952,
+            14080
+          ],
+          "train_indices_hash": "bfa466830928"
+        },
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.1111111111111111,
+        "subject_id": "20"
+      },
+      {
+        "balanced_accuracy": 0.25,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.25,
+          "dummy_uniform_balanced_accuracy": 0.75,
+          "majority_class_accuracy": 1.0,
+          "n_test": 4,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.46875
+        },
+        "confusion_matrix": [
+          [
+            1,
+            3
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "macro_f1": 0.2,
+        "n_positive": 0,
+        "n_test": 4,
+        "provenance": {
+          "gap_groups": 0,
+          "n_train": 96,
+          "test_block_id": [
+            22,
+            22,
+            22,
+            22
+          ],
+          "test_indices_hash": "2da521ef63f8",
+          "test_start_sample": [
+            14336,
+            14464,
+            14592,
+            14720
+          ],
+          "train_indices_hash": "00fc7bf5f940"
+        },
+        "roc_auc": null,
+        "sensitivity": null,
+        "specificity": 0.25,
+        "subject_id": "22"
+      }
+    ],
+    "pooled_descriptive_metrics": {
+      "_warning": "Descriptive only. Pools correlated epochs across folds. Not the inferential result.",
+      "balanced_accuracy": 0.38930419781483616,
+      "confusion_matrix": [
+        [
+          15,
+          32
+        ],
+        [
+          20,
+          17
+        ]
+      ],
+      "macro_f1": 0.3806012478729438,
+      "n_positive": 37,
+      "n_test": 84,
+      "roc_auc": 0.3651523864289822,
+      "sensitivity": 0.4594594594594595,
+      "specificity": 0.3191489361702128
+    },
+    "subject_bootstrap_ci": {
+      "balanced_accuracy": {
+        "hi": 0.5453601953601953,
+        "level": 0.95,
+        "lo": 0.22984890109890108,
+        "method": "percentile bootstrap, resampling subjects",
+        "n_subjects": 13,
+        "point": 0.3804639804639804
+      },
+      "macro_f1": {
+        "hi": 0.43233268334229874,
+        "level": 0.95,
+        "lo": 0.16527838895247804,
+        "method": "percentile bootstrap, resampling subjects",
+        "n_subjects": 13,
+        "point": 0.2833722395463287
+      },
+      "roc_auc": null
+    },
+    "subject_mean": {
+      "balanced_accuracy": {
+        "mean": 0.3804639804639804,
+        "median": 0.2857142857142857,
+        "n_above_chance": 4,
+        "n_folds": 13,
+        "std": 0.2986276627910357
+      },
+      "macro_f1": {
+        "mean": 0.2833722395463287,
+        "median": 0.2222222222222222,
+        "n_above_chance": 1,
+        "n_folds": 13,
+        "std": 0.25536412087018273
+      },
+      "roc_auc": {
+        "mean": null,
+        "median": null,
+        "n_above_chance": 0,
+        "n_folds": 0,
+        "std": null
+      }
+    }
+  },
   "grouping_unit": "contiguous label block (single subject, so no LOSO)",
   "leave_one_block_out": {
     "config": {
@@ -30,6 +817,14 @@
     "folds": [
       {
         "balanced_accuracy": 1.0,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 1.0,
+          "dummy_uniform_balanced_accuracy": 1.0,
+          "majority_class_accuracy": 1.0,
+          "n_test": 1,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.45454545454545453
+        },
         "confusion_matrix": [
           [
             1,
@@ -43,6 +838,17 @@
         "macro_f1": 1.0,
         "n_positive": 0,
         "n_test": 1,
+        "provenance": {
+          "n_train": 99,
+          "test_block_id": [
+            0
+          ],
+          "test_indices_hash": "05fe40575316",
+          "test_start_sample": [
+            0
+          ],
+          "train_indices_hash": "b6ed08e9dbdc"
+        },
         "roc_auc": null,
         "sensitivity": null,
         "specificity": 1.0,
@@ -50,6 +856,14 @@
       },
       {
         "balanced_accuracy": 0.75,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.75,
+          "dummy_uniform_balanced_accuracy": 0.25,
+          "majority_class_accuracy": 1.0,
+          "n_test": 4,
+          "positive_rate_test": 1.0,
+          "positive_rate_train": 0.4270833333333333
+        },
         "confusion_matrix": [
           [
             0,
@@ -63,6 +877,23 @@
         "macro_f1": 0.42857142857142855,
         "n_positive": 4,
         "n_test": 4,
+        "provenance": {
+          "n_train": 96,
+          "test_block_id": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "test_indices_hash": "1074bd0a31df",
+          "test_start_sample": [
+            256,
+            384,
+            512,
+            640
+          ],
+          "train_indices_hash": "76842bb48a86"
+        },
         "roc_auc": null,
         "sensitivity": 0.75,
         "specificity": null,
@@ -70,6 +901,14 @@
       },
       {
         "balanced_accuracy": 0.6666666666666666,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.3333333333333333,
+          "dummy_uniform_balanced_accuracy": 0.6666666666666666,
+          "majority_class_accuracy": 1.0,
+          "n_test": 3,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.4639175257731959
+        },
         "confusion_matrix": [
           [
             2,
@@ -83,6 +922,21 @@
         "macro_f1": 0.4,
         "n_positive": 0,
         "n_test": 3,
+        "provenance": {
+          "n_train": 97,
+          "test_block_id": [
+            2,
+            2,
+            2
+          ],
+          "test_indices_hash": "bbaee4ffd23c",
+          "test_start_sample": [
+            896,
+            1024,
+            1152
+          ],
+          "train_indices_hash": "24d5d854b532"
+        },
         "roc_auc": null,
         "sensitivity": null,
         "specificity": 0.6666666666666666,
@@ -90,6 +944,14 @@
       },
       {
         "balanced_accuracy": 0.0,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.0,
+          "dummy_uniform_balanced_accuracy": 0.0,
+          "majority_class_accuracy": 1.0,
+          "n_test": 1,
+          "positive_rate_test": 1.0,
+          "positive_rate_train": 0.4444444444444444
+        },
         "confusion_matrix": [
           [
             0,
@@ -103,6 +965,17 @@
         "macro_f1": 0.0,
         "n_positive": 1,
         "n_test": 1,
+        "provenance": {
+          "n_train": 99,
+          "test_block_id": [
+            3
+          ],
+          "test_indices_hash": "29e24643a632",
+          "test_start_sample": [
+            1408
+          ],
+          "train_indices_hash": "5f0cd4f25711"
+        },
         "roc_auc": null,
         "sensitivity": 0.0,
         "specificity": null,
@@ -110,6 +983,14 @@
       },
       {
         "balanced_accuracy": 0.0,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.25,
+          "dummy_uniform_balanced_accuracy": 0.75,
+          "majority_class_accuracy": 1.0,
+          "n_test": 4,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.46875
+        },
         "confusion_matrix": [
           [
             0,
@@ -123,6 +1004,23 @@
         "macro_f1": 0.0,
         "n_positive": 0,
         "n_test": 4,
+        "provenance": {
+          "n_train": 96,
+          "test_block_id": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "test_indices_hash": "48c1a4b0e34b",
+          "test_start_sample": [
+            1664,
+            1792,
+            1920,
+            2048
+          ],
+          "train_indices_hash": "cffc0427f6d8"
+        },
         "roc_auc": null,
         "sensitivity": null,
         "specificity": 0.0,
@@ -130,6 +1028,14 @@
       },
       {
         "balanced_accuracy": 0.3333333333333333,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.6666666666666666,
+          "dummy_uniform_balanced_accuracy": 0.3333333333333333,
+          "majority_class_accuracy": 1.0,
+          "n_test": 3,
+          "positive_rate_test": 1.0,
+          "positive_rate_train": 0.4329896907216495
+        },
         "confusion_matrix": [
           [
             0,
@@ -143,6 +1049,21 @@
         "macro_f1": 0.25,
         "n_positive": 3,
         "n_test": 3,
+        "provenance": {
+          "n_train": 97,
+          "test_block_id": [
+            5,
+            5,
+            5
+          ],
+          "test_indices_hash": "c72bcc9583e5",
+          "test_start_sample": [
+            2176,
+            2304,
+            2432
+          ],
+          "train_indices_hash": "72567381c1b0"
+        },
         "roc_auc": null,
         "sensitivity": 0.3333333333333333,
         "specificity": null,
@@ -150,6 +1071,14 @@
       },
       {
         "balanced_accuracy": 1.0,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 1.0,
+          "dummy_uniform_balanced_accuracy": 1.0,
+          "majority_class_accuracy": 1.0,
+          "n_test": 1,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.45454545454545453
+        },
         "confusion_matrix": [
           [
             1,
@@ -163,6 +1092,17 @@
         "macro_f1": 1.0,
         "n_positive": 0,
         "n_test": 1,
+        "provenance": {
+          "n_train": 99,
+          "test_block_id": [
+            6
+          ],
+          "test_indices_hash": "b2e53df9ea15",
+          "test_start_sample": [
+            2688
+          ],
+          "train_indices_hash": "fb3726c5e4c2"
+        },
         "roc_auc": null,
         "sensitivity": null,
         "specificity": 1.0,
@@ -170,6 +1110,14 @@
       },
       {
         "balanced_accuracy": 1.0,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.3333333333333333,
+          "dummy_uniform_balanced_accuracy": 0.6666666666666666,
+          "majority_class_accuracy": 1.0,
+          "n_test": 3,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.4639175257731959
+        },
         "confusion_matrix": [
           [
             3,
@@ -183,6 +1131,21 @@
         "macro_f1": 1.0,
         "n_positive": 0,
         "n_test": 3,
+        "provenance": {
+          "n_train": 97,
+          "test_block_id": [
+            8,
+            8,
+            8
+          ],
+          "test_indices_hash": "b3d3733047f1",
+          "test_start_sample": [
+            2944,
+            3072,
+            3200
+          ],
+          "train_indices_hash": "ef6012de0170"
+        },
         "roc_auc": null,
         "sensitivity": null,
         "specificity": 1.0,
@@ -190,6 +1153,14 @@
       },
       {
         "balanced_accuracy": 0.7142857142857143,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.42857142857142855,
+          "dummy_uniform_balanced_accuracy": 0.2857142857142857,
+          "majority_class_accuracy": 1.0,
+          "n_test": 7,
+          "positive_rate_test": 1.0,
+          "positive_rate_train": 0.40860215053763443
+        },
         "confusion_matrix": [
           [
             0,
@@ -203,6 +1174,29 @@
         "macro_f1": 0.4166666666666667,
         "n_positive": 7,
         "n_test": 7,
+        "provenance": {
+          "n_train": 93,
+          "test_block_id": [
+            9,
+            9,
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
+          "test_indices_hash": "8068efa5c9df",
+          "test_start_sample": [
+            3456,
+            3584,
+            3712,
+            3840,
+            3968,
+            4096,
+            4224
+          ],
+          "train_indices_hash": "c3d73a90dd1e"
+        },
         "roc_auc": null,
         "sensitivity": 0.7142857142857143,
         "specificity": null,
@@ -210,6 +1204,14 @@
       },
       {
         "balanced_accuracy": 0.3333333333333333,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.5,
+          "dummy_uniform_balanced_accuracy": 0.6666666666666666,
+          "majority_class_accuracy": 1.0,
+          "n_test": 6,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.4787234042553192
+        },
         "confusion_matrix": [
           [
             2,
@@ -223,6 +1225,27 @@
         "macro_f1": 0.25,
         "n_positive": 0,
         "n_test": 6,
+        "provenance": {
+          "n_train": 94,
+          "test_block_id": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "test_indices_hash": "e14449631a34",
+          "test_start_sample": [
+            4352,
+            4480,
+            4608,
+            4736,
+            4864,
+            4992
+          ],
+          "train_indices_hash": "4a7a08298e10"
+        },
         "roc_auc": null,
         "sensitivity": null,
         "specificity": 0.3333333333333333,
@@ -230,6 +1253,14 @@
       },
       {
         "balanced_accuracy": 0.6,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.6,
+          "dummy_uniform_balanced_accuracy": 0.2,
+          "majority_class_accuracy": 1.0,
+          "n_test": 5,
+          "positive_rate_test": 1.0,
+          "positive_rate_train": 0.42105263157894735
+        },
         "confusion_matrix": [
           [
             0,
@@ -243,6 +1274,25 @@
         "macro_f1": 0.375,
         "n_positive": 5,
         "n_test": 5,
+        "provenance": {
+          "n_train": 95,
+          "test_block_id": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "test_indices_hash": "7f9c29355f1f",
+          "test_start_sample": [
+            5248,
+            5376,
+            5504,
+            5632,
+            5760
+          ],
+          "train_indices_hash": "7565d7965a32"
+        },
         "roc_auc": null,
         "sensitivity": 0.6,
         "specificity": null,
@@ -250,6 +1300,14 @@
       },
       {
         "balanced_accuracy": 0.75,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.25,
+          "dummy_uniform_balanced_accuracy": 0.75,
+          "majority_class_accuracy": 1.0,
+          "n_test": 4,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.46875
+        },
         "confusion_matrix": [
           [
             3,
@@ -263,6 +1321,23 @@
         "macro_f1": 0.42857142857142855,
         "n_positive": 0,
         "n_test": 4,
+        "provenance": {
+          "n_train": 96,
+          "test_block_id": [
+            12,
+            12,
+            12,
+            12
+          ],
+          "test_indices_hash": "9272332c2de5",
+          "test_start_sample": [
+            6016,
+            6144,
+            6272,
+            6400
+          ],
+          "train_indices_hash": "3b0fbce33aae"
+        },
         "roc_auc": null,
         "sensitivity": null,
         "specificity": 0.75,
@@ -270,6 +1345,14 @@
       },
       {
         "balanced_accuracy": 0.3333333333333333,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.3333333333333333,
+          "dummy_uniform_balanced_accuracy": 0.3333333333333333,
+          "majority_class_accuracy": 1.0,
+          "n_test": 18,
+          "positive_rate_test": 1.0,
+          "positive_rate_train": 0.32926829268292684
+        },
         "confusion_matrix": [
           [
             0,
@@ -283,6 +1366,51 @@
         "macro_f1": 0.25,
         "n_positive": 18,
         "n_test": 18,
+        "provenance": {
+          "n_train": 82,
+          "test_block_id": [
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13
+          ],
+          "test_indices_hash": "213194b781e1",
+          "test_start_sample": [
+            6656,
+            6784,
+            6912,
+            7040,
+            7168,
+            7296,
+            7424,
+            7552,
+            7680,
+            7808,
+            7936,
+            8064,
+            8192,
+            8320,
+            8448,
+            8576,
+            8704,
+            8832
+          ],
+          "train_indices_hash": "906ea1c387d4"
+        },
         "roc_auc": null,
         "sensitivity": 0.3333333333333333,
         "specificity": null,
@@ -290,6 +1418,14 @@
       },
       {
         "balanced_accuracy": 0.5333333333333333,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.5333333333333333,
+          "dummy_uniform_balanced_accuracy": 0.7333333333333333,
+          "majority_class_accuracy": 1.0,
+          "n_test": 15,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.5294117647058824
+        },
         "confusion_matrix": [
           [
             8,
@@ -303,6 +1439,45 @@
         "macro_f1": 0.34782608695652173,
         "n_positive": 0,
         "n_test": 15,
+        "provenance": {
+          "n_train": 85,
+          "test_block_id": [
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
+          "test_indices_hash": "b81f76145c69",
+          "test_start_sample": [
+            9088,
+            9216,
+            9344,
+            9472,
+            9600,
+            9728,
+            9856,
+            9984,
+            10112,
+            10240,
+            10368,
+            10496,
+            10624,
+            10752,
+            10880
+          ],
+          "train_indices_hash": "638e1eb77057"
+        },
         "roc_auc": null,
         "sensitivity": null,
         "specificity": 0.5333333333333333,
@@ -310,6 +1485,14 @@
       },
       {
         "balanced_accuracy": 0.2857142857142857,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.42857142857142855,
+          "dummy_uniform_balanced_accuracy": 0.2857142857142857,
+          "majority_class_accuracy": 1.0,
+          "n_test": 7,
+          "positive_rate_test": 1.0,
+          "positive_rate_train": 0.40860215053763443
+        },
         "confusion_matrix": [
           [
             0,
@@ -323,6 +1506,29 @@
         "macro_f1": 0.2222222222222222,
         "n_positive": 7,
         "n_test": 7,
+        "provenance": {
+          "n_train": 93,
+          "test_block_id": [
+            15,
+            15,
+            15,
+            15,
+            15,
+            15,
+            15
+          ],
+          "test_indices_hash": "af100b192813",
+          "test_start_sample": [
+            11136,
+            11264,
+            11392,
+            11520,
+            11648,
+            11776,
+            11904
+          ],
+          "train_indices_hash": "d9ec09dd968e"
+        },
         "roc_auc": null,
         "sensitivity": 0.2857142857142857,
         "specificity": null,
@@ -330,6 +1536,14 @@
       },
       {
         "balanced_accuracy": 0.5,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.25,
+          "dummy_uniform_balanced_accuracy": 0.75,
+          "majority_class_accuracy": 1.0,
+          "n_test": 4,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.46875
+        },
         "confusion_matrix": [
           [
             2,
@@ -343,6 +1557,23 @@
         "macro_f1": 0.3333333333333333,
         "n_positive": 0,
         "n_test": 4,
+        "provenance": {
+          "n_train": 96,
+          "test_block_id": [
+            16,
+            16,
+            16,
+            16
+          ],
+          "test_indices_hash": "4e0938824f3e",
+          "test_start_sample": [
+            12160,
+            12288,
+            12416,
+            12544
+          ],
+          "train_indices_hash": "670e4ac1dd83"
+        },
         "roc_auc": null,
         "sensitivity": null,
         "specificity": 0.5,
@@ -350,6 +1581,14 @@
       },
       {
         "balanced_accuracy": 0.0,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 1.0,
+          "dummy_uniform_balanced_accuracy": 1.0,
+          "majority_class_accuracy": 1.0,
+          "n_test": 1,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.45454545454545453
+        },
         "confusion_matrix": [
           [
             0,
@@ -363,6 +1602,17 @@
         "macro_f1": 0.0,
         "n_positive": 0,
         "n_test": 1,
+        "provenance": {
+          "n_train": 99,
+          "test_block_id": [
+            18
+          ],
+          "test_indices_hash": "ddcf639579ed",
+          "test_start_sample": [
+            12800
+          ],
+          "train_indices_hash": "6b90f62a5784"
+        },
         "roc_auc": null,
         "sensitivity": null,
         "specificity": 0.0,
@@ -370,6 +1620,14 @@
       },
       {
         "balanced_accuracy": 0.1111111111111111,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.4444444444444444,
+          "dummy_uniform_balanced_accuracy": 0.7777777777777778,
+          "majority_class_accuracy": 1.0,
+          "n_test": 9,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.4945054945054945
+        },
         "confusion_matrix": [
           [
             1,
@@ -383,6 +1641,33 @@
         "macro_f1": 0.1,
         "n_positive": 0,
         "n_test": 9,
+        "provenance": {
+          "n_train": 91,
+          "test_block_id": [
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "test_indices_hash": "c164532733b8",
+          "test_start_sample": [
+            13056,
+            13184,
+            13312,
+            13440,
+            13568,
+            13696,
+            13824,
+            13952,
+            14080
+          ],
+          "train_indices_hash": "6aa12ba0e32f"
+        },
         "roc_auc": null,
         "sensitivity": null,
         "specificity": 0.1111111111111111,
@@ -390,6 +1675,14 @@
       },
       {
         "balanced_accuracy": 0.25,
+        "baselines": {
+          "dummy_stratified_balanced_accuracy": 0.25,
+          "dummy_uniform_balanced_accuracy": 0.75,
+          "majority_class_accuracy": 1.0,
+          "n_test": 4,
+          "positive_rate_test": 0.0,
+          "positive_rate_train": 0.46875
+        },
         "confusion_matrix": [
           [
             1,
@@ -403,6 +1696,23 @@
         "macro_f1": 0.2,
         "n_positive": 0,
         "n_test": 4,
+        "provenance": {
+          "n_train": 96,
+          "test_block_id": [
+            22,
+            22,
+            22,
+            22
+          ],
+          "test_indices_hash": "2da521ef63f8",
+          "test_start_sample": [
+            14336,
+            14464,
+            14592,
+            14720
+          ],
+          "train_indices_hash": "00fc7bf5f940"
+        },
         "roc_auc": null,
         "sensitivity": null,
         "specificity": 0.25,
@@ -475,6 +1785,14 @@
   "naive_random_split": {
     "_warning": "Leaky by construction: epochs from the same subject appear in both train and test. Included to quantify inflation.",
     "balanced_accuracy": 0.5333333333333333,
+    "baselines": {
+      "dummy_stratified_balanced_accuracy": 0.5515151515151515,
+      "dummy_uniform_balanced_accuracy": 0.5363636363636364,
+      "majority_class_accuracy": 0.55,
+      "n_test": 100,
+      "positive_rate_test": 0.45,
+      "positive_rate_train": 0.45
+    },
     "confusion_matrix": [
       [
         33,
@@ -584,5 +1902,30 @@
         }
       }
     }
-  }
+  },
+  "temporal_dependence": {
+    "gap_choice": {
+      "reason": "already_below",
+      "recommended_gap_windows": 0,
+      "threshold": 0.3
+    },
+    "lag_report": {
+      "lags": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "mean_abs_autocorr": [
+        0.08556016716259383,
+        0.09234588336684145,
+        0.10195775061124104,
+        0.07266418687249922,
+        0.0808603497874447
+      ]
+    },
+    "note": "Autocorrelation is measured on band-power features extracted with a clipper fitted on the first 70% of windows (the chronological training half), so the values reflect what the model actually consumes rather than the raw voltages."
+  },
+  "temporal_gap_windows_used": 0
 }

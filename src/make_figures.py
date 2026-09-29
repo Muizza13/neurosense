@@ -54,37 +54,78 @@ def ci_err(ci):
 
 
 # ======================================================================
-# FIGURE 1: Phase 1, the split determines the answer
+# FIGURE 1: Phase 1, the split determines the answer, with per-split baselines
 # ======================================================================
-naive = p1["naive_random_split"]["balanced_accuracy"]
-chrono = p1["chronological_holdout"]["balanced_accuracy"]
-majority = p1["chronological_holdout"]["majority_baseline_accuracy"]
-lobo_ci = p1["leave_one_block_out"]["subject_bootstrap_ci"]["balanced_accuracy"]
-block_scores = [f["balanced_accuracy"] for f in p1["leave_one_block_out"]["folds"]]
+naive_score = p1["naive_random_split"]["balanced_accuracy"]
+naive_baselines = p1["naive_random_split"]["baselines"]
 
-fig, (a1, a2) = plt.subplots(1, 2, figsize=(11, 4.4))
+chrono = p1["chronological_holdout"]
+chrono_score = chrono["balanced_accuracy"]
+chrono_baselines = chrono["baselines"]
+chrono_gap = chrono["gap_windows"]
 
-labels = ["Naive\nrandom split", "Chronological\nholdout", "Leave-one-\nblock-out"]
-vals = [naive, chrono, lobo_ci["point"]]
-errs = np.array([[0, 0, lobo_ci["point"] - lobo_ci["lo"]],
-                 [0, 0, lobo_ci["hi"] - lobo_ci["point"]]])
-bars = a1.bar(labels, vals, yerr=errs, capsize=5, color=[HOT, INK, INK])
-a1.axhline(0.5, ls="--", color=HOT, lw=1.3)
-a1.text(2.45, 0.515, "chance", color=HOT, fontsize=8.5, ha="right")
-a1.axhline(majority, ls=":", color=GREY, lw=1.3)
-a1.text(2.45, majority + 0.015, f"majority baseline ({majority:.2f})",
-        color=GREY, fontsize=8, ha="right")
+expand = p1["expanding_window"]
+expand_ci = expand["subject_bootstrap_ci"]["balanced_accuracy"]
+expand_folds = expand["folds"]
+
+lobo = p1["leave_one_block_out"]
+lobo_ci = lobo["subject_bootstrap_ci"]["balanced_accuracy"]
+block_scores = [f["balanced_accuracy"] for f in lobo["folds"]]
+
+fig, (a1, a2) = plt.subplots(1, 2, figsize=(12, 4.6))
+
+# Left: four protocols with per-split majority baseline overlaid.
+protocol_labels = [
+    "Naive random\nsplit (leaky)",
+    f"Chronological\nholdout\n(gap = {chrono_gap})",
+    "Expanding-\nwindow",
+    "Leave-one-\nblock-out",
+]
+protocol_scores = [naive_score, chrono_score,
+                   expand_ci["point"], lobo_ci["point"]]
+protocol_errs = np.array([
+    [0, 0, expand_ci["point"] - expand_ci["lo"], lobo_ci["point"] - lobo_ci["lo"]],
+    [0, 0, expand_ci["hi"] - expand_ci["point"], lobo_ci["hi"] - lobo_ci["point"]],
+])
+# Majority baseline is only meaningful for splits with more than one class in
+# the test set. Naive and chronological have both classes; LOBO and
+# expanding-window folds are single-class by construction, so their majority
+# baseline is trivially 1.0 and is omitted rather than plotted misleadingly.
+majority_naive = naive_baselines["majority_class_accuracy"]
+majority_chrono = chrono_baselines["majority_class_accuracy"]
+bar_colors = [HOT, INK, INK, INK]
+
+bars = a1.bar(protocol_labels, protocol_scores, yerr=protocol_errs,
+              capsize=5, color=bar_colors, zorder=2)
+a1.scatter([0, 1], [majority_naive, majority_chrono],
+           marker="_", s=1600, color=GREY, linewidths=2.5, zorder=3,
+           label="majority-class baseline")
+a1.text(1, majority_chrono + 0.02, f"{majority_chrono:.2f}", ha="center",
+        fontsize=8.5, color=GREY)
+a1.text(0, majority_naive + 0.02, f"{majority_naive:.2f}", ha="center",
+        fontsize=8.5, color=GREY)
+# For the single-class-fold protocols, note that AUC and majority are
+# uninformative rather than plotting a trivial 1.0.
+a1.text(2, 0.94, "single-class\nfolds", ha="center",
+        fontsize=7.5, style="italic", color=GREY)
+a1.text(3, 0.94, "single-class\nfolds", ha="center",
+        fontsize=7.5, style="italic", color=GREY)
+
+a1.axhline(0.5, ls="--", color=HOT, lw=1.3, zorder=1)
+a1.text(len(protocol_labels) - 0.55, 0.515, "chance", color=HOT,
+        fontsize=8.5, ha="right")
 a1.set_ylabel("balanced accuracy")
-a1.set_ylim(0, 0.9)
-a1.set_title("Same features, same model.\nOnly the split changes.",
+a1.set_ylim(0, 1.05)
+a1.set_title("Same features, same model.\nOnly the split, gap, and baseline change.",
              fontsize=11, loc="left")
-for b, v in zip(bars, vals):
-    a1.text(b.get_x() + b.get_width() / 2, v + 0.04, f"{v:.3f}",
+for b, v in zip(bars, protocol_scores):
+    a1.text(b.get_x() + b.get_width() / 2, v + 0.03, f"{v:.3f}",
             ha="center", fontweight="bold", fontsize=9)
-a1.text(0, naive / 2, "LEAKED", ha="center", color="white",
+a1.text(0, naive_score / 2, "LEAKED", ha="center", color="white",
         fontweight="bold", rotation=90, fontsize=9)
+a1.legend(frameon=False, fontsize=8, loc="upper left")
 
-# Right panel: the per-block spread that a single number hides.
+# Right panel: the per-block spread that LOBO's mean averages over.
 jitter = rng.uniform(-0.09, 0.09, len(block_scores))
 a2.fill_between([-0.16, 0.16], lobo_ci["lo"], lobo_ci["hi"],
                 color=HOT, alpha=0.12, zorder=1)
@@ -96,17 +137,26 @@ a2.set_xlim(-0.35, 0.35)
 a2.set_xticks([])
 a2.set_ylim(-0.08, 1.08)
 a2.set_ylabel("balanced accuracy")
-a2.set_title(f"Per-block scores (n = {len(block_scores)})\n"
+a2.set_title(f"Per-block LOBO scores (n = {len(block_scores)})\n"
              f"mean {lobo_ci['point']:.3f}, 95% CI "
              f"[{lobo_ci['lo']:.3f}, {lobo_ci['hi']:.3f}]",
              fontsize=10.5, loc="left")
 a2.text(0, -0.03, "each block is single-class, so AUC is undefined",
         ha="center", fontsize=8.5, style="italic", color=GREY)
 
-fig.suptitle("Phase 1  |  UCI EEG Eye State: apparent skill is an artifact of "
-             "the split (100 windows, 1 subject)",
-             fontweight="bold", x=0.02, ha="left", fontsize=11)
-fig.tight_layout(rect=[0, 0, 1, 0.93])
+# Autocorrelation subtitle: makes explicit that gap=0 was measured, not chosen.
+ac = p1["temporal_dependence"]["lag_report"]
+ac_str = ", ".join(f"lag{l}={v:.2f}"
+                   for l, v in zip(ac["lags"], ac["mean_abs_autocorr"]))
+gap_reason = p1["temporal_dependence"]["gap_choice"]["reason"]
+fig.suptitle(
+    "Phase 1  |  UCI EEG Eye State: apparent skill is an artifact of the "
+    "split (100 windows, 1 subject)\n"
+    f"feature autocorrelation {ac_str}   →   gap = {chrono_gap} windows "
+    f"({gap_reason})",
+    fontweight="bold", x=0.02, ha="left", fontsize=10.5,
+)
+fig.tight_layout(rect=[0, 0, 1, 0.90])
 fig.savefig("reports/figures/fig1_phase1_leakage.png", bbox_inches="tight")
 plt.close(fig)
 
@@ -228,7 +278,7 @@ a1.barh(range(len(f1names))[::-1], f1vals, color=f1cols)
 a1.set_yticks(range(len(f1names))[::-1])
 a1.set_yticklabels(f1names, fontsize=9)
 a1.set_xlabel("permutation importance (balanced accuracy)")
-a1.set_title(f"Phase 1: attribution on a model scoring {chrono:.3f}\n"
+a1.set_title(f"Phase 1: attribution on a model scoring {chrono_score:.3f}\n"
              f"below chance, so this is not evidence about physiology",
              fontsize=10.5, loc="left", color=HOT)
 a2.barh(range(len(f2names))[::-1], f2vals, color=f2cols)
@@ -253,9 +303,9 @@ fig.savefig("reports/figures/fig3_interpretability_contrast.png",
 plt.close(fig)
 
 print("figures written to reports/figures/")
-print(f"  fig1 from phase1_results.json: naive={naive:.3f} "
-      f"chrono={chrono:.3f} lobo={lobo_ci['point']:.3f} "
-      f"[{lobo_ci['lo']:.3f}, {lobo_ci['hi']:.3f}]")
+print(f"  fig1 from phase1_results.json: naive={naive_score:.3f} "
+      f"chrono={chrono_score:.3f} expand={expand_ci['point']:.3f} "
+      f"lobo={lobo_ci['point']:.3f} [{lobo_ci['lo']:.3f}, {lobo_ci['hi']:.3f}]")
 print(f"  fig2 from phase2_results.json: within balAcc="
       f"{w_ci['balanced_accuracy']['point']:.3f} | cross balAcc="
       f"{c_ci['balanced_accuracy']['point']:.3f}")

@@ -1,9 +1,9 @@
 {
   "_provenance": {
-    "git_commit": "62ca90a",
+    "git_commit": "2619fc7",
     "numpy": "2.0.2",
     "python": "3.9.6",
-    "written_utc": "2026-07-31T05:59:01Z"
+    "written_utc": "2026-09-29T08:37:20Z"
   },
   "cross_subject": {
     "config": {

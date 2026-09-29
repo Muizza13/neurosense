@@ -1,45 +1,74 @@
-"""Phase 1: UCI EEG Eye State, rerun through the shared core.
+"""Phase 1: UCI EEG Eye State, rerun after the 2026-09 audit.
 
-Changes from the original train.py:
+Changes from the pre-audit pipeline (still true):
 
-1. Artifact clipping is fitted inside the fold. The original called
-   clip_artifacts() on the entire 14980-sample recording before windowing and
-   before the chronological split, so the winsorisation thresholds were
-   computed partly from held-out future samples.
+1. Artifact clipping is fitted inside every fold via `EpochBandPower` in the
+   Pipeline. Nothing data-dependent is fitted on the whole recording.
+2. Leave-one-block-out reuses the shared `evaluate_loso` on contiguous label
+   blocks. Phase 1 has one subject, so the block is the only leakage-safe
+   grouping available.
 
-2. Band power extraction also happens inside the fold, via EpochBandPower.
+Audit additions (2026-09):
 
-3. Leave-one-block-out reuses the same evaluate_loso as Phase 2, with the
-   contiguous label block as the grouping unit. Phase 1 has one subject, so the
-   block is the only leakage-safe grouping available. Its cross-subject cell
-   stays empty by construction.
+3. Every leakage-safe protocol reports per-split baselines: majority-class
+   accuracy, and balanced accuracy of a stratified and a uniform dummy
+   classifier. No baseline is shared across protocols.
+4. Temporal dependence of the fold-safe features is measured, and the choice
+   of temporal gap for the chronological and expanding-window protocols is
+   derived from the measurement rather than picked by hand.
+5. An expanding-window (walk-forward across label blocks) evaluation is added
+   as an additional leakage-safe protocol.
+6. Every fold row carries a `provenance` block with test-window start-sample
+   indices, block ids, and index hashes, so a fold can be re-located in the
+   raw recording.
 
 Run:  bash scripts/download_data.sh  (or just the UCI half)
       python src/phase1_eyestate.py
 """
 import sys
+import warnings
 
 sys.path.insert(0, ".")
+
+# Single-class LOBO test blocks trigger benign warnings from sklearn about
+# predicted classes not present in y_true. They are expected here and are
+# handled in reporting; silence them so the console output is readable.
+warnings.filterwarnings(
+    "ignore", message="y_pred contains classes not in y_true"
+)
+warnings.filterwarnings(
+    "ignore", message="A single label was found in 'y_true' and 'y_pred'"
+)
 
 import numpy as np
 import pandas as pd
 from scipy.io import arff
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import balanced_accuracy_score, f1_score, roc_auc_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-from src.core.evaluation import evaluate_loso, evaluate_naive_split
+from src.core.evaluation import (
+    evaluate_expanding_window,
+    evaluate_loso,
+    evaluate_naive_split,
+    per_split_baselines,
+)
 from src.core.features import (
     STANDARD_BANDS,
+    ArtifactClipper,
     EpochBandPower,
+    band_power,
     flatten_epochs,
     label_blocks,
     make_continuous_windows,
 )
 from src.core.results import format_ci, save_results
+from src.core.temporal import (
+    choose_temporal_gap,
+    feature_lag_autocorr,
+)
 
 ARFF = "data/raw/EEG Eye State.arff"
 SFREQ = 128.0
@@ -47,6 +76,9 @@ WIN_SEC = 1.0
 RANDOM_STATE = 42
 
 PRIMARY_NAME = "LogisticRegression(C=1.0, balanced)"
+CHRONO_TRAIN_FRAC = 0.70
+AUTOCORR_LAGS = (1, 2, 3, 4, 5)
+AUTOCORR_THRESHOLD = 0.30            # gap chosen at first lag with |ac| < 0.30
 
 
 def make_primary(channels, n_times):
@@ -68,60 +100,208 @@ def load():
     blocks_per_sample = label_blocks(y)
     epochs, labels, starts = make_continuous_windows(x, y, SFREQ, WIN_SEC)
     block_ids = blocks_per_sample[starts]
-    return flatten_epochs(epochs), labels, block_ids, channels, epochs.shape[2]
+    return flatten_epochs(epochs), labels, block_ids, starts, channels, epochs.shape[2]
 
 
-def chronological_holdout(X, y, factory, frac=0.70):
-    """Train on the first 70 percent of time, test on the last 30 percent."""
-    split = int(frac * len(y))
-    model = factory()
-    model.fit(X[:split], y[:split])
-    proba = model.predict_proba(X[split:])[:, 1]
-    pred = (proba >= 0.5).astype(int)
-    yte = y[split:]
+def _training_fitted_features(X, split, channels, n_times):
+    """Extract features with a clipper fit on the training half of the split.
+
+    Used by the temporal-dependence diagnostic. Everything else in Phase 1
+    lets `EpochBandPower` in the Pipeline handle this per fold. Here we
+    just need one representative feature matrix to measure autocorrelation
+    of what the model actually consumes.
+    """
+    epochs = X.reshape(len(X), len(channels), n_times)
+    clipper = ArtifactClipper().fit(epochs[:split])
+    clipped = clipper.transform(epochs)
+    feats, _ = band_power(clipped, SFREQ, STANDARD_BANDS, channels)
+    return feats
+
+
+def temporal_diagnostic(X, split, channels, n_times):
+    """Return the autocorrelation report and the recommended gap."""
+    feats = _training_fitted_features(X, split, channels, n_times)
+    report = feature_lag_autocorr(feats, lags=AUTOCORR_LAGS)
+    recommendation = choose_temporal_gap(report, threshold=AUTOCORR_THRESHOLD)
     return {
-        "n_train": int(split),
-        "n_test": int(len(yte)),
+        "lag_report": report,
+        "gap_choice": recommendation,
+        "note": (
+            "Autocorrelation is measured on band-power features extracted with "
+            "a clipper fitted on the first "
+            f"{int(CHRONO_TRAIN_FRAC * 100)}% of windows (the chronological "
+            "training half), so the values reflect what the model actually "
+            "consumes rather than the raw voltages."
+        ),
+    }
+
+
+def chronological_holdout(X, y, factory, starts, block_ids,
+                          frac=CHRONO_TRAIN_FRAC, gap_windows=0):
+    """Train on the first `frac` of time; test on the last (1 - frac).
+
+    A `gap_windows` argument drops that many windows between the training
+    tail and the test head so short-range temporal memory cannot leak across
+    the boundary.
+    """
+    n = len(y)
+    split = int(frac * n)
+    if gap_windows < 0:
+        raise ValueError("gap_windows must be non-negative")
+    if split + gap_windows >= n:
+        raise ValueError(
+            f"gap ({gap_windows}) leaves no test windows at split={split} "
+            f"of {n}"
+        )
+    train_idx = np.arange(0, split)
+    test_idx = np.arange(split + gap_windows, n)
+
+    model = factory()
+    model.fit(X[train_idx], y[train_idx])
+    proba = model.predict_proba(X[test_idx])[:, 1]
+    pred = (proba >= 0.5).astype(int)
+
+    from sklearn.metrics import (
+        balanced_accuracy_score, f1_score, roc_auc_score
+    )
+    yte = y[test_idx]
+    return {
+        "n_train": int(len(train_idx)),
+        "n_test": int(len(test_idx)),
+        "gap_windows": int(gap_windows),
+        "train_fraction": float(frac),
         "balanced_accuracy": float(balanced_accuracy_score(yte, pred)),
         "macro_f1": float(f1_score(yte, pred, average="macro", zero_division=0)),
         "roc_auc": (float(roc_auc_score(yte, proba))
                     if len(np.unique(yte)) > 1 else None),
-        "majority_baseline_accuracy": float(max(np.mean(yte), 1 - np.mean(yte))),
+        "baselines": per_split_baselines(y[train_idx], yte,
+                                         random_state=RANDOM_STATE),
+        "provenance": {
+            "train_start_sample": int(starts[train_idx[0]]),
+            "train_end_sample_exclusive": int(starts[train_idx[-1]]
+                                              + int(SFREQ * WIN_SEC)),
+            "test_start_sample": int(starts[test_idx[0]]),
+            "test_end_sample_exclusive": int(starts[test_idx[-1]]
+                                             + int(SFREQ * WIN_SEC)),
+            "test_block_ids": [int(b) for b in block_ids[test_idx]],
+        },
     }
 
 
+def _log_lobo_or_expanding(name, result):
+    for m in ("balanced_accuracy", "macro_f1", "roc_auc"):
+        ci = result["subject_bootstrap_ci"].get(m)
+        if ci is None:
+            print(f"  {m:20s} n/a (single-class folds only)")
+            continue
+        print(f"  {m:20s} {format_ci(ci)}")
+
+
+def _describe_baselines(split_name, baselines):
+    print(f"  baselines ({split_name}):")
+    print(f"    positive-rate test  : {baselines['positive_rate_test']:.3f}")
+    print(f"    majority-class acc  : {baselines['majority_class_accuracy']:.3f}")
+    print(f"    stratified dummy balAcc: "
+          f"{baselines['dummy_stratified_balanced_accuracy']:.3f}")
+    print(f"    uniform dummy    balAcc: "
+          f"{baselines['dummy_uniform_balanced_accuracy']:.3f}")
+
+
 def main():
-    X, y, blocks, channels, n_times = load()
+    X, y, blocks, starts, channels, n_times = load()
     factory = lambda: make_primary(channels, n_times)
 
     print(f"Phase 1: {len(y)} windows of {WIN_SEC}s, {len(channels)} channels, "
           f"{len(np.unique(blocks))} label blocks, 1 subject")
     print(f"Primary model (prespecified): {PRIMARY_NAME}")
-    print(f"Class balance: open {int((y == 0).sum())} / closed {int((y == 1).sum())}\n")
+    print(f"Class balance: open {int((y == 0).sum())} / "
+          f"closed {int((y == 1).sum())}\n")
 
-    print("=== NAIVE RANDOM WINDOW SPLIT (leaky, for contrast) ===")
-    naive = evaluate_naive_split(X, y, factory, random_state=RANDOM_STATE)
+    # ------------------------------------------------------------------
+    # Temporal dependence diagnostic and gap choice
+    # ------------------------------------------------------------------
+    chrono_split = int(CHRONO_TRAIN_FRAC * len(y))
+    diagnostic = temporal_diagnostic(X, chrono_split, channels, n_times)
+    gap_windows = diagnostic["gap_choice"]["recommended_gap_windows"]
+    print("=== TEMPORAL DEPENDENCE (fold-safe band-power features) ===")
+    for lag, ac in zip(diagnostic["lag_report"]["lags"],
+                       diagnostic["lag_report"]["mean_abs_autocorr"]):
+        print(f"  lag {lag}: mean |autocorr| = {ac:.3f}")
+    print(f"  chosen gap: {gap_windows} windows "
+          f"({diagnostic['gap_choice']['reason']}, "
+          f"threshold={diagnostic['gap_choice']['threshold']})\n")
+
+    # ------------------------------------------------------------------
+    # Naive random window split (descriptive contrast, not a valid estimate)
+    # ------------------------------------------------------------------
+    print("=== NAIVE RANDOM WINDOW SPLIT (leaky, descriptive only) ===")
+    naive = evaluate_naive_split(X, y, factory, random_state=RANDOM_STATE,
+                                 include_baselines=True)
     print(f"  balanced_accuracy    {naive['balanced_accuracy']:.3f}")
     print(f"  macro_f1             {naive['macro_f1']:.3f}")
     print(f"  roc_auc              {naive['roc_auc']:.3f}")
+    _describe_baselines("naive random", naive["baselines"])
 
-    print("\n=== CHRONOLOGICAL 70/30 HOLDOUT ===")
-    chrono = chronological_holdout(X, y, factory)
+    # ------------------------------------------------------------------
+    # Chronological 70/30 holdout with the diagnostic-chosen gap
+    # ------------------------------------------------------------------
+    print("\n=== CHRONOLOGICAL 70/30 HOLDOUT (leakage-safe, temporal gap) ===")
+    chrono = chronological_holdout(
+        X, y, factory, starts, blocks,
+        frac=CHRONO_TRAIN_FRAC, gap_windows=gap_windows,
+    )
     print(f"  balanced_accuracy    {chrono['balanced_accuracy']:.3f}")
     print(f"  macro_f1             {chrono['macro_f1']:.3f}")
-    print(f"  roc_auc              {chrono['roc_auc']:.3f}")
-    print(f"  majority baseline    {chrono['majority_baseline_accuracy']:.3f}")
+    if chrono["roc_auc"] is None:
+        print("  roc_auc              n/a")
+    else:
+        print(f"  roc_auc              {chrono['roc_auc']:.3f}")
+    print(f"  gap                  {chrono['gap_windows']} windows")
+    _describe_baselines("chronological", chrono["baselines"])
 
-    print("\n=== LEAVE-ONE-BLOCK-OUT (same evaluator as Phase 2) ===")
-    lobo = evaluate_loso(X, y, blocks, factory, random_state=RANDOM_STATE)
-    for m in ("balanced_accuracy", "macro_f1", "roc_auc"):
-        ci = lobo["subject_bootstrap_ci"][m]
-        n_ok = lobo["subject_mean"][m]["n_subjects"]
-        print(f"  {m:20s} {format_ci(ci)}   ({n_ok} blocks scored)")
+    # ------------------------------------------------------------------
+    # Expanding-window across label blocks (walk-forward, leakage-safe)
+    # ------------------------------------------------------------------
+    print("\n=== EXPANDING-WINDOW (walk-forward across label blocks) ===")
+    n_unique_blocks = len(np.unique(blocks))
+    # Start with a third of the blocks in the initial training window, walk
+    # one block at a time. Gap is measured in blocks; if the recommended gap
+    # in windows is 0 we still keep 0 blocks (adjacent-block boundary is
+    # already leakage-safe under the block grouping).
+    gap_groups = 1 if gap_windows > 0 else 0
+    n_init_groups = max(3, n_unique_blocks // 3)
+    expanding = evaluate_expanding_window(
+        X, y, blocks, factory,
+        n_init_groups=n_init_groups,
+        step_groups=1,
+        gap_groups=gap_groups,
+        random_state=RANDOM_STATE,
+        sample_metadata={"start_sample": starts, "block_id": blocks},
+        include_baselines=True,
+    )
+    _log_lobo_or_expanding("expanding-window", expanding)
+    print(f"  n_folds              {expanding['config']['n_folds']}")
+    print(f"  n_init_groups        {expanding['config']['n_init_groups']}")
+    print(f"  gap_groups           {expanding['config']['gap_groups']}")
+
+    # ------------------------------------------------------------------
+    # Leave-one-block-out (retained supporting check)
+    # ------------------------------------------------------------------
+    print("\n=== LEAVE-ONE-BLOCK-OUT (retained supporting check) ===")
+    lobo = evaluate_loso(
+        X, y, blocks, factory,
+        random_state=RANDOM_STATE,
+        sample_metadata={"start_sample": starts, "block_id": blocks},
+        include_baselines=True,
+    )
+    _log_lobo_or_expanding("LOBO", lobo)
     print("  note: each held-out block is single-class, so per-block AUC is "
           "undefined and balanced accuracy collapses to that block's recall.")
 
-    print("\n=== SECONDARY MODELS (leave-one-block-out) ===")
+    # ------------------------------------------------------------------
+    # Secondary models under leave-one-block-out (unchanged from pre-audit)
+    # ------------------------------------------------------------------
+    print("\n=== SECONDARY MODELS (leave-one-block-out, retained) ===")
     secondary = {}
     for sname, model in [
         ("SVM-RBF", lambda: SVC(kernel="rbf", probability=True,
@@ -130,7 +310,8 @@ def main():
             n_estimators=300, random_state=RANDOM_STATE)),
     ]:
         f = lambda m=model: Pipeline([
-            ("bandpower", EpochBandPower(SFREQ, STANDARD_BANDS, channels, n_times)),
+            ("bandpower", EpochBandPower(SFREQ, STANDARD_BANDS,
+                                         channels, n_times)),
             ("scaler", StandardScaler()),
             ("model", m()),
         ])
@@ -139,21 +320,40 @@ def main():
             "subject_mean": res["subject_mean"],
             "subject_bootstrap_ci": res["subject_bootstrap_ci"],
         }
+        ci = res["subject_bootstrap_ci"]["balanced_accuracy"]
         print(f"  {sname:20s} "
-              f"balAcc={format_ci(res['subject_bootstrap_ci']['balanced_accuracy'])}")
+              f"balAcc={format_ci(ci) if ci else 'n/a'}")
 
+    # ------------------------------------------------------------------
+    # Persist
+    # ------------------------------------------------------------------
     path = save_results("phase1_results", {
         "phase": "1_eye_state",
         "dataset": "UCI EEG Eye State, single continuous recording, 1 subject",
         "primary_model": PRIMARY_NAME,
         "primary_model_prespecified": True,
-        "grouping_unit": "contiguous label block (single subject, so no LOSO)",
+        "grouping_unit": (
+            "contiguous label block (single subject, so no LOSO)"
+        ),
         "cross_subject": None,
         "cross_subject_note": "Not available. The dataset contains one subject.",
+        "temporal_dependence": diagnostic,
+        "temporal_gap_windows_used": int(gap_windows),
         "naive_random_split": naive,
         "chronological_holdout": chrono,
+        "expanding_window": expanding,
         "leave_one_block_out": lobo,
         "secondary_models": secondary,
+        "audit": {
+            "version": "2026-09",
+            "notes": (
+                "Naive split retained as descriptive only. Chronological "
+                "holdout and expanding-window run with a temporal gap "
+                "chosen from a measured autocorrelation threshold. Every "
+                "leakage-safe split reports its own baselines; no baseline "
+                "is shared across protocols."
+            ),
+        },
     })
     print(f"\nsaved {path}")
 
