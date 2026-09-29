@@ -1,14 +1,12 @@
 # NeuroSense: Leakage-Aware, Explainable EEG Decoding
 
-**An honest look at when EEG machine learning actually generalizes, and when it only appears to.**
-
-This repository reports logistic-regression scores on two public EEG datasets under standard train/test rules: a random split, a chronological holdout, walk-forward blocks, leave-one-block-out, leave-one-subject-out, and leave-one-run-out. Those rules are not a new method. The numbers below are what this code produced on these files.
+This repository reports band-power logistic regression, and a CSP plus LDA baseline, on two public EEG recordings. The splits are a random split, a chronological holdout, walk-forward blocks, leave-one-block-out, leave-one-subject-out, and leave-one-run-out. CSP plus LDA is the motor-imagery baseline of Ramoser, Müller-Gerking, and Pfurtscheller (2000). The numbers below are what this code produced on these files.
 
 A full write-up is in [`reports/NeuroSense_Report.pdf`](reports/NeuroSense_Report.pdf).
 
 ## Core finding
 
-> On the UCI eye-state recording, the leakage-safe scores do not beat the same-split dummy. On the PhysioNet subset, within-subject band-power logistic regression is above 0.5. Leave-one-subject-out is not. Coefficient lists are the fitted weights of that model. They are not a physiological result.
+> On the UCI eye-state recording, one subject, the merged-block balanced-accuracy interval includes the same-split dummy prior. On the ten-subject PhysioNet subset, band-power logistic regression leave-one-subject-out balanced accuracy is 0.470 [0.423, 0.524]. CSP plus LDA leave-one-subject-out balanced accuracy on the same ten subjects is 0.569 [0.519, 0.627]. Coefficient lists are the fitted weights of the band-power logistic regression. They are not a physiological result.
 
 ## How to read the numbers
 
@@ -33,7 +31,8 @@ All numbers are produced by the code in this repo and stored in `reports/results
 | Phase 2 (motor imagery) | Naive random trial split                                     | balAcc = 0.516, AUC = 0.551                                                                     | leaky contrast                       |
 | Phase 2 (motor imagery) | Within-subject shuffled trial CV                             | balAcc = 0.607 [0.546, 0.688], AUC = 0.644 [0.577, 0.729]; 9/10 and 10/10 subjects above 0.5    | modest                               |
 | Phase 2 (motor imagery) | Within-subject leave-one-run-out (10 subject means)          | balAcc = 0.574 [0.498, 0.654], AUC = 0.633 [0.545, 0.729]; same-session runs only               | interval includes 0.5                |
-| Phase 2 (motor imagery) | Cross-subject (leave-one-subject-out)                        | balAcc = 0.470 [0.423, 0.524], AUC = 0.518 [0.450, 0.593]                                       | interval includes 0.5                |
+| Phase 2 (motor imagery) | Cross-subject, band-power logistic regression                | balAcc = 0.470 [0.423, 0.524], AUC = 0.518 [0.450, 0.593]                                       | ten-subject subset; interval includes 0.5 |
+| Phase 2 (motor imagery) | Cross-subject, CSP plus LDA                                  | balAcc = 0.569 [0.519, 0.627]                                                                   | same ten subjects                     |
 
 The 2026-09 audit added (a) temporal-gap chronological holdout and expanding-window on Phase 1, (b) leave-one-merged-block-out with a DummyClassifier(prior) diagnostic that replaces single-class native LOBO as the primary group protocol, (c) leave-one-run-out within subject on Phase 2, (d) persisted per-fold labels, predictions, and probabilities in Phase 2 JSON, (e) per-split baselines throughout, (f) a hardened raw-data reproduction path with a manifest of SHA-256 source-file checksums, (g) signed per-fold coefficients captured and consumed by the figure code so figures do not refit models, and (h) a CSP + LDA extension for Phase 2 as a separately labelled comparison to the audited band-power primary. The primary model is the same as before (LogisticRegression, C = 1.0, balanced). See [`REFACTOR_NOTES.md`](REFACTOR_NOTES.md) and [`reports/AUDIT_LOG.md`](reports/AUDIT_LOG.md) for the full change list.
 
@@ -110,7 +109,7 @@ Leave-one-run-out balanced accuracy is 0.574 [0.498, 0.654]. That interval resam
 
 A spread from 0.361 to 0.638 that a single pooled figure hides completely. Standard deviation across subjects: 0.087. Secondary models cross-subject: LogisticRegression (C = 0.5) 0.472 [0.422, 0.522], RandomForest (300) 0.490 [0.455, 0.528].
 
-**Scores.** On this cache the shuffled-trial balanced-accuracy interval is 0.546 to 0.688. Leave-one-subject-out balanced accuracy is 0.470 [0.423, 0.524], which includes 0.5. This repository does not include a subject-identity classifier.
+**Scores.** On this cache the shuffled-trial balanced-accuracy interval is 0.546 to 0.688. Band-power leave-one-subject-out balanced accuracy is 0.470 [0.423, 0.524]. That interval includes 0.5. CSP plus LDA on the same ten subjects is reported in the next section. This repository does not include a subject-identity classifier.
 
 ![Phase 2 generalization](reports/figures/fig2_phase2_generalization.png)
 
@@ -151,7 +150,7 @@ CSP plus LDA is the usual motor-imagery baseline (Ramoser, Müller-Gerking, and 
 
 **2. Within-subject interval.** On the 450-trial cache, `bootstrap_ci` gives shuffled-trial balanced accuracy 0.546 to 0.688 and AUC 0.577 to 0.729. Leave-one-run-out balanced accuracy, resampling 10 subject means, is 0.498 to 0.654. Nine of 10 subjects sit above 0.5 on shuffled-trial balanced accuracy, and 10 of 10 on AUC. That count is not a test. Leave-one-run-out uses three runs from the same recording.
 
-An earlier version also paired a balanced accuracy from one model with an AUC from another. Every headline metric here comes from the single prespecified model.
+The original headline rounded logistic-regression balanced accuracy 0.575 and AUC 0.611 to 0.58 and 0.61. Both figures are from that model. Every headline metric in this README comes from the single prespecified model.
 
 **3. The Phase 1 frontal-artifact claim is withdrawn.** It was produced by a different model (RandomForest), a different metric (F1), and globally fitted artifact clipping. Under the prespecified pipeline the top features are mixed, and the underlying model overlaps a same-splits dummy prior, which makes the attribution a descriptive ranking rather than physiological evidence. See the Phase 1 explainability section above.
 
@@ -161,15 +160,9 @@ Full detail in [`REFACTOR_NOTES.md`](REFACTOR_NOTES.md).
 
 ---
 
-## A caveat on the inflation story
-
-Phase 2's naive random trial split reaches 0.516 against a cross-subject 0.470. Phase 2 uses discrete trials, and random splitting of discrete trials leaks far less than random splitting of Phase 1's continuous windows.
-
-**The dramatic inflation result belongs to Phase 1 and is not a general claim about EEG machine learning.** How much a naive split inflates depends on how much temporal and session structure the epochs share.
-
 ## Unified finding
 
-On the UCI file, the random-split balanced accuracy is 0.533 and the chronological holdout is 0.416. On the PhysioNet subset, the random-split balanced accuracy is 0.516 and leave-one-subject-out is 0.470. The large gap between a random split and a blocked split is in Phase 1. Phase 2 does not show that gap. Leave-one-subject-out band-power balanced accuracy includes 0.5. No further cause is identified.
+On the UCI file, the random-split balanced accuracy is 0.533 and the chronological holdout is 0.416. On the ten-subject PhysioNet subset, band-power logistic regression scores random-split balanced accuracy 0.516 and leave-one-subject-out balanced accuracy 0.470 [0.423, 0.524]. CSP plus LDA leave-one-subject-out balanced accuracy on the same ten subjects is 0.569 [0.519, 0.627]. The splits differ. This comparison does not identify why.
 
 ## Repository structure
 
@@ -230,9 +223,11 @@ Supported Python: **3.9** (audit runs used 3.9.6). The `numpy==2.0.2` pin means 
 
 ### Path A: cached-features reproduction (fast, no EDF download)
 
+Phase 2 band-power reads the committed cache and does not download the PhysioNet EDFs. Phase 1 still requires the UCI ARFF file at `data/raw/EEG Eye State.arff`.
+
 ```bash
 pip install -r requirements.txt       # MNE is only needed for path B
-python src/phase1_eyestate.py          # reads data/raw/EEG Eye State.arff
+python src/phase1_eyestate.py          # requires data/raw/EEG Eye State.arff
 python src/phase2_motor_imagery.py     # reads data/processed/physionet_features.npz
 python src/make_figures.py             # figures from JSON only, no model fit
 python src/make_tables.py              # markdown tables from the same JSONs
@@ -286,7 +281,7 @@ Phase 1 is a single subject and a single session on consumer-grade hardware, so 
 
 ## Future work
 
-Scale Phase 2 to all 109 subjects to tighten the estimates; add common spatial pattern (CSP) features, which are the standard for motor imagery; attempt subject-adaptive transfer, both unsupervised alignment and small-sample calibration, to move cross-subject decoding above chance; and explore deep models only after establishing these leakage-safe baselines. Add explanation-faithfulness checks (permutation of top features vs held-out score drop) and model-randomisation tests to strengthen the attribution reading beyond a descriptive ranking. A third phase on mental arithmetic is planned, with its analysis prespecified in [`PREREGISTRATION.md`](PREREGISTRATION.md).
+Scale Phase 2 to all 109 subjects to tighten the estimates. CSP plus LDA is already in this repository as a labelled Phase 2 baseline. Attempt subject-adaptive transfer, both unsupervised alignment and small-sample calibration. Explore deep models only after these leakage-safe baselines. Add explanation-faithfulness checks (permutation of top features vs held-out score drop) and model-randomisation tests. A third phase on mental arithmetic is planned, with its analysis prespecified in [`PREREGISTRATION.md`](PREREGISTRATION.md).
 
 ## Data and licensing
 

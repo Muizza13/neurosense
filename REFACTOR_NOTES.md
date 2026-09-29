@@ -58,10 +58,10 @@ descriptive AUC is 0.476.
 
 ### Also worth noting
 
-The naive random trial split reaches 0.516. Leave-one-subject-out is 0.470.
-Phase 2 uses discrete trials, so random splitting leaks far less than it does in
-Phase 1's continuous windows. The inflation story is a Phase 1 phenomenon and
-should be presented as such rather than as a general claim.
+The naive random trial split reaches 0.516. Leave-one-subject-out band-power
+balanced accuracy is 0.470 [0.423, 0.524]. CSP plus LDA leave-one-subject-out
+balanced accuracy on the same ten subjects is 0.569 [0.519, 0.627]. The splits
+differ. This comparison does not identify why.
 
 ## Phase 1, refactored
 
