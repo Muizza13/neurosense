@@ -1,0 +1,375 @@
+{
+  "bands_hz": {
+    "beta": [
+      13,
+      30
+    ],
+    "mu": [
+      8,
+      13
+    ]
+  },
+  "cache_path": "data/processed/physionet_features.npz",
+  "channel_order": [
+    "FC3",
+    "FCZ",
+    "FC4",
+    "C5",
+    "C3",
+    "C1",
+    "CZ",
+    "C2",
+    "C4",
+    "C6",
+    "CP3",
+    "CPZ",
+    "CP4"
+  ],
+  "epoch_window_seconds": {
+    "tmax": 3.5,
+    "tmin": 0.5
+  },
+  "feature_names": [
+    "FC3_mu",
+    "FC3_beta",
+    "FCZ_mu",
+    "FCZ_beta",
+    "FC4_mu",
+    "FC4_beta",
+    "C5_mu",
+    "C5_beta",
+    "C3_mu",
+    "C3_beta",
+    "C1_mu",
+    "C1_beta",
+    "CZ_mu",
+    "CZ_beta",
+    "C2_mu",
+    "C2_beta",
+    "C4_mu",
+    "C4_beta",
+    "C6_mu",
+    "C6_beta",
+    "CP3_mu",
+    "CP3_beta",
+    "CPZ_mu",
+    "CPZ_beta",
+    "CP4_mu",
+    "CP4_beta"
+  ],
+  "imagery_runs": [
+    4,
+    8,
+    12
+  ],
+  "n_features": 26,
+  "n_subjects": 10,
+  "n_trials": 383,
+  "npz_keys": [
+    "X",
+    "y",
+    "g",
+    "run",
+    "trial_id"
+  ],
+  "per_subject": [
+    {
+      "n_left": 19,
+      "n_right": 20,
+      "n_trials": 39,
+      "run_trial_counts": {
+        "4": 15,
+        "8": 9,
+        "12": 15
+      },
+      "source_files": [
+        {
+          "bytes": 2596896,
+          "path": "data/physionet/S001/S001R04.edf",
+          "sha256": "3d161f88e1c00632585287d2ce584c2bc0f08862438eb255ea8723e00fac693d"
+        },
+        {
+          "bytes": 1556318,
+          "path": "data/physionet/S001/S001R08.edf",
+          "sha256": "d3cba0af1f00c3142bb6b60588cd57103bd0343a70609bdbc228672f36238899"
+        },
+        {
+          "bytes": 2596896,
+          "path": "data/physionet/S001/S001R12.edf",
+          "sha256": "2b281c9b687b4c4176e83251d74743721f2d6ebd76656a972a3b9c44d9d88cd5"
+        }
+      ],
+      "subject_id": "S001",
+      "subject_index": 0
+    },
+    {
+      "n_left": 16,
+      "n_right": 15,
+      "n_trials": 31,
+      "run_trial_counts": {
+        "4": 8,
+        "8": 15,
+        "12": 8
+      },
+      "source_files": [
+        {
+          "bytes": 1458122,
+          "path": "data/physionet/S002/S002R04.edf",
+          "sha256": "37535d7a3e3f85cd334066ca50441ec5ae07ef547f77ccdeae0dc88d5e62ddfc"
+        },
+        {
+          "bytes": 2555616,
+          "path": "data/physionet/S002/S002R08.edf",
+          "sha256": "02d64941f6bcd1635bc7dd187a9553331b73933e9771f4e7c59249dfc5632c5a"
+        },
+        {
+          "bytes": 1458158,
+          "path": "data/physionet/S002/S002R12.edf",
+          "sha256": "fb8cad083773b53360c835f39d3256942f9c7d13ad5c54cadaa2c42b4cdf3f33"
+        }
+      ],
+      "subject_id": "S002",
+      "subject_index": 1
+    },
+    {
+      "n_left": 20,
+      "n_right": 18,
+      "n_trials": 38,
+      "run_trial_counts": {
+        "4": 15,
+        "8": 8,
+        "12": 15
+      },
+      "source_files": [
+        {
+          "bytes": 2596896,
+          "path": "data/physionet/S003/S003R04.edf",
+          "sha256": "7d0732eea963488a53153835524e55c2b68220b0a0c7c5be99e535a9f5367e7f"
+        },
+        {
+          "bytes": 1458122,
+          "path": "data/physionet/S003/S003R08.edf",
+          "sha256": "d6abbae049b154d0d7dfa7e5626efbb81bc874f89ece4cb6516c968dc0624c35"
+        },
+        {
+          "bytes": 2596896,
+          "path": "data/physionet/S003/S003R12.edf",
+          "sha256": "bbf7137bfa7905724741e95359fa090439d4422c07bdba16c792acb09ebd6421"
+        }
+      ],
+      "subject_id": "S003",
+      "subject_index": 2
+    },
+    {
+      "n_left": 20,
+      "n_right": 20,
+      "n_trials": 40,
+      "run_trial_counts": {
+        "4": 10,
+        "8": 15,
+        "12": 15
+      },
+      "source_files": [
+        {
+          "bytes": 1687426,
+          "path": "data/physionet/S004/S004R04.edf",
+          "sha256": "f2c4c8b9d1ff26ddcd1e5e1072d65615f1beacdd9056a63fbd3966ad6b53e3b7"
+        },
+        {
+          "bytes": 2555616,
+          "path": "data/physionet/S004/S004R08.edf",
+          "sha256": "1ab5909b183413283a7ea76e35311a68a4688558f0044b9faab3987291cbdb92"
+        },
+        {
+          "bytes": 2555616,
+          "path": "data/physionet/S004/S004R12.edf",
+          "sha256": "c44b7be0464d86be4d460ec66432869b7b3e8dcaa2067af02d6e772abf5c11de"
+        }
+      ],
+      "subject_id": "S004",
+      "subject_index": 3
+    },
+    {
+      "n_left": 16,
+      "n_right": 17,
+      "n_trials": 33,
+      "run_trial_counts": {
+        "4": 9,
+        "8": 15,
+        "12": 9
+      },
+      "source_files": [
+        {
+          "bytes": 1572756,
+          "path": "data/physionet/S005/S005R04.edf",
+          "sha256": "74c4106a9b51c400c88eaae107e23d31ab8d7d138a6a12644f0a2559422c6b0c"
+        },
+        {
+          "bytes": 2555616,
+          "path": "data/physionet/S005/S005R08.edf",
+          "sha256": "eeed6c328ee256dd2c20d1808e05819bed4ce56b8de1c57914ded00565b6b7bc"
+        },
+        {
+          "bytes": 1556246,
+          "path": "data/physionet/S005/S005R12.edf",
+          "sha256": "d710fdcd482898b9610132d35cc1f67e1d49f9d77896f46da28d7a6785044f60"
+        }
+      ],
+      "subject_id": "S005",
+      "subject_index": 4
+    },
+    {
+      "n_left": 21,
+      "n_right": 18,
+      "n_trials": 39,
+      "run_trial_counts": {
+        "4": 15,
+        "8": 9,
+        "12": 15
+      },
+      "source_files": [
+        {
+          "bytes": 2555616,
+          "path": "data/physionet/S006/S006R04.edf",
+          "sha256": "4bd532bb728e1f2ed2afc0a5c162830a07465b6a4a58e105d1316c6ff1921f3b"
+        },
+        {
+          "bytes": 1474452,
+          "path": "data/physionet/S006/S006R08.edf",
+          "sha256": "159189675a3c32f2253741878f7e5089f9d370a0f3b6c8700e0b134939109bc2"
+        },
+        {
+          "bytes": 2555616,
+          "path": "data/physionet/S006/S006R12.edf",
+          "sha256": "296b5cb14549098dc55ee047cc9ff63faccf480e432b94797ff73cc7209b7353"
+        }
+      ],
+      "subject_id": "S006",
+      "subject_index": 5
+    },
+    {
+      "n_left": 16,
+      "n_right": 16,
+      "n_trials": 32,
+      "run_trial_counts": {
+        "4": 15,
+        "8": 5,
+        "12": 12
+      },
+      "source_files": [
+        {
+          "bytes": 2596896,
+          "path": "data/physionet/S007/S007R04.edf",
+          "sha256": "3b31e50c4a5ebbb25459b1ebdf802b7ca86010857637580aacd53067350553a6"
+        },
+        {
+          "bytes": 929792,
+          "path": "data/physionet/S007/S007R08.edf",
+          "sha256": "62851576717e75f94f41e982ee83b7ab2a40e64050d951ae2ba99794369ea508"
+        },
+        {
+          "bytes": 2144018,
+          "path": "data/physionet/S007/S007R12.edf",
+          "sha256": "9a549643ed648079aa789831ed6f9c7ab6b8cb34597e5d691d68f1a416e5183a"
+        }
+      ],
+      "subject_id": "S007",
+      "subject_index": 6
+    },
+    {
+      "n_left": 21,
+      "n_right": 20,
+      "n_trials": 41,
+      "run_trial_counts": {
+        "4": 15,
+        "8": 11,
+        "12": 15
+      },
+      "source_files": [
+        {
+          "bytes": 2555616,
+          "path": "data/physionet/S008/S008R04.edf",
+          "sha256": "034a26131e1425e6374a459e5887b1f831f7bfdb101a3658d2cd07620cf2c06b"
+        },
+        {
+          "bytes": 1933024,
+          "path": "data/physionet/S008/S008R08.edf",
+          "sha256": "cda4fa354e7a6bf0dbb0ef6976dffdaaa53e71beac0630bcbf1373c027d22247"
+        },
+        {
+          "bytes": 2555616,
+          "path": "data/physionet/S008/S008R12.edf",
+          "sha256": "ddced4ba4dc801313554039823fa1826d0dd52648f87a5ee5ada8e9cdd0678c8"
+        }
+      ],
+      "subject_id": "S008",
+      "subject_index": 7
+    },
+    {
+      "n_left": 24,
+      "n_right": 21,
+      "n_trials": 45,
+      "run_trial_counts": {
+        "4": 15,
+        "8": 15,
+        "12": 15
+      },
+      "source_files": [
+        {
+          "bytes": 2555616,
+          "path": "data/physionet/S009/S009R04.edf",
+          "sha256": "705f53460954e465e7a6ef45bd1f64e675548c08e9238dfb1f448713f9e559f8"
+        },
+        {
+          "bytes": 2555616,
+          "path": "data/physionet/S009/S009R08.edf",
+          "sha256": "a8121c688ffca3db1d3b1f61dd53d6636ac91763cd2269b39636c65dfc6e4fe2"
+        },
+        {
+          "bytes": 2555616,
+          "path": "data/physionet/S009/S009R12.edf",
+          "sha256": "0c3f9700d6bfd8a8dd797803d61b80852688709011e5863f4e13e9ec3948191f"
+        }
+      ],
+      "subject_id": "S009",
+      "subject_index": 8
+    },
+    {
+      "n_left": 24,
+      "n_right": 21,
+      "n_trials": 45,
+      "run_trial_counts": {
+        "4": 15,
+        "8": 15,
+        "12": 15
+      },
+      "source_files": [
+        {
+          "bytes": 2555616,
+          "path": "data/physionet/S010/S010R04.edf",
+          "sha256": "8e68b22936cbcb7f84ed8ff037cb4a99f01064589d181c8056dbef06c1c7159b"
+        },
+        {
+          "bytes": 2555616,
+          "path": "data/physionet/S010/S010R08.edf",
+          "sha256": "b468e77d0c8a73377b4510220c6be95bdefd572f6ed5c4b5f539c9dc0bdef485"
+        },
+        {
+          "bytes": 2555616,
+          "path": "data/physionet/S010/S010R12.edf",
+          "sha256": "0983609a12e6fd9b3ae99fd6968938ec5a3b012948894602233a65b720ac3975"
+        }
+      ],
+      "subject_id": "S010",
+      "subject_index": 9
+    }
+  ],
+  "preprocessing": {
+    "boundary_handling": "reject_by_annotation=False in mne.Epochs",
+    "channel_reference": "raw EDF, no re-reference applied",
+    "integration_rule": "trapezoid over PSD",
+    "welch_fs": 160.0,
+    "welch_nperseg": 160
+  },
+  "sampling_rate_hz": 160.0
+}

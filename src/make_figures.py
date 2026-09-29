@@ -16,23 +16,27 @@ import sys
 
 sys.path.insert(0, ".")
 
+import os
+
 import matplotlib
 
 matplotlib.use("Agg")
+
+# Task 7: create output directories automatically so a fresh clone does not
+# need manual mkdir before running the figures.
+for _d in ("reports/figures", "reports/results", "models"):
+    os.makedirs(_d, exist_ok=True)
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.patches import Patch
 from scipy.io import arff
-from sklearn.inspection import permutation_importance
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from src.core.features import (
     STANDARD_BANDS,
-    ArtifactClipper,
-    band_power,
     make_continuous_windows,
 )
 
@@ -258,87 +262,155 @@ fig.savefig("reports/figures/fig2_phase2_generalization.png", bbox_inches="tight
 plt.close(fig)
 
 # ======================================================================
-# FIGURE 3: interpretability contrast (the only panel that fits a model)
+# FIGURE 3: per-fold signed-coefficient attribution (Task 6)
+#
+# Both panels now use the same method: signed standardized logistic-
+# regression coefficients extracted from within each real evaluation
+# fold. Bars are the mean across folds; horizontal segments are the
+# per-fold values, so the spread is visible. This replaces the previous
+# figure which paired Phase 1 permutation importance with Phase 2
+# coefficients from a model fitted to all subjects at once (not a
+# protocol we evaluate).
 # ======================================================================
+from src.core.evaluation import merged_block_groups  # noqa: E402
+from src.core.features import (  # noqa: E402
+    EpochBandPower,
+    flatten_epochs,
+    label_blocks,
+)
+
 SFREQ1, WIN_SEC = 128.0, 1.0
 
 df = pd.DataFrame(arff.loadarff("data/raw/EEG Eye State.arff")[0])
 df["eyeDetection"] = df["eyeDetection"].astype(int)
-channels = [c for c in df.columns if c != "eyeDetection"]
+channels_1 = [c for c in df.columns if c != "eyeDetection"]
 
 epochs, yw, starts = make_continuous_windows(
-    df[channels].values, df["eyeDetection"].values, SFREQ1, WIN_SEC
+    df[channels_1].values, df["eyeDetection"].values, SFREQ1, WIN_SEC
 )
-split = int(0.70 * len(yw))
+n_times_1 = epochs.shape[2]
+X1_flat = flatten_epochs(epochs)
+blocks_1 = label_blocks(df["eyeDetection"].values)[starts]
+super_1 = merged_block_groups(blocks_1, blocks_per_superblock=4)
 
-# Clipping fitted on the training segment only, as in phase1_eyestate.py.
-clipper = ArtifactClipper().fit(epochs[:split])
-Xtr, names1 = band_power(clipper.transform(epochs[:split]), SFREQ1,
-                         STANDARD_BANDS, channels)
-Xte, _ = band_power(clipper.transform(epochs[split:]), SFREQ1,
-                    STANDARD_BANDS, channels)
+# Feature names in the Phase 1 pipeline order.
+names1 = [f"{ch}_{b}" for ch in channels_1 for b in STANDARD_BANDS]
 
-model1 = Pipeline([
-    ("scaler", StandardScaler()),
-    ("model", LogisticRegression(C=1.0, class_weight="balanced",
-                                 max_iter=5000, random_state=RANDOM_STATE)),
-]).fit(Xtr, yw[:split])
+# Per-fold signed standardised coefficients from the merged-LOBO folds.
+# Fitting inside the fold is what the phase actually evaluates, so the
+# explanation is model-specific and protocol-consistent.
+coef_folds_p1 = []
+for super_id in np.unique(super_1):
+    train_idx = np.where(super_1 != super_id)[0]
+    if len(np.unique(yw[train_idx])) < 2:
+        continue
+    pipe = Pipeline([
+        ("bandpower", EpochBandPower(SFREQ1, STANDARD_BANDS,
+                                     channels_1, n_times_1)),
+        ("scaler", StandardScaler()),
+        ("model", LogisticRegression(C=1.0, class_weight="balanced",
+                                     max_iter=5000,
+                                     random_state=RANDOM_STATE)),
+    ])
+    pipe.fit(X1_flat[train_idx], yw[train_idx])
+    coef_folds_p1.append(pipe.named_steps["model"].coef_[0])
+coef_folds_p1 = np.asarray(coef_folds_p1)
+coef_mean_p1 = coef_folds_p1.mean(axis=0)
+# Rank by mean |coef|, then plot the SIGNED mean and per-fold segments.
+order1 = np.argsort(np.abs(coef_mean_p1))[::-1][:10]
 
-imp = permutation_importance(model1, Xte, yw[split:], n_repeats=30,
-                             random_state=RANDOM_STATE,
-                             scoring="balanced_accuracy")
-order = imp.importances_mean.argsort()[::-1][:10]
 POSTERIOR = {"O1", "O2", "P7", "P8", "T7", "T8"}
-f1names = [names1[i] for i in order]
-f1vals = [imp.importances_mean[i] for i in order]
-f1cols = [COOL if n.split("_")[0] in POSTERIOR else HOT for n in f1names]
+f1_labels = [names1[i] for i in order1]
+f1_means = [coef_mean_p1[i] for i in order1]
+f1_folds = [coef_folds_p1[:, i] for i in order1]
 
+# Phase 2: per-subject models from within-subject shuffled trial CV.
+# One fit per subject on that subject's own trials, coefficients extracted
+# and averaged across subjects. Report signed mean and per-subject range.
 d = np.load("data/processed/physionet_features.npz")
-X2, y2 = d["X"], d["y"].astype(int)
+X2, y2, g2 = d["X"], d["y"].astype(int), d["g"]
 MOTOR = ["FC3", "FCZ", "FC4", "C5", "C3", "C1", "CZ", "C2", "C4", "C6",
          "CP3", "CPZ", "CP4"]
 names2 = [f"{ch}_{b}" for ch in MOTOR for b in ("mu", "beta")]
 
-model2 = Pipeline([
-    ("scaler", StandardScaler()),
-    ("model", LogisticRegression(C=1.0, class_weight="balanced",
-                                 max_iter=5000, random_state=RANDOM_STATE)),
-]).fit(X2, y2)
-coef = model2.named_steps["model"].coef_[0]
-o2 = np.argsort(np.abs(coef))[::-1][:10]
-CLINE = {"C5", "C3", "C1", "CZ", "C2", "C4", "C6"}
-f2names = [names2[i] for i in o2]
-f2vals = [abs(coef[i]) for i in o2]
-f2cols = [GOOD if n.split("_")[0] in CLINE else GREY for n in f2names]
+coef_folds_p2 = []
+for s in np.unique(g2):
+    Xs, ys = X2[g2 == s], y2[g2 == s]
+    if len(np.unique(ys)) < 2:
+        continue
+    pipe = Pipeline([
+        ("scaler", StandardScaler()),
+        ("model", LogisticRegression(C=1.0, class_weight="balanced",
+                                     max_iter=5000,
+                                     random_state=RANDOM_STATE)),
+    ]).fit(Xs, ys)
+    coef_folds_p2.append(pipe.named_steps["model"].coef_[0])
+coef_folds_p2 = np.asarray(coef_folds_p2)
+coef_mean_p2 = coef_folds_p2.mean(axis=0)
+order2 = np.argsort(np.abs(coef_mean_p2))[::-1][:10]
 
-fig, (a1, a2) = plt.subplots(1, 2, figsize=(11, 4.6))
-a1.barh(range(len(f1names))[::-1], f1vals, color=f1cols)
-a1.set_yticks(range(len(f1names))[::-1])
-a1.set_yticklabels(f1names, fontsize=9)
-a1.set_xlabel("permutation importance (balanced accuracy)")
-a1.set_title(
-    f"Phase 1: attribution on a model scoring "
-    f"{merged_ci['point']:.3f} on merged-LOBO\n"
-    "no signal to attribute, so this is not evidence about physiology",
-    fontsize=10.5, loc="left", color=HOT,
+CLINE = {"C5", "C3", "C1", "CZ", "C2", "C4", "C6"}
+f2_labels = [names2[i] for i in order2]
+f2_means = [coef_mean_p2[i] for i in order2]
+f2_folds = [coef_folds_p2[:, i] for i in order2]
+
+
+def _plot_signed_attribution(ax, labels, means, per_fold, colour_map,
+                             xlabel, title, colour_title):
+    n = len(labels)
+    positions = np.arange(n)[::-1]
+    ax.axvline(0, color="black", lw=0.8)
+    for i, (m, folds) in enumerate(zip(means, per_fold)):
+        col = colour_map(labels[i])
+        # Bar for mean
+        ax.barh(positions[i], m, color=col, alpha=0.75, zorder=2)
+        # Per-fold segments (dots) so variability is visible
+        ax.scatter(folds, np.full(len(folds), positions[i]),
+                   s=18, color="white", edgecolor="black",
+                   linewidth=0.5, zorder=3)
+    ax.set_yticks(positions)
+    ax.set_yticklabels(labels, fontsize=9)
+    ax.set_xlabel(xlabel, fontsize=9)
+    ax.set_title(title, fontsize=10.5, loc="left")
+
+
+def _p1_colour(name):
+    return COOL if name.split("_")[0] in POSTERIOR else HOT
+
+
+def _p2_colour(name):
+    return GOOD if name.split("_")[0] in CLINE else GREY
+
+
+fig, (a1, a2) = plt.subplots(1, 2, figsize=(12, 5.2))
+_plot_signed_attribution(
+    a1, f1_labels, f1_means, f1_folds, _p1_colour,
+    "signed standardized coefficient (mean across merged-LOBO folds)",
+    (f"Phase 1: coefficients from a model whose merged-LOBO balAcc "
+     f"({merged_ci['point']:.3f})\noverlaps the same-splits dummy prior "
+     f"(descriptive ranking only)"),
+    "channel group",
 )
-a2.barh(range(len(f2names))[::-1], f2vals, color=f2cols)
-a2.set_yticks(range(len(f2names))[::-1])
-a2.set_yticklabels(f2names, fontsize=9)
-a2.set_xlabel("|standardized coefficient|")
-a2.set_title("Phase 2: top features are C3/C4 mu\n= sensorimotor lateralization",
-             fontsize=10.5, loc="left", color=GOOD)
+_plot_signed_attribution(
+    a2, f2_labels, f2_means, f2_folds, _p2_colour,
+    "signed standardized coefficient (mean across per-subject fits)",
+    ("Phase 2: per-subject signed coefficients; top magnitudes sit on "
+     "the central strip,\nconsistent with expected sensorimotor patterns"),
+    "channel group",
+)
 a1.legend(handles=[Patch(color=HOT, label="frontal"),
-                   Patch(color=COOL, label="posterior")],
+                   Patch(color=COOL, label="posterior/temporal")],
           frameon=False, fontsize=8, loc="lower right")
 a2.legend(handles=[Patch(color=GOOD, label="central (motor)"),
                    Patch(color=GREY, label="other")],
           frameon=False, fontsize=8, loc="lower right")
-fig.suptitle("Explainability is only as trustworthy as the evaluation beneath "
-             "it: uninterpretable where the model fails (left), corroborating "
-             "known physiology where it works (right)",
-             fontweight="bold", x=0.02, ha="left", fontsize=11)
-fig.tight_layout(rect=[0, 0, 1, 0.95])
+fig.suptitle(
+    "Same attribution method both sides: signed standardized coefficients "
+    "collected inside each evaluation fold. White dots = per-fold values "
+    "(spread you would otherwise not see).",
+    fontweight="bold", x=0.02, ha="left", fontsize=10,
+)
+fig.tight_layout(rect=[0, 0, 1, 0.94])
 fig.savefig("reports/figures/fig3_interpretability_contrast.png",
             bbox_inches="tight")
 plt.close(fig)
@@ -352,5 +424,6 @@ print(f"  fig1 from phase1_results.json: naive={naive_score:.3f} "
 print(f"  fig2 from phase2_results.json: within balAcc="
       f"{w_ci['balanced_accuracy']['point']:.3f} | cross balAcc="
       f"{c_ci['balanced_accuracy']['point']:.3f}")
-print(f"  fig3 recomputed: phase1 top = {f1names[0]}, "
-      f"phase2 top = {f2names[0]}")
+print(f"  fig3 recomputed: phase1 top = {f1_labels[0]} "
+      f"(mean coef {f1_means[0]:+.3f}), "
+      f"phase2 top = {f2_labels[0]} (mean coef {f2_means[0]:+.3f})")

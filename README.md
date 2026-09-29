@@ -77,11 +77,11 @@ Secondary models under leave-one-merged-block-out: SVM-RBF and RandomForest (300
 
 **Explainability, and its limits.** A pre-modeling check found no clean Berger effect in this recording: occipital alpha does not rise on eye closure, which is the first sign that this is not a decodable eye-state signal.
 
-An earlier version of this project went further and reported that the most class-separating features were frontal, reading that as evidence of eye-movement and blink artifact. That claim does not survive the rebuild. Under the prespecified pipeline the top ten features are 6 frontal and 4 posterior or temporal, and the single strongest is `T7_alpha`.
+An earlier version of this project went further and reported that the most class-separating features were frontal, reading that as evidence of eye-movement and blink artifact. That claim does not survive the rebuild, and the audit's re-runs do not restore it either. Signed standardized coefficients extracted from within each merged-LOBO fold (see `src/make_figures.py`; same method as Phase 2) put both frontal and posterior/temporal channels at the top of the mean-|coef| ranking; the single strongest by mean coefficient is `F4_beta`, but per-fold spread is very wide and the model's merged-LOBO balanced accuracy (0.456) overlaps the same-splits DummyClassifier(prior). A high frontal coefficient here is not itself evidence of ocular artifact, and a low central coefficient is not evidence of anything either.
 
-More fundamentally, the model these attributions describe scores **0.416 balanced accuracy, below chance**. Permutation importance on a model that does not work is not evidence about physiology or about artifact. The honest statement is that Phase 1 produces no trustworthy explanation at all, which is itself the point: an explanation inherits the credibility of the evaluation beneath it, and here there is none to inherit.
+The Phase 1 attribution figure is therefore a **descriptive ranking**, not a physiological finding. An explanation inherits the credibility of the evaluation beneath it, and when the evaluation overlaps a dummy the ranking should be read as descriptive text rather than mined for a mechanistic story. Explanation-faithfulness checks (permutation of labels within blocks, model-randomisation tests) are not implemented in this repo; see [`REFACTOR_NOTES.md`](REFACTOR_NOTES.md) for the future-work list.
 
-**Takeaway.** The widely reported high accuracies on this dataset are an artifact of evaluation design. A single continuous recording from one person cannot support generalizable eye-state decoding. This motivates moving to data built for generalization.
+**Takeaway.** On this recording and under the leakage-aware protocols implemented here, the widely reported high accuracies on this dataset appear to be an artifact of evaluation design. This is not a claim that every published high-accuracy result on this dataset was wrong — some published pipelines use different features, filters, or evaluation designs — only that under a leakage-safe design the model does not clear a same-split dummy. A single continuous recording from one person on consumer-grade hardware also cannot support subject-generalizable eye-state decoding on its own, which is what motivates moving to Phase 2's multi-subject data.
 
 ---
 
@@ -112,15 +112,17 @@ Leave-one-run-out is close to the shuffled-trial CV, which is reassuring: the wi
 
 A spread from 0.353 to 0.600 that a single pooled figure hides completely. Standard deviation across subjects: 0.072. Secondary models cross-subject: LogisticRegression (C = 0.5) 0.472 [0.427, 0.514], RandomForest (300) 0.487 [0.444, 0.531].
 
-**Two honest evaluations.** Within a subject, decoding is above chance on AUC but modest, with clear between-subject variability. Across subjects, performance collapses to chance: the features are subject-specific and do not transfer to a new person without calibration.
+**Two honest evaluations.** Within a subject, decoding is above chance on AUC but modest, with clear between-subject variability. Across subjects, performance collapses to chance. The chance-level cross-subject result is _consistent with_ features that carry subject-specific information (montage, cap placement, individual mu-rhythm topography) and do not transfer to a new person without calibration; it does not by itself _prove_ that the model is learning subject identity, which would require an explicit subject-id decoding experiment that is not implemented here.
 
 ![Phase 2 generalization](reports/figures/fig2_phase2_generalization.png)
 
-**Explainability as a validity check, again.** The within-subject model keys on the C3 versus C4 mu rhythm, the lateralized sensorimotor pattern expected from contralateral desynchronization during motor imagery. Here the explanation _confirms_ known physiology. The contrast with Phase 1 is the centerpiece of the project:
+**Explainability, same method both sides (Task 6 correction).** Both Phase 1 and Phase 2 now report signed standardized logistic-regression coefficients extracted from within each real evaluation fold (Phase 1: merged-LOBO folds; Phase 2: per-subject models). The white dots on Figure 3 are the per-fold coefficients so the between-fold spread is visible. The Phase 2 mean coefficients place `C6_beta`, `C1_mu`, `C3_beta`, `C5_mu`, and `C4_mu` at the top of the |coef| ranking, sitting on the central sensorimotor strip — **consistent with expected sensorimotor patterns** for imagined left-vs-right fist movement, and consistent enough across subjects that the signs of the top mu features do not flip randomly. That is a validity check on the model, not a proof of a specific physiological mechanism; the audit deliberately stopped short of "confirms known physiology" language.
 
 ![Interpretability contrast](reports/figures/fig3_interpretability_contrast.png)
 
-Same interpretability method, two very different situations. On the right it corroborates known physiology on a model that genuinely decodes. On the left it describes a model that performs below chance, so the ranking it produces should not be read as a finding.
+Same method, two very different situations. On the right the ranking is stable across subjects and lands on the expected motor strip. On the left the model overlaps a same-splits dummy prior, so the ranking is presented as **descriptive** — a description of what the coefficients happen to be on this recording, not evidence about ocular artifact or about eye-state physiology in either direction.
+
+**Attribution caveat.** These are model-specific coefficients from one prespecified classifier fit inside real evaluation folds. They report what the model uses; they do not by themselves establish faithfulness (that permuting the top feature would degrade held-out score by a matching amount) or robustness (that a differently regularised model would rank the same features). Randomisation tests and permutation-importance-vs-coefficient agreement checks would strengthen the interpretation and are listed in [`REFACTOR_NOTES.md`](REFACTOR_NOTES.md) as future work.
 
 ---
 
@@ -132,7 +134,9 @@ Same interpretability method, two very different situations. On the right it cor
 
 An earlier version also paired a balanced accuracy from one model with an AUC from another. Every headline metric here comes from the single prespecified model.
 
-**3. The Phase 1 frontal-artifact claim is withdrawn.** It was produced by a different model (RandomForest), a different metric (F1), and globally fitted artifact clipping. Under the prespecified pipeline the top features are mixed, and the underlying model scores below chance, which makes the attribution uninterpretable either way. See the Phase 1 explainability section above.
+**3. The Phase 1 frontal-artifact claim is withdrawn.** It was produced by a different model (RandomForest), a different metric (F1), and globally fitted artifact clipping. Under the prespecified pipeline the top features are mixed, and the underlying model overlaps a same-splits dummy prior, which makes the attribution a descriptive ranking rather than physiological evidence. See the Phase 1 explainability section above.
+
+**4. The two attribution panels used different methods before Round 3.** Round 3 of the audit (Task 6) replaced the previous Figure 3 — Phase 1 permutation importance paired with Phase 2 |coef| from a model fit to all subjects at once — with signed standardized coefficients from real evaluation folds on both sides. The "same attribution method" phrasing in the earlier README was inaccurate; it is correct now.
 
 Full detail in [`REFACTOR_NOTES.md`](REFACTOR_NOTES.md).
 
@@ -146,7 +150,7 @@ Phase 2's naive random trial split reaches 0.504 against a cross-subject 0.474. 
 
 ## Unified finding
 
-Across both datasets, naive evaluation overstates performance. Leakage-aware evaluation reveals that EEG band-power features capture session and time structure (Phase 1) and subject identity (Phase 2), neither of which is the intended target. Honest within-subject motor-imagery decoding is achievable but modest, and its explanations align with sensorimotor physiology. Model explanations are trustworthy as evidence only when the evaluation underneath them is leakage-free, and where the evaluation shows the model failing, the explanation should be reported as uninterpretable rather than mined for a story.
+Across both datasets, naive evaluation overstates performance on Phase 1 (dramatically) and marginally on Phase 2. Under leakage-aware evaluation, Phase 1 features from this single-subject continuous recording do not clear a same-split dummy, and Phase 2 features carry structure that supports modest within-subject decoding but does not transfer across people. Whether that non-transfer reflects subject-identity leakage, montage variability, or genuine between-subject differences in motor-imagery neurophysiology is not answered by the present evaluation. Model explanations are usable as descriptive rankings; they warrant a physiological reading only when paired with faithfulness and randomisation checks, which are listed as future work.
 
 ## Repository structure
 
@@ -154,25 +158,26 @@ Across both datasets, naive evaluation overstates performance. Leakage-aware eva
 src/
   core/
     features.py           # windowing, artifact clipping, band power; sfreq is always explicit
-    evaluation.py         # LOSO / expanding-window / per-split baselines / per-subject metric rows
+    evaluation.py         # LOSO / expanding-window / merged-block grouping / per-split baselines
     statistics.py         # subject-level bootstrap, grouped permutation test
     temporal.py           # feature autocorrelation, gap chooser, walk-forward split generators
     results.py            # deterministic JSON serialisation
-  phase1_eyestate.py      # Phase 1: naive / chronological (with gap) / expanding-window / LOBO
-  phase2_motor_imagery.py # Phase 2: within-subject and cross-subject
+  phase1_eyestate.py      # Phase 1: naive / chronological / expanding-window / merged-LOBO + dummy
+  phase2_motor_imagery.py # Phase 2: within-subject shuffled + LORO / cross-subject LOSO
+  physionet_features.py   # raw EDF -> feature cache + manifest (validated, no silent skips)
   make_figures.py         # regenerates the three figures from data
 tests/
   test_features.py        # feature extraction, windowing, clipping
-  test_evaluation.py      # per-subject reporting structure
+  test_evaluation.py      # per-subject reporting, merged_block_groups, persist_predictions, dummy
   test_temporal.py        # autocorrelation diagnostic and expanding-window splits
   test_no_leakage.py      # the project thesis as executable regression tests
 reports/
-  AUDIT_LOG.md            # 2026-09 audit: pre-audit commit, environment, changes
+  AUDIT_LOG.md            # 2026-09 audit: pre-audit commit, environment, changes (rounds 1-3)
   NeuroSense_Report.pdf   # write-up (start here)
   NeuroSense_Report.tex   # its LaTeX source
   results/
-    phase1_results.json   # current, four Phase 1 protocols and per-split baselines
-    phase2_results.json   # current, unchanged from pre-audit
+    phase1_results.json   # current, five Phase 1 protocols with per-split baselines + dummy prior
+    phase2_results.json   # current, LOSO + LORO + shuffled CV, per-fold preds persisted
     archive/pre-audit-<commit>/  # verbatim pre-audit JSONs, never rewritten
   figures/
     fig1_phase1_leakage.png
@@ -180,26 +185,67 @@ reports/
     fig3_interpretability_contrast.png
     archive/pre-audit-<commit>/  # verbatim pre-audit figures
 scripts/
-  download_data.sh        # fetches both datasets (data is not stored in the repo)
-data/processed/           # cached PhysioNet feature matrix (small)
+  download_data.sh        # fetches datasets, hard-fails on missing/truncated files
+data/processed/
+  physionet_features.npz            # committed feature cache (see licensing note above)
+  physionet_features_manifest.json  # SHA-256 of source EDFs, channel order, preprocessing
+models/                              # created automatically by the phase scripts
 PREREGISTRATION.md        # analysis plan for Phase 3, committed before results
-REFACTOR_NOTES.md         # shared-core rebuild + 2026-09 audit notes
+REFACTOR_NOTES.md         # shared-core rebuild + 2026-09 audit notes (rounds 1-3)
 ```
 
 ## Reproduce
 
+Supported Python: **3.9** (audit runs used 3.9.6). The `numpy==2.0.2` pin means Python 3.8 is out. Newer Python versions are likely fine but not verified.
+
+### Path A: cached-features reproduction (fast, no EDF download)
+
 ```bash
-pip install -r requirements.txt
-bash scripts/download_data.sh          # downloads UCI + PhysioNet (not committed to the repo)
-python src/phase1_eyestate.py          # Phase 1
-python src/phase2_motor_imagery.py     # Phase 2
-python src/make_figures.py             # figures
-python -m pytest tests/ -q             # 49 tests (33 pre-audit + 16 added in the 2026-09 audit)
+pip install -r requirements.txt       # MNE is only needed for path B
+python src/phase1_eyestate.py          # reads data/raw/EEG Eye State.arff
+python src/phase2_motor_imagery.py     # reads data/processed/physionet_features.npz
+python src/make_figures.py
+python -m pytest tests/ -q             # 49 tests
 ```
 
-Every number above has been reproduced on two independent machines and matches to three decimal places, with one exception: the RandomForest bootstrap interval varies in the third decimal across scikit-learn versions because of tie-breaking in tree construction. Point estimates are identical. Versions are pinned in `requirements.txt`.
+`data/processed/physionet_features.npz` and its manifest `data/processed/physionet_features_manifest.json` are committed. The manifest records the SHA-256 of every source EDF the cache was built from, so a Path-B rerun can verify byte-for-byte agreement.
+
+### Path B: full raw-data reproduction (rebuild the cache from EDFs)
+
+```bash
+pip install -r requirements.txt        # includes mne==1.8.0
+bash scripts/download_data.sh          # ~60 MB of PhysioNet EDFs, refuses to skip missing files
+python -m src.physionet_features       # rebuild data/processed/physionet_features.npz + manifest
+python src/phase1_eyestate.py
+python src/phase2_motor_imagery.py
+python src/make_figures.py
+python -m pytest tests/ -q
+```
+
+`scripts/download_data.sh` hard-fails on any missing or truncated EDF (below 500 KB per file) rather than silently skipping. `src/physionet_features.py` validates that all 10 expected subjects and all 3 imagery runs per subject (R04, R08, R12) are present, and asserts the sampling rate on every EDF equals the expected 160 Hz.
+
+### What's in the manifest
+
+`data/processed/physionet_features_manifest.json` records, per feature cache:
+
+- subject ids, per-run trial counts, and per-trial ids (`S001_R04_T000`, ...)
+- channel order, frequency bands, epoch window (0.5-3.5 s)
+- preprocessing (Welch parameters, integration rule, boundary handling)
+- source EDF SHA-256 checksums and file sizes
+
+Rerunning `python -m src.physionet_features` on unchanged EDFs produces a byte-identical manifest.
+
+### Reproducibility notes
+
+Every number in the tables above has been reproduced on two independent machines and matches to three decimal places, with one exception: the RandomForest bootstrap interval varies in the third decimal across scikit-learn versions because of tie-breaking in tree construction. Point estimates are identical. Versions are pinned in `requirements.txt`.
+
+The Path-B trial count is 383 (post-audit re-extraction with MNE 1.8). The pre-audit cache had 437 trials because an older MNE version retained more boundary-adjacent epochs after `mne.concatenate_raws` in the feature extractor. The point estimates on the trimmed cache are close to the pre-audit numbers and do not change any substantive conclusion.
 
 `tests/test_no_leakage.py` encodes the project's thesis as executable checks. If a global scaler, a naive split, or an epoch-level confidence interval is reintroduced, a test fails. The 2026-09 audit added `test_held_out_mutation_cannot_change_training_preprocessing`, which mutates held-out rows to 1e12, refits the Phase 1 pipeline, and requires the fitted clipper thresholds, scaler statistics, and transformed training features to be bit-identical to a baseline without the mutation.
+
+### Committed derived artefacts
+
+`data/processed/physionet_features.npz` is a derived feature cache built from the public PhysioNet EEG Motor Movement/Imagery Database (PhysioNet is distributed under the ODC-BY license). The cache contains only per-trial band-power features and label/subject/run/trial-id integers — no raw EEG samples — so it does not constitute redistribution of the underlying recordings. The cache is committed for convenience of reproduction; delete it and rerun Path B to rebuild from raw EDFs.
 
 ## Limitations
 
@@ -207,7 +253,7 @@ Phase 1 is a single subject and a single session on consumer-grade hardware, so 
 
 ## Future work
 
-Scale Phase 2 to all 109 subjects to tighten the estimates; add common spatial pattern (CSP) features, which are the standard for motor imagery; attempt subject-adaptive transfer, both unsupervised alignment and small-sample calibration, to move cross-subject decoding above chance; and explore deep models only after establishing these leakage-safe baselines. A third phase on mental arithmetic is planned, with its analysis prespecified in [`PREREGISTRATION.md`](PREREGISTRATION.md).
+Scale Phase 2 to all 109 subjects to tighten the estimates; add common spatial pattern (CSP) features, which are the standard for motor imagery; attempt subject-adaptive transfer, both unsupervised alignment and small-sample calibration, to move cross-subject decoding above chance; and explore deep models only after establishing these leakage-safe baselines. Add explanation-faithfulness checks (permutation of top features vs held-out score drop) and model-randomisation tests to strengthen the attribution reading beyond a descriptive ranking. A third phase on mental arithmetic is planned, with its analysis prespecified in [`PREREGISTRATION.md`](PREREGISTRATION.md).
 
 ## Data and licensing
 

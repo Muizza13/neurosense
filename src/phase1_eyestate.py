@@ -1,5 +1,12 @@
 """Phase 1: UCI EEG Eye State, rerun after the 2026-09 audit.
 
+Note on the "confirmatory" framing: this file is a rerun on the same UCI
+recording that has been inspected many times in this project. It is not an
+untouched confirmatory study of Phase 1. The audit's job is to make the
+existing evaluation honest, not to provide fresh evidence about the eye-
+state paradigm.
+
+
 Changes from the pre-audit pipeline (still true):
 
 1. Artifact clipping is fitted inside every fold via `EpochBandPower` in the
@@ -237,6 +244,9 @@ def _describe_baselines(split_name, baselines):
 
 
 def main():
+    import os
+    for d in ("reports/figures", "reports/results", "models"):
+        os.makedirs(d, exist_ok=True)
     X, y, blocks, starts, channels, n_times = load()
     factory = lambda: make_primary(channels, n_times)
 

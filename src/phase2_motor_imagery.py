@@ -198,6 +198,9 @@ def _print_summary(name, res, unit):
 
 
 def main():
+    import os
+    for _d in ("reports/figures", "reports/results", "models"):
+        os.makedirs(_d, exist_ok=True)
     d = np.load(FEATURES)
     has_run = "run" in d.files
     X = d["X"]

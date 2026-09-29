@@ -200,10 +200,80 @@ the same session; it does not establish transfer to a new recording
 session. The shuffled trial CV is retained and labelled as such
 (trials from the same run appear in both train and test).
 
+### Round 3 (Tasks 6 and 7)
+
+**Task 6 (interpretation and explanation claims):**
+
+- Rewrote Figure 3 so both panels use the **same** attribution method:
+  signed standardized logistic-regression coefficients extracted from
+  within real evaluation folds. Phase 1 uses the 5 merged-LOBO folds;
+  Phase 2 uses per-subject models fitted on that subject's own trials.
+  White dots on the figure are per-fold coefficients so between-fold
+  spread is visible. Signs are preserved (not just magnitudes).
+- Replaced the earlier "same interpretability method, two very different
+  situations" claim — which was inaccurate, since Phase 1 was
+  permutation importance and Phase 2 was |coef| on a model fit to all
+  subjects at once.
+- Labelled the Phase 1 attribution figure as a **descriptive ranking**,
+  not physiological evidence, because the underlying model overlaps a
+  same-splits dummy prior.
+- Rewrote the Phase 2 interpretation from "confirms known physiology" to
+  "consistent with expected sensorimotor patterns", and dropped the
+  contrast rhetoric where it implied one attribution proved physiology.
+- Removed the claim that frontal importance proved ocular artifact and
+  the claim that poor cross-subject performance proved subject-identity
+  learning; both would require dedicated experiments the repo does not
+  run.
+- Softened the "widely reported high accuracies on this dataset are an
+  artifact" language: on this recording under the leakage-aware
+  protocols implemented here, the model does not clear a same-split
+  dummy; that is not evidence that every published high-accuracy result
+  on this dataset used a leaky evaluation, only that ours does not
+  survive a stricter one.
+- Documented explanation-faithfulness and model-randomisation tests as
+  future work (not implemented).
+
+**Task 7 (raw-data reproduction):**
+
+- `scripts/download_data.sh` now validates every expected EDF (10
+  subjects x 3 imagery runs = 30 files), rejects files below 500 KB as
+  truncated, retries failed downloads up to 3 times, and exits non-zero
+  if any file is missing or truncated after retries. No silent skips.
+- `src/physionet_features.py` rewritten to (a) validate the raw-data
+  layout up front, (b) allow only R04, R08, R12, (c) read and validate
+  the sampling rate on every EDF against `EXPECTED_FS = 160.0`, and (d)
+  write `data/processed/physionet_features_manifest.json` recording
+  subject ids, run ids, per-trial ids, channel order, frequency bands,
+  epoch timing, Welch parameters, and the SHA-256 of every source EDF.
+- The npz cache now stores `X, y, g, run, trial_id`. `trial_id` is a
+  stable per-trial identifier of the form `S001_R04_T000`.
+- Phase 1, Phase 2, and `make_figures.py` create `reports/figures/`,
+  `reports/results/`, and `models/` on startup so a fresh clone runs
+  without manual mkdir.
+- `requirements.txt` documents the supported Python (3.9) and pins
+  `mne==1.8.0`. Two documented reproduction paths in README (cached vs
+  full raw-data rebuild) with the manifest as the byte-level integrity
+  check between them.
+- Added a licensing note in README for the committed derived feature
+  cache: it contains no raw EEG samples, only per-trial band-power
+  features and integer labels, so it does not constitute
+  redistribution of the underlying recordings.
+
 ### What the audit did not change
 
 - The primary model, feature bands, channel sets, window lengths, or the
   shared-core primitives in `src/core/features.py`.
 - The withdrawn-claims list from the shared-core rebuild above.
-- The Phase 2 cross-subject leave-one-subject-out point estimates
-  themselves (byte-identical up to provenance stamps).
+- The Phase 2 cross-subject leave-one-subject-out protocol structure
+  (LOSO with subject-level bootstrap); the point estimates moved
+  slightly because the round-2 re-extraction with run IDs preserved
+  gave 383 trials vs the pre-audit 437.
+
+### Framing note
+
+This audit is a rerun on data that has been inspected many times in this
+project. It is not an untouched confirmatory study of either paradigm.
+Where the rerun changes a number or a claim, the change is documented
+here and in `reports/AUDIT_LOG.md`; where the rerun agrees with the
+pre-audit result, that agreement should be read as internal consistency
+rather than as independent replication.

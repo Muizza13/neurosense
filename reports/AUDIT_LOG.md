@@ -1,13 +1,23 @@
 # Audit log
 
-The 2026-09 audit had two rounds. Round 1 (2026-09-29) added leakage-safe
+The 2026-09 audit had three rounds. Round 1 (2026-09-29) added leakage-safe
 protocols, per-split baselines, a temporal-dependence diagnostic, an
 expanding-window evaluation, a regression guard, and fold provenance to
 Phase 1; Phase 2 was unchanged. Round 2 (later the same day) corrected the
 leave-one-block-out analysis, added leave-one-run-out to Phase 2, persisted
 per-fold labels and predictions in the Phase 2 JSON, and tightened
 reporting language around baselines, standard deviation vs. confidence
-interval, and "N of 10 above 0.5" as a descriptive count.
+interval, and "N of 10 above 0.5" as a descriptive count. Round 3 (Tasks 6
+and 7) rebuilt Figure 3 so both panels use the same attribution method
+(signed standardized coefficients from within real evaluation folds),
+corrected the interpretation language around ocular artifact,
+subject-identity learning, and "confirms physiology", hardened raw-data
+reproduction with a validated download script and a feature manifest, and
+documented explanation-faithfulness and randomisation tests as future
+work.
+
+This is a rerun on data that has been inspected many times in this project.
+It is not an untouched confirmatory study of either paradigm.
 
 All pre-audit research artifacts are preserved unmodified in the `archive/`
 subfolders so a reviewer can diff the old and new numbers directly.
@@ -107,6 +117,56 @@ truth for what the earlier version claimed.
 15. Retains the shuffled trial CV within Phase 2 with an accurate
     description of its limitation (trials from the same run appear in
     both train and test).
+
+### Round 3 (Tasks 6 and 7)
+
+16. Rewrites Figure 3 so both panels use the same attribution method:
+    signed standardized logistic-regression coefficients extracted from
+    within real evaluation folds. Phase 1 uses the 5 merged-LOBO folds;
+    Phase 2 uses per-subject within-subject models. Signs are preserved
+    (not just magnitudes); per-fold values are plotted as white dots so
+    between-fold spread is visible.
+17. Corrects the earlier "same interpretability method" claim, which was
+    inaccurate: Phase 1 was RandomForest permutation importance and
+    Phase 2 was |coef| on a model fit to all subjects at once.
+18. Removes claims that Phase 1 frontal importance proves ocular artifact
+    and that Phase 2 poor cross-subject performance proves subject-identity
+    learning; both would require dedicated experiments not implemented
+    here.
+19. Replaces "confirms known physiology" with "consistent with expected
+    sensorimotor patterns" in the Phase 2 interpretation. Labels the
+    Phase 1 attribution ranking as descriptive rather than physiological
+    evidence, since the underlying model overlaps a same-splits dummy
+    prior.
+20. Softens the "widely reported high accuracies on this dataset are an
+    artifact" language: the finding is scoped to this recording and to
+    the leakage-aware protocols implemented here.
+21. Documents explanation-faithfulness (permutation-of-top-features vs
+    held-out score drop) and model-randomisation tests as future work.
+22. Hardens `scripts/download_data.sh`: 3-retry loop, 300 s timeout, hard
+    validation that all 10 subjects x 3 imagery runs are present and >=
+    500 KB each. Exits non-zero if any file is missing or truncated. No
+    silent skips.
+23. Rewrites `src/physionet_features.py` to (a) validate all expected
+    files up front, (b) allow only imagery runs R04, R08, R12, (c) read
+    and validate `raw.info["sfreq"]` against `EXPECTED_FS = 160.0` on
+    every EDF, (d) write `data/processed/physionet_features_manifest.json`
+    with per-subject SHA-256 checksums, run trial counts, channel order,
+    frequency bands, epoch timing (0.5-3.5 s), Welch parameters, and
+    per-trial identifiers of the form `S001_R04_T000`.
+24. Adds `trial_id` to the npz cache (`X, y, g, run, trial_id`), so
+    per-fold predictions in the Phase 2 JSON can be linked back to
+    specific trials.
+25. Adds `os.makedirs("reports/figures", "reports/results", "models",
+    exist_ok=True)` at the top of every runnable script so a fresh clone
+    runs without manual mkdir.
+26. Updates `requirements.txt` to document the supported Python (3.9,
+    audit used 3.9.6) and pins `mne==1.8.0` (round-2 note about the
+    `mne==2.4.1` typo is now fixed here).
+27. Adds a "cached vs raw-data reproduction" section to the README with
+    the two paths explicitly documented, and a licensing note for the
+    committed derived feature cache (band-power features only, no raw
+    EEG samples, so not redistribution of the PhysioNet recordings).
 
 ## What the audit does not change
 
