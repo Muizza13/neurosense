@@ -16,19 +16,24 @@ Both phases run through a shared core (`src/core/`) with one band definition, pr
 
 **The unit of inference is the subject, or in Phase 1 the label block, never the epoch.** Every interval below is a 95 percent percentile bootstrap resampling subjects or blocks. Pooled epoch-level figures are recorded in the results JSON as descriptive only, because pooling correlated epochs and treating them as independent both understates uncertainty and distorts threshold-free metrics.
 
+**Every leakage-safe split reports its own baselines.** Majority-class accuracy, a stratified dummy, and a uniform dummy are computed on that split's test set alone. Nothing is shared across protocols. Where a protocol produces single-class test folds by construction (leave-one-block-out and expanding-window on Phase 1), the meaningful baseline is chance (0.5) and the majority-class number is trivially 1.0.
+
 All numbers are produced by the code in this repo and stored in `reports/results/`. Nothing is rounded up.
 
 ## Results at a glance
 
-| Setting                 | Evaluation                            | Result                                                                       | Reading             |
-| ----------------------- | ------------------------------------- | ---------------------------------------------------------------------------- | ------------------- |
-| Phase 1 (eye state)     | Naive random window split             | balAcc = 0.533                                                               | leaked              |
-| Phase 1 (eye state)     | Chronological holdout                 | balAcc = 0.416, majority baseline 0.767                                      | below chance        |
-| Phase 1 (eye state)     | Leave-one-block-out                   | balAcc = 0.482 [0.334, 0.630]                                                | chance, very wide   |
-| Phase 1 (eye state)     | Cross-subject                         | not available                                                                | one subject         |
-| Phase 2 (motor imagery) | Naive random trial split              | balAcc = 0.540                                                               | mildly leaked       |
-| Phase 2 (motor imagery) | Within-subject (trial CV)             | balAcc = 0.580 [0.493, 0.675], AUC = 0.624 [0.536, 0.721], 8/10 above chance | modest, real on AUC |
-| Phase 2 (motor imagery) | Cross-subject (leave-one-subject-out) | balAcc = 0.482 [0.429, 0.539], AUC = 0.520 [0.439, 0.608]                    | chance              |
+| Setting                 | Evaluation                                | Result                                                                       | Reading                 |
+| ----------------------- | ----------------------------------------- | ---------------------------------------------------------------------------- | ----------------------- |
+| Phase 1 (eye state)     | Naive random window split                 | balAcc = 0.533, majority 0.55                                                | leaked, near dummy      |
+| Phase 1 (eye state)     | Chronological holdout (gap = 0 windows)   | balAcc = 0.416, majority 0.767, stratified dummy 0.366                       | below majority          |
+| Phase 1 (eye state)     | Expanding-window (13 folds across blocks) | balAcc = 0.380 [0.230, 0.545]                                                | at chance, wide         |
+| Phase 1 (eye state)     | Leave-one-block-out (19 folds)            | balAcc = 0.482 [0.334, 0.630]                                                | at chance, very wide    |
+| Phase 1 (eye state)     | Cross-subject                             | not available                                                                | one subject             |
+| Phase 2 (motor imagery) | Naive random trial split                  | balAcc = 0.540                                                               | mildly leaked           |
+| Phase 2 (motor imagery) | Within-subject (trial CV)                 | balAcc = 0.580 [0.493, 0.675], AUC = 0.624 [0.536, 0.721], 8/10 above chance | modest, real on AUC     |
+| Phase 2 (motor imagery) | Cross-subject (leave-one-subject-out)     | balAcc = 0.482 [0.429, 0.539], AUC = 0.520 [0.439, 0.608]                    | chance                  |
+
+The 2026-09 audit added two Phase 1 protocols (temporal-gap chronological holdout, expanding-window across blocks) and per-split baselines. It did not change Phase 2. See [`REFACTOR_NOTES.md`](REFACTOR_NOTES.md) and [`reports/AUDIT_LOG.md`](reports/AUDIT_LOG.md) for the full change list.
 
 ---
 
@@ -38,21 +43,28 @@ All numbers are produced by the code in this repo and stored in `reports/results
 
 Every Phase 1 number rests on 100 observations from one person. That single fact drives the width of every interval below and is the main reason this phase is a cautionary tale rather than a result.
 
-| Protocol                          | Balanced accuracy    | Macro F1             | ROC AUC   |
-| --------------------------------- | -------------------- | -------------------- | --------- |
-| Naive random window split (leaky) | 0.533                | 0.533                | 0.566     |
-| Chronological 70/30 holdout       | 0.416                | 0.330                | 0.491     |
-| Leave-one-block-out               | 0.482 [0.334, 0.630] | 0.369 [0.239, 0.515] | undefined |
+**Temporal-dependence diagnostic.** Before choosing the temporal gap between train and test in the chronological and expanding-window protocols, mean absolute autocorrelation of the fold-safe band-power features is measured at lags 1 through 5. Values on this recording sit in [0.07, 0.10], well below the 0.30 threshold, so **the chosen gap is 0 windows** and the choice is recorded in the results JSON under `temporal_dependence`. The autocorrelation is measured on features extracted with a clipper fitted on the training half of the chronological split, so the values reflect what the model actually consumes.
 
-Majority-class accuracy on the chronological test segment is **0.767**. Balanced accuracy of 0.416 sits below chance and far below that baseline.
+**Four leakage protocols, per-split baselines.**
+
+| Protocol                          | Balanced accuracy    | Macro F1             | ROC AUC   | Majority | Stratified dummy | Uniform dummy |
+| --------------------------------- | -------------------- | -------------------- | --------- | -------- | ---------------- | ------------- |
+| Naive random window split (leaky) | 0.533                | 0.533                | 0.566     | 0.550    | 0.552            | 0.536         |
+| Chronological 70/30 (gap = 0)     | 0.416                | 0.330                | 0.491     | 0.767    | 0.366            | 0.339         |
+| Expanding-window (13 folds)       | 0.380 [0.230, 0.545] | 0.283 [0.165, 0.432] | undefined | see note | see note         | see note      |
+| Leave-one-block-out (19 folds)    | 0.482 [0.334, 0.630] | 0.369 [0.239, 0.515] | undefined | see note | see note         | see note      |
+
+Note: for leave-one-block-out and expanding-window each held-out block is single-class by construction, so majority-class accuracy is trivially 1.0 and the stratified and uniform dummies degenerate. The meaningful baseline for these protocols is chance (0.5), which every reported interval brackets.
+
+The chronological logistic regression at 0.416 beats a stratified dummy by a small margin but sits well below the 0.767 majority-class baseline. The expanding-window mean of 0.380 sits at the level a stratified dummy would reach on a two-class split. Neither is evidence of real generalisation.
 
 Secondary models under leave-one-block-out: SVM-RBF 0.534 [0.376, 0.686], RandomForest (300) 0.487 [0.328, 0.648].
 
-**The leakage trap.** Because the label runs in long blocks, neighboring samples are near-identical and share a label. A random shuffled split scatters those neighbors across train and test, so the model scores well by recognizing near-duplicates it has already seen. Holding everything else constant and changing only how the split is drawn produces the entire performance gap.
+**The leakage trap.** Because the label runs in long blocks, neighboring samples are near-identical and share a label. A random shuffled split scatters those neighbors across train and test, so the model scores well by recognizing near-duplicates it has already seen. Holding everything else constant and changing only how the split is drawn produces the performance gap between the first row and the leakage-safe rows below.
 
 ![Phase 1 leakage](reports/figures/fig1_phase1_leakage.png)
 
-**Why leave-one-block-out AUC is undefined.** Every contiguous label block is single-class by construction, so a held-out block contains only eyes-open or only eyes-closed windows. AUC cannot be computed on a single-class test set, and balanced accuracy degenerates into the recall of whichever class the block contains. Leave-one-block-out is therefore reported as a supporting check; **chronological holdout is the more interpretable leakage-safe protocol for this phase.**
+**Why leave-one-block-out and expanding-window AUCs are undefined.** Every contiguous label block is single-class by construction, so a held-out block contains only eyes-open or only eyes-closed windows. AUC cannot be computed on a single-class test set, and balanced accuracy degenerates into the recall of whichever class the block contains. Leave-one-block-out and expanding-window are therefore reported as supporting checks; **chronological holdout is the more interpretable leakage-safe protocol for this phase.**
 
 **Explainability, and its limits.** A pre-modeling check found no clean Berger effect in this recording: occipital alpha does not rise on eye closure, which is the first sign that this is not a decodable eye-state signal.
 
@@ -126,26 +138,36 @@ Across both datasets, naive evaluation overstates performance. Leakage-aware eva
 src/
   core/
     features.py           # windowing, artifact clipping, band power; sfreq is always explicit
-    evaluation.py         # leave-one-group-out with per-subject metric rows
+    evaluation.py         # LOSO / expanding-window / per-split baselines / per-subject metric rows
     statistics.py         # subject-level bootstrap, grouped permutation test
+    temporal.py           # feature autocorrelation, gap chooser, walk-forward split generators
     results.py            # deterministic JSON serialisation
-  phase1_eyestate.py      # Phase 1: naive / chronological / leave-one-block-out
+  phase1_eyestate.py      # Phase 1: naive / chronological (with gap) / expanding-window / LOBO
   phase2_motor_imagery.py # Phase 2: within-subject and cross-subject
   make_figures.py         # regenerates the three figures from data
 tests/
   test_features.py        # feature extraction, windowing, clipping
   test_evaluation.py      # per-subject reporting structure
+  test_temporal.py        # autocorrelation diagnostic and expanding-window splits
   test_no_leakage.py      # the project thesis as executable regression tests
 reports/
+  AUDIT_LOG.md            # 2026-09 audit: pre-audit commit, environment, changes
   NeuroSense_Report.pdf   # write-up (start here)
   NeuroSense_Report.tex   # its LaTeX source
-  results/                # phase1_results.json, phase2_results.json
-  figures/                # the three figures above
+  results/
+    phase1_results.json   # current, four Phase 1 protocols and per-split baselines
+    phase2_results.json   # current, unchanged from pre-audit
+    archive/pre-audit-<commit>/  # verbatim pre-audit JSONs, never rewritten
+  figures/
+    fig1_phase1_leakage.png
+    fig2_phase2_generalization.png
+    fig3_interpretability_contrast.png
+    archive/pre-audit-<commit>/  # verbatim pre-audit figures
 scripts/
   download_data.sh        # fetches both datasets (data is not stored in the repo)
 data/processed/           # cached PhysioNet feature matrix (small)
 PREREGISTRATION.md        # analysis plan for Phase 3, committed before results
-REFACTOR_NOTES.md         # what changed in the shared-core rebuild and why
+REFACTOR_NOTES.md         # shared-core rebuild + 2026-09 audit notes
 ```
 
 ## Reproduce
@@ -156,12 +178,12 @@ bash scripts/download_data.sh          # downloads UCI + PhysioNet (not committe
 python src/phase1_eyestate.py          # Phase 1
 python src/phase2_motor_imagery.py     # Phase 2
 python src/make_figures.py             # figures
-python -m pytest tests/ -q             # 33 tests
+python -m pytest tests/ -q             # 44 tests (33 pre-audit + 11 added in the 2026-09 audit)
 ```
 
 Every number above has been reproduced on two independent machines and matches to three decimal places, with one exception: the RandomForest bootstrap interval varies in the third decimal across scikit-learn versions because of tie-breaking in tree construction. Point estimates are identical. Versions are pinned in `requirements.txt`.
 
-`tests/test_no_leakage.py` encodes the project's thesis as executable checks. If a global scaler, a naive split, or an epoch-level confidence interval is reintroduced, a test fails.
+`tests/test_no_leakage.py` encodes the project's thesis as executable checks. If a global scaler, a naive split, or an epoch-level confidence interval is reintroduced, a test fails. The 2026-09 audit added `test_held_out_mutation_cannot_change_training_preprocessing`, which mutates held-out rows to 1e12, refits the Phase 1 pipeline, and requires the fitted clipper thresholds, scaler statistics, and transformed training features to be bit-identical to a baseline without the mutation.
 
 ## Limitations
 
